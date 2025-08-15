@@ -21,6 +21,9 @@ from models import OAuth, User, UserRole
 
 login_manager = LoginManager(app)
 
+# Global issuer URL for reuse
+ISSUER_URL = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -31,14 +34,14 @@ class UserSessionStorage(BaseStorage):
 
     def get(self, blueprint):
         try:
-            token = db.session.query(OAuth).filter_by(
+            oauth_record = db.session.query(OAuth).filter_by(
                 user_id=current_user.get_id(),
                 browser_session_key=g.browser_session_key,
                 provider=blueprint.name,
-            ).one().token
+            ).one()
+            return oauth_record.token
         except NoResultFound:
-            token = None
-        return token
+            return None
 
     def set(self, blueprint, token):
         db.session.query(OAuth).filter_by(
@@ -68,7 +71,8 @@ def make_replit_blueprint():
     except KeyError:
         raise SystemExit("the REPL_ID environment variable must be set")
 
-    issuer_url = os.environ.get('ISSUER_URL', "https://replit.com/oidc")
+    global ISSUER_URL
+    issuer_url = ISSUER_URL
 
     replit_bp = OAuth2ConsumerBlueprint(
         "replit_auth",
@@ -99,6 +103,7 @@ def make_replit_blueprint():
     def set_applocal_session():
         if '_browser_session_key' not in session:
             session['_browser_session_key'] = uuid.uuid4().hex
+        session.permanent = True
         session.modified = True
         g.browser_session_key = session['_browser_session_key']
         g.flask_dance_replit = replit_bp.session
@@ -171,7 +176,7 @@ def require_login(f):
 
         expires_in = replit.token.get('expires_in', 0)
         if expires_in < 0:
-            refresh_token_url = issuer_url + "/token"
+            refresh_token_url = ISSUER_URL + "/token"
             try:
                 token = replit.refresh_token(token_url=refresh_token_url,
                                              client_id=os.environ['REPL_ID'])
