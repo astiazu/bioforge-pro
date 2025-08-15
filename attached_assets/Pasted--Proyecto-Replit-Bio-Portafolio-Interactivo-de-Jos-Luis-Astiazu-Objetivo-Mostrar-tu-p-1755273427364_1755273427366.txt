@@ -1,0 +1,89 @@
+"""
+🚀 Proyecto Replit – Bio & Portafolio Interactivo de José Luis Astiazu
+Objetivo:
+Mostrar tu perfil profesional, proyectos, publicaciones y análisis de datos
+con la posibilidad de agregar notas y gráficos interactivos.
+
+🔹 Tecnologías: Python, Pandas, Plotly
+🔹 Salida: Web interactiva (usando Streamlit)
+"""
+
+# 1️⃣ IMPORTAR LIBRERÍAS
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# 2️⃣ CONFIGURACIÓN BÁSICA DE LA APP
+st.set_page_config(page_title="Portafolio José Luis Astiazu", page_icon="📊", layout="wide")
+
+# 3️⃣ SIDEBAR CON BIO
+st.sidebar.image("https://via.placeholder.com/150", caption="José Luis Astiazu", width=150)
+st.sidebar.markdown("## 📄 Bio Corta")
+st.sidebar.write("📊 Consultor freelance en Analítica de Datos y Sistemas • Formador en Python y BI • Certificado Google Data Analytics • Transformo datos en decisiones.")
+
+st.sidebar.markdown("## 📄 Bio Extendida")
+st.sidebar.write("""
+Soy José Luis Astiazu, consultor independiente en análisis de datos, big data y sistemas.
+Especialista en Python, Django, automatización de procesos y visualización de datos.
+Certificado en Google Data Analytics. Me apasiona simplificar lo complejo y acompañar a mis clientes en todo el ciclo: desde la captura y limpieza de datos hasta la presentación de resultados claros y accionables.
+📍 Mina Clavero, Córdoba – Argentina.
+""")
+
+# 4️⃣ MENÚ PRINCIPAL
+menu = st.tabs(["🏠 Inicio", "📰 Publicaciones", "📂 Portafolio", "📝 Notas", "📈 Análisis de Datos"])
+
+# 5️⃣ SECCIÓN INICIO
+with menu[0]:
+    st.title("📊 Portafolio Profesional – José Luis Astiazu")
+    st.write("Bienvenido a mi portafolio interactivo. Aquí encontrarás información sobre mi experiencia, casos de éxito, publicaciones y ejemplos de análisis de datos.")
+
+# 6️⃣ PUBLICACIONES
+with menu[1]:
+    st.subheader("📰 Ejemplos de publicaciones")
+    publicaciones = [
+        ("Educativo", "El error más común al analizar datos (y cómo evitarlo)", "Muchos creen que el análisis de datos empieza en la visualización, pero la base está en la limpieza y preparación..."),
+        ("Caso de éxito", "Cómo un dashboard redujo el tiempo de reportes en un 40%", "Un cliente de retail necesitaba reportes semanales que le tomaban horas. Con un dashboard en Python + Power BI logramos..."),
+        ("Autoridad técnica", "3 razones para aprender Python si trabajás con datos", "1️⃣ Sintaxis clara 2️⃣ Librerías potentes 3️⃣ Comunidad enorme...")
+    ]
+    for tipo, titulo, texto in publicaciones:
+        st.markdown(f"**{tipo} – {titulo}**")
+        st.write(texto)
+        st.markdown("---")
+
+# 7️⃣ PORTAFOLIO
+with menu[2]:
+    st.subheader("📂 Estructura de portafolio")
+    st.markdown("""
+    - Presentación: Foto profesional, bio corta, llamada a la acción 'Trabajemos juntos'
+    - Áreas de especialidad: Análisis de datos, Big Data & BI, Automatización en Python, Consultoría en sistemas, Formación y capacitaciones
+    - Casos / Proyectos: Ejemplo dashboard para retail, Script Python para limpieza de encuestas, Curso intensivo de Python para marketing
+    - Testimonios: Opiniones de alumnos y clientes
+    - Contacto: Formulario, email, WhatsApp
+    """)
+
+# 8️⃣ NOTAS PERSONALES
+with menu[3]:
+    st.subheader("📝 Notas personales y de proyectos")
+    notas = st.text_area("Escribe tus notas aquí:", height=200)
+    if st.button("Guardar nota"):
+        st.success("✅ Nota guardada temporalmente (puedes conectarlo a una base de datos para guardado permanente).")
+
+# 9️⃣ ANÁLISIS DE DATOS
+with menu[4]:
+    st.subheader("📈 Análisis de datos interactivo")
+    st.write("Sube un archivo CSV para analizarlo.")
+    file = st.file_uploader("Subir archivo CSV", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
+        st.write("Vista previa de datos:", df.head())
+        col_x = st.selectbox("Eje X", df.columns)
+        col_y = st.selectbox("Eje Y", df.columns)
+        fig = px.scatter(df, x=col_x, y=col_y, title=f"Relación {col_x} vs {col_y}")
+        st.plotly_chart(fig)
+
+"""
+💡 Cómo usar:
+1. Copia este código en un nuevo proyecto de Replit con template "Python + Streamlit".
+2. Ejecuta con `streamlit run nombre_archivo.py`.
+3. Abre la URL que Replit te dará para interactuar con la web.
+"""
