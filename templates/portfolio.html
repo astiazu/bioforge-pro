@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Portafolio - José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-folder me-3 text-info"></i>
+                    Estructura de Portafolio
+                </h1>
+                <p class="lead text-muted">
+                    Una visión completa de mi experiencia profesional y servicios
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Presentación -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-circle me-2 text-info"></i>
+                        Presentación
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            <i class="fas fa-user-tie fa-5x text-secondary"></i>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted">
+                                Foto profesional, bio corta destacando experiencia en análisis de datos 
+                                y consultoría de sistemas.
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <button class="btn btn-info btn-lg">
+                                <i class="fas fa-handshake me-2"></i>
+                                Trabajemos juntos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Áreas de Especialidad -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2 text-success"></i>
+                        Áreas de Especialidad
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-chart-line fa-2x text-info me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Análisis de datos</h6>
+                                    <small class="text-muted">Python, Pandas, Visualización</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-database fa-2x text-success me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Big Data & BI</h6>
+                                    <small class="text-muted">Business Intelligence</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-robot fa-2x text-warning me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Automatización en Python</h6>
+                                    <small class="text-muted">Scripts y procesos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-server fa-2x text-danger me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Consultoría en sistemas</h6>
+                                    <small class="text-muted">Arquitectura y optimización</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-chalkboard-teacher fa-2x text-primary me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Formación y capacitaciones</h6>
+                                    <small class="text-muted">Cursos personalizados</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Casos / Proyectos -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-project-diagram me-2 text-warning"></i>
+                        Casos / Proyectos Destacados
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <div class="card bg-dark border-info">
+                                <div class="card-body">
+                                    <h6 class="card-title text-info">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        Dashboard para retail
+                                    </h6>
+                                    <p class="card-text text-muted small">
+                                        Implementación de dashboard interactivo que redujo el tiempo 
+                                        de generación de reportes en un 40%.
+                                    </p>
+                                    <span class="badge bg-info">Python + Power BI</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card bg-dark border-success">
+                                <div class="card-body">
+                                    <h6 class="card-title text-success">
+                                        <i class="fas fa-broom me-2"></i>
+                                        Script Python para encuestas
+                                    </h6>
+                                    <p class="card-text text-muted small">
+                                        Automatización de limpieza y análisis de datos de encuestas 
+                                        masivas con validación automática.
+                                    </p>
+                                    <span class="badge bg-success">Pandas + Automation</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card bg-dark border-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title text-warning">
+                                        <i class="fas fa-graduation-cap me-2"></i>
+                                        Curso intensivo Python
+                                    </h6>
+                                    <p class="card-text text-muted small">
+                                        Capacitación especializada en Python para equipos de marketing, 
+                                        enfocada en análisis de datos.
+                                    </p>
+                                    <span class="badge bg-warning text-dark">Formación</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testimonios -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-quote-left me-2 text-secondary"></i>
+                        Testimonios
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <blockquote class="blockquote">
+                                <p class="text-muted">
+                                    "El curso de Python cambió completamente nuestra forma de trabajar con datos. 
+                                    José Luis tiene una habilidad excepcional para explicar conceptos complejos."
+                                </p>
+                                <footer class="blockquote-footer">
+                                    Alumno del curso <cite title="Marketing Digital">Marketing Digital</cite>
+                                </footer>
+                            </blockquote>
+                        </div>
+                        <div class="col-md-6">
+                            <blockquote class="blockquote">
+                                <p class="text-muted">
+                                    "El dashboard implementado nos ahorra horas de trabajo cada semana. 
+                                    La inversión se recuperó en menos de 3 meses."
+                                </p>
+                                <footer class="blockquote-footer">
+                                    Cliente <cite title="Retail">Sector Retail</cite>
+                                </footer>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contacto -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-envelope me-2 text-primary"></i>
+                        Contacto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <form>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <input type="text" class="form-control" placeholder="Nombre">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="email" class="form-control" placeholder="Email">
+                                    </div>
+                                    <div class="col-12">
+                                        <textarea class="form-control" rows="4" placeholder="Mensaje"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane me-2"></i>
+                                            Enviar mensaje
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-grid gap-2">
+                                <a href="mailto:jose.luis.astiazu@example.com" class="btn btn-outline-info">
+                                    <i class="fas fa-envelope me-2"></i>Email directo
+                                </a>
+                                <a href="https://wa.me/5493544123456" class="btn btn-outline-success" target="_blank">
+                                    <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                                </a>
+                                <p class="text-muted small text-center mt-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    Mina Clavero, Córdoba – Argentina
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

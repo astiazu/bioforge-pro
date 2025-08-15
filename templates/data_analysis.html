@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Análisis de Datos - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-chart-line me-3 text-info"></i>
+                    Análisis de Datos Interactivo
+                </h1>
+                <p class="lead text-muted">
+                    Sube un archivo CSV para analizarlo y crear visualizaciones interactivas
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-upload me-2 text-primary"></i>
+                        Subir Archivo CSV
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="csvFile" accept=".csv">
+                                <button class="btn btn-primary" type="button" id="uploadBtn">
+                                    <i class="fas fa-upload me-2"></i>Analizar CSV
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Tamaño máximo: 16MB. Solo archivos CSV.
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div id="uploadStatus" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Data Preview -->
+    <div class="row mb-4" id="dataPreview" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2 text-success"></i>
+                        Vista Previa de Datos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="bg-dark p-3 rounded text-center">
+                                <h6 class="text-info mb-1">Filas</h6>
+                                <h4 id="dataRows" class="text-light mb-0">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-dark p-3 rounded text-center">
+                                <h6 class="text-success mb-1">Columnas</h6>
+                                <h4 id="dataCols" class="text-light mb-0">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-dark p-3 rounded text-center">
+                                <h6 class="text-warning mb-1">Valores Faltantes</h6>
+                                <h4 id="dataMissing" class="text-light mb-0">-</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-dark p-3 rounded text-center">
+                                <h6 class="text-danger mb-1">Tipos de Datos</h6>
+                                <h4 id="dataTypes" class="text-light mb-0">-</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive" style="max-height: 400px;">
+                        <table class="table table-dark table-striped" id="dataTable">
+                            <thead id="dataTableHead"></thead>
+                            <tbody id="dataTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Configuration -->
+    <div class="row mb-4" id="chartConfig" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2 text-warning"></i>
+                        Configuración de Gráfico
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="chartType" class="form-label">Tipo de Gráfico</label>
+                            <select class="form-select" id="chartType">
+                                <option value="line">Línea</option>
+                                <option value="bar">Barras</option>
+                                <option value="scatter">Dispersión</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="xColumn" class="form-label">Eje X</label>
+                            <select class="form-select" id="xColumn">
+                                <option value="">Seleccionar columna...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="yColumn" class="form-label">Eje Y</label>
+                            <select class="form-select" id="yColumn">
+                                <option value="">Seleccionar columna...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-warning w-100" id="generateChart">
+                                <i class="fas fa-chart-line me-2"></i>Generar Gráfico
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Display -->
+    <div class="row mb-4" id="chartDisplay" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-area me-2 text-info"></i>
+                        Visualización
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="dataChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body">
+                    <h6 class="card-title text-light">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        Cómo usar esta herramienta
+                    </h6>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-primary me-2 mt-1">1</span>
+                                <div>
+                                    <small class="text-light d-block">Subir archivo</small>
+                                    <small class="text-muted">Selecciona un archivo CSV desde tu computadora</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-success me-2 mt-1">2</span>
+                                <div>
+                                    <small class="text-light d-block">Explorar datos</small>
+                                    <small class="text-muted">Revisa la vista previa y estadísticas básicas</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <span class="badge bg-warning me-2 mt-1">3</span>
+                                <div>
+                                    <small class="text-light d-block">Crear gráficos</small>
+                                    <small class="text-muted">Selecciona columnas y genera visualizaciones</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/data-analysis.js') }}"></script>
+{% endblock %}

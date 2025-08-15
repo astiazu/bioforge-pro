@@ -1,0 +1,222 @@
+/* Custom CSS for José Luis Astiazu Portfolio */
+
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+}
+
+/* Body and Layout */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    background-color: var(--dark-color);
+    color: #fff;
+}
+
+/* Sidebar Styles */
+.profile-image {
+    transition: transform 0.3s ease;
+}
+
+.profile-image:hover {
+    transform: scale(1.05);
+}
+
+/* Navigation */
+.nav-link {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.nav-link.active {
+    background-color: var(--info-color);
+    color: var(--dark-color) !important;
+    font-weight: bold;
+}
+
+/* Cards */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Icons */
+.fa-7x {
+    font-size: 7rem;
+}
+
+/* Charts */
+#dataChart {
+    max-height: 400px;
+    border-radius: 0.5rem;
+}
+
+/* Data Table */
+.table-responsive {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: rgba(13, 110, 253, 0.2);
+    border-color: var(--info-color);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+/* Upload Area */
+.form-control:focus, .form-select:focus {
+    border-color: var(--info-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--info-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Notes Container */
+.notes-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary-color) transparent;
+}
+
+.notes-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notes-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.notes-container::-webkit-scrollbar-thumb {
+    background-color: var(--secondary-color);
+    border-radius: 3px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .display-4, .display-5 {
+        font-size: 2rem;
+    }
+    
+    .fa-7x {
+        font-size: 4rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Success/Error States */
+.success-state {
+    border-left: 4px solid var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.error-state {
+    border-left: 4px solid var(--danger-color);
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Professional Touch */
+.blockquote {
+    border-left: 4px solid var(--info-color);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+}
+
+.blockquote-footer {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Badge Improvements */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Dark theme consistency */
+.bg-dark {
+    background-color: #1a1a1a !important;
+}
+
+.border-secondary {
+    border-color: #3a3a3a !important;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}

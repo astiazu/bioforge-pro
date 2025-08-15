@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Notas - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-sticky-note me-3 text-info"></i>
+                    Notas Personales y de Proyectos
+                </h1>
+                <p class="lead text-muted">
+                    Espacio para guardar ideas, recordatorios y notas de trabajo
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Formulario para nueva nota -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus me-2 text-success"></i>
+                        Nueva Nota
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Contenido de la nota</label>
+                            <textarea 
+                                class="form-control" 
+                                id="notes" 
+                                name="notes" 
+                                rows="8" 
+                                placeholder="Escribe tu nota aquí..."
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>
+                                Guardar nota
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notas guardadas -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2 text-info"></i>
+                        Notas Guardadas ({{ saved_notes|length }})
+                    </h5>
+                    {% if saved_notes %}
+                    <form method="POST" action="{{ url_for('clear_notes') }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar todas las notas?')">
+                            <i class="fas fa-trash me-1"></i>Limpiar todo
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if saved_notes %}
+                        <div class="notes-container" style="max-height: 500px; overflow-y: auto;">
+                            {% for note in saved_notes|reverse %}
+                            <div class="card mb-3 bg-dark border-secondary">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ note.timestamp }}
+                                        </small>
+                                        <span class="badge bg-secondary">Nota #{{ loop.revindex }}</span>
+                                    </div>
+                                    <p class="card-text text-light">{{ note.content }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-sticky-note fa-3x mb-3 opacity-50"></i>
+                            <p>No hay notas guardadas aún</p>
+                            <small>Las notas que escribas aparecerán aquí</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Información importante:</strong> Las notas se guardan temporalmente en tu sesión. 
+                Para guardado permanente, se puede conectar a una base de datos.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tips para usar las notas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        Tips para usar las notas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-project-diagram text-info me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-light d-block">Proyectos</small>
+                                    <small class="text-muted">Ideas y avances de proyectos actuales</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-users text-success me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-light d-block">Cliente</small>
+                                    <small class="text-muted">Notas sobre reuniones y requerimientos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-code text-warning me-2 mt-1"></i>
+                                <div>
+                                    <small class="text-light d-block">Código</small>
+                                    <small class="text-muted">Snippets y recordatorios técnicos</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

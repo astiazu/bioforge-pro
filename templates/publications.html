@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Publicaciones - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-newspaper me-3 text-info"></i>
+                    Ejemplos de Publicaciones
+                </h1>
+                <p class="lead text-muted">
+                    Artículos y casos de estudio que demuestran experiencia y conocimiento en análisis de datos
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for publication in publications %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <span class="badge 
+                                {% if publication.type == 'Educativo' %}bg-info
+                                {% elif publication.type == 'Caso de éxito' %}bg-success
+                                {% else %}bg-warning text-dark
+                                {% endif %} me-2">
+                                {{ publication.type }}
+                            </span>
+                            <h5 class="card-title d-inline-block mb-0">{{ publication.title }}</h5>
+                        </div>
+                        <div class="col-auto">
+                            {% if publication.type == 'Educativo' %}
+                                <i class="fas fa-graduation-cap text-info"></i>
+                            {% elif publication.type == 'Caso de éxito' %}
+                                <i class="fas fa-trophy text-success"></i>
+                            {% else %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted">{{ publication.content }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>Publicado recientemente
+                        </small>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2">
+                                <i class="fas fa-share me-1"></i>Compartir
+                            </button>
+                            <button class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-external-link-alt me-1"></i>Leer más
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-body text-center">
+                    <h4 class="card-title text-light mb-3">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>
+                        ¿Te interesa este tipo de contenido?
+                    </h4>
+                    <p class="card-text text-muted mb-4">
+                        Suscríbete para recibir más artículos sobre análisis de datos, 
+                        Python y casos de éxito reales.
+                    </p>
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="email" class="form-control" placeholder="Tu email aquí...">
+                                <button class="btn btn-info" type="button">
+                                    <i class="fas fa-paper-plane me-1"></i>Suscribirse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
