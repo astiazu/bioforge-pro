@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import json
+from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
@@ -98,12 +99,11 @@ def notes():
             return redirect(url_for('notes'))
             
         # Create new note
-        note = Note(
-            title=title,
-            content=content,
-            user_id=current_user.id,
-            status=NoteStatus.PRIVATE
-        )
+        note = Note()
+        note.title = title
+        note.content = content
+        note.user_id = current_user.id
+        note.status = NoteStatus.PRIVATE
         db.session.add(note)
         db.session.commit()
         flash('✅ Nota creada exitosamente', 'success')
@@ -139,7 +139,8 @@ def upload_csv():
             return jsonify({'error': 'Please upload a CSV file'}), 400
         
         # Read CSV directly from memory
-        df = pd.read_csv(file)
+        file.seek(0)  # Reset file pointer
+        df = pd.read_csv(file.stream)
         
         # Basic data info
         info = {
@@ -228,16 +229,15 @@ def new_publication():
                                bio_short=BIO_SHORT, 
                                bio_extended=BIO_EXTENDED)
         
-        publication = Publication(
-            title=title,
-            content=content,
-            type=pub_type,
-            excerpt=excerpt,
-            tags=tags,
-            user_id=current_user.id,
-            is_published=True,
-            published_at=pd.Timestamp.now()
-        )
+        publication = Publication()
+        publication.title = title
+        publication.content = content
+        publication.type = pub_type
+        publication.excerpt = excerpt
+        publication.tags = tags
+        publication.user_id = current_user.id
+        publication.is_published = True
+        publication.published_at = datetime.now()
         db.session.add(publication)
         db.session.commit()
         flash('✅ Publicación creada exitosamente', 'success')
@@ -330,12 +330,11 @@ def edit_note(note_id=None):
             flash('✅ Nota actualizada exitosamente', 'success')
         else:
             # Create new note
-            note = Note(
-                title=title,
-                content=content,
-                user_id=current_user.id,
-                status=NoteStatus.PRIVATE
-            )
+            note = Note()
+            note.title = title
+            note.content = content
+            note.user_id = current_user.id
+            note.status = NoteStatus.PRIVATE
             db.session.add(note)
             db.session.commit()
             flash('✅ Nota creada exitosamente', 'success')
@@ -402,7 +401,7 @@ def approve_note(note_id):
     
     note.status = NoteStatus.PUBLISHED
     note.approved_by = current_user.id
-    note.approved_at = pd.Timestamp.now()
+    note.approved_at = datetime.now()
     db.session.commit()
     
     flash(f'✅ Nota "{note.title}" aprobada y publicada', 'success')

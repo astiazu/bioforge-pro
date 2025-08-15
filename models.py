@@ -36,7 +36,7 @@ class User(UserMixin, db.Model):
                            onupdate=datetime.now)
 
     # Relationships
-    notes = db.relationship('Note', backref='author', lazy=True, cascade='all, delete-orphan')
+    notes = db.relationship('Note', foreign_keys='Note.user_id', backref='author', lazy=True, cascade='all, delete-orphan')
     publications = db.relationship('Publication', backref='author', lazy=True, cascade='all, delete-orphan')
 
     def is_admin(self):
