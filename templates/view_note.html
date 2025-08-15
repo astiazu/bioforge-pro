@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.title }} - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('publications') }}">Publicaciones</a></li>
+                    <li class="breadcrumb-item active">{{ note.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <article class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Note Header -->
+            <header class="mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-info mb-2">
+                            <i class="fas fa-sticky-note me-1"></i>
+                            Nota de Usuario
+                        </span>
+                        <h1 class="display-6 mb-3">{{ note.title }}</h1>
+                    </div>
+                    
+                    {% if current_user.is_authenticated and (current_user.is_admin() or current_user.id == note.user_id) %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('edit_note', note_id=note.id) }}">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                            </li>
+                            {% if current_user.is_admin() or current_user.id == note.user_id %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}" 
+                                      onsubmit="return confirm('¿Estás seguro?')">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-trash me-2"></i>Eliminar
+                                    </button>
+                                </form>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Note Meta -->
+                <div class="d-flex flex-wrap align-items-center text-muted mb-4">
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-user me-1"></i>
+                        Por {{ note.author.full_name }}
+                    </div>
+                    
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ note.created_at.strftime('%d de %B, %Y') }}
+                    </div>
+                    
+                    {% if note.approved_at %}
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Aprobada el {{ note.approved_at.strftime('%d/%m/%Y') }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-2">
+                        <span class="badge {{ note.status_class }}">{{ note.status_display }}</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Note Content -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="note-content" style="line-height: 1.6; white-space: pre-wrap;">{{ note.content }}</div>
+                </div>
+            </div>
+            
+            <!-- Author Info for published notes -->
+            {% if note.status.value == 'published' %}
+            <div class="card mt-4 bg-dark border-secondary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="card-title text-light mb-2">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Sobre esta nota
+                            </h6>
+                            <p class="card-text text-muted mb-0">
+                                Esta es una contribución de la comunidad aprobada por José Luis Astiazu. 
+                                Las ideas y opiniones expresadas pertenecen al autor de la nota.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <button class="btn btn-outline-info btn-sm" onclick="shareNote()">
+                                    <i class="fas fa-share-alt me-1"></i>Compartir
+                                </button>
+                                <a href="{{ url_for('index') }}#contact" class="btn btn-info btn-sm">
+                                    <i class="fas fa-envelope me-1"></i>Contacto
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{{ url_for('publications') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Publicaciones
+                </a>
+                
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('notes') }}" class="btn btn-info">
+                    <i class="fas fa-sticky-note me-2"></i>Mis Notas
+                </a>
+                {% else %}
+                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 2rem;">
+                <!-- Author Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>Autor de la Nota
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if note.author.profile_image_url %}
+                        <img src="{{ note.author.profile_image_url }}" 
+                             alt="{{ note.author.full_name }}" 
+                             class="rounded-circle mb-3" 
+                             width="80" height="80" 
+                             style="object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-user-circle fa-4x text-secondary mb-3"></i>
+                        {% endif %}
+                        <h6 class="card-title">{{ note.author.full_name }}</h6>
+                        <p class="card-text text-muted small">
+                            Miembro desde {{ note.author.created_at.strftime('%B %Y') }}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Community Guidelines -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-heart me-2"></i>Comunidad
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted small">
+                            Las notas de usuarios son contribuciones valiosas a nuestra comunidad. 
+                            Cada nota pasa por un proceso de revisión para mantener la calidad del contenido.
+                        </p>
+                        
+                        {% if current_user.is_authenticated %}
+                        <div class="d-grid">
+                            <a href="{{ url_for('notes') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Escribir una Nota
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-grid">
+                            <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-sign-in-alt me-2"></i>Únete a la Comunidad
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+
+<script>
+function shareNote() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    const text = encodeURIComponent('{{ note.title }} - Una nota interesante de la comunidad');
+    
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ note.title }}',
+            text: text,
+            url: window.location.href
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>¡Copiado!';
+            btn.classList.remove('btn-outline-info');
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-info');
+            }, 2000);
+        });
+    }
+}
+</script>
+{% endblock %}

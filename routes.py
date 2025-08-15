@@ -2,8 +2,11 @@ import os
 import pandas as pd
 import json
 from flask import render_template, request, redirect, url_for, flash, jsonify, session
+from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from app import app
+from app import app, db
+from models import User, Note, Publication, NoteStatus, UserRole
+from replit_auth import require_login, require_admin, make_replit_blueprint
 
 # Bio data
 BIO_SHORT = "📊 Consultor freelance en Analítica de Datos y Sistemas • Formador en Python y BI • Certificado Google Data Analytics • Transformo datos en decisiones."
@@ -34,6 +37,14 @@ PUBLICATIONS = [
     }
 ]
 
+# Register authentication blueprint
+app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+
+# Make session permanent
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'csv'}
 
@@ -46,8 +57,24 @@ def index():
 
 @app.route('/publications')
 def publications():
+    # Get published notes and database publications
+    published_notes = Note.query.filter_by(status=NoteStatus.PUBLISHED).order_by(Note.approved_at.desc()).all()
+    db_publications = Publication.query.filter_by(is_published=True).order_by(Publication.published_at.desc()).all()
+    
+    # Combine static publications with database ones
+    all_publications = PUBLICATIONS + [
+        {
+            'type': pub.type,
+            'title': pub.title,
+            'content': pub.excerpt or pub.content[:200] + '...',
+            'id': pub.id,
+            'is_db': True
+        } for pub in db_publications
+    ]
+    
     return render_template('publications.html', 
-                         publications=PUBLICATIONS,
+                         publications=all_publications,
+                         published_notes=published_notes,
                          bio_short=BIO_SHORT, 
                          bio_extended=BIO_EXTENDED,
                          active_tab='publications')
@@ -60,23 +87,33 @@ def portfolio():
                          active_tab='portfolio')
 
 @app.route('/notes', methods=['GET', 'POST'])
+@require_login
 def notes():
     if request.method == 'POST':
-        note_content = request.form.get('notes', '')
-        if note_content.strip():
-            # Store note in session for temporary storage
-            if 'notes' not in session:
-                session['notes'] = []
-            session['notes'].append({
-                'content': note_content,
-                'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
-            })
-            flash('✅ Nota guardada temporalmente', 'success')
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        
+        if not title or not content:
+            flash('Por favor completa el título y contenido de la nota', 'error')
+            return redirect(url_for('notes'))
+            
+        # Create new note
+        note = Note(
+            title=title,
+            content=content,
+            user_id=current_user.id,
+            status=NoteStatus.PRIVATE
+        )
+        db.session.add(note)
+        db.session.commit()
+        flash('✅ Nota creada exitosamente', 'success')
         return redirect(url_for('notes'))
     
-    saved_notes = session.get('notes', [])
+    # Get user's notes
+    user_notes = Note.query.filter_by(user_id=current_user.id).order_by(Note.created_at.desc()).all()
+    
     return render_template('notes.html',
-                         saved_notes=saved_notes,
+                         user_notes=user_notes,
                          bio_short=BIO_SHORT, 
                          bio_extended=BIO_EXTENDED,
                          active_tab='notes')
@@ -173,8 +210,211 @@ def analyze_data():
         app.logger.error(f"Error analyzing data: {str(e)}")
         return jsonify({'error': f'Error analyzing data: {str(e)}'}), 500
 
-@app.route('/clear-notes', methods=['POST'])
-def clear_notes():
-    session.pop('notes', None)
-    flash('📝 Todas las notas han sido eliminadas', 'info')
+# Admin routes for publications
+@app.route('/admin/publication/new', methods=['GET', 'POST'])
+@require_admin
+def new_publication():
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        pub_type = request.form.get('type', '').strip()
+        excerpt = request.form.get('excerpt', '').strip()
+        tags = request.form.get('tags', '').strip()
+        
+        if not title or not content or not pub_type:
+            flash('Por favor completa todos los campos requeridos', 'error')
+            return render_template('edit_publication.html', 
+                               publication=None,
+                               bio_short=BIO_SHORT, 
+                               bio_extended=BIO_EXTENDED)
+        
+        publication = Publication(
+            title=title,
+            content=content,
+            type=pub_type,
+            excerpt=excerpt,
+            tags=tags,
+            user_id=current_user.id,
+            is_published=True,
+            published_at=pd.Timestamp.now()
+        )
+        db.session.add(publication)
+        db.session.commit()
+        flash('✅ Publicación creada exitosamente', 'success')
+        return redirect(url_for('admin_panel'))
+    
+    return render_template('edit_publication.html', 
+                         publication=None,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED)
+
+@app.route('/admin/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
+@require_admin
+def edit_publication(pub_id):
+    publication = Publication.query.get_or_404(pub_id)
+    
+    if request.method == 'POST':
+        publication.title = request.form.get('title', '').strip()
+        publication.content = request.form.get('content', '').strip()
+        publication.type = request.form.get('type', '').strip()
+        publication.excerpt = request.form.get('excerpt', '').strip()
+        publication.tags = request.form.get('tags', '').strip()
+        
+        if not publication.title or not publication.content or not publication.type:
+            flash('Por favor completa todos los campos requeridos', 'error')
+            return render_template('edit_publication.html', 
+                               publication=publication,
+                               bio_short=BIO_SHORT, 
+                               bio_extended=BIO_EXTENDED)
+        
+        db.session.commit()
+        flash('✅ Publicación actualizada exitosamente', 'success')
+        return redirect(url_for('admin_panel'))
+    
+    return render_template('edit_publication.html', 
+                         publication=publication,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED)
+
+@app.route('/admin/publication/<int:pub_id>/delete', methods=['POST'])
+@require_admin
+def delete_publication(pub_id):
+    publication = Publication.query.get_or_404(pub_id)
+    db.session.delete(publication)
+    db.session.commit()
+    flash('🗑️ Publicación eliminada exitosamente', 'info')
+    return redirect(url_for('admin_panel'))
+
+# Public view for individual publications and notes
+@app.route('/publication/<int:pub_id>')
+def view_publication(pub_id):
+    publication = Publication.query.filter_by(id=pub_id, is_published=True).first_or_404()
+    return render_template('view_publication.html', 
+                         publication=publication,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED)
+
+@app.route('/note/<int:note_id>')
+def view_note(note_id):
+    note = Note.query.filter_by(id=note_id, status=NoteStatus.PUBLISHED).first_or_404()
+    return render_template('view_note.html', 
+                         note=note,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED)
+
+@app.route('/note/<int:note_id>/edit', methods=['GET', 'POST'])
+@app.route('/note/new', methods=['GET', 'POST'])
+@require_login
+def edit_note(note_id=None):
+    note = None
+    if note_id and note_id != 0:
+        note = Note.query.get_or_404(note_id)
+    
+    if note and not note.can_edit(current_user):
+        flash('No tienes permisos para editar esta nota', 'error')
+        return redirect(url_for('notes'))
+    
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+        
+        if not title or not content:
+            flash('Por favor completa el título y contenido de la nota', 'error')
+            return render_template('edit_note.html', note=note, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
+        
+        if note:
+            # Update existing note
+            note.title = title
+            note.content = content
+            db.session.commit()
+            flash('✅ Nota actualizada exitosamente', 'success')
+        else:
+            # Create new note
+            note = Note(
+                title=title,
+                content=content,
+                user_id=current_user.id,
+                status=NoteStatus.PRIVATE
+            )
+            db.session.add(note)
+            db.session.commit()
+            flash('✅ Nota creada exitosamente', 'success')
+        return redirect(url_for('notes'))
+    
+    return render_template('edit_note.html', 
+                         note=note,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED)
+
+@app.route('/note/<int:note_id>/delete', methods=['POST'])
+@require_login
+def delete_note(note_id):
+    note = Note.query.get_or_404(note_id)
+    
+    if not note.can_edit(current_user):
+        flash('No tienes permisos para eliminar esta nota', 'error')
+        return redirect(url_for('notes'))
+    
+    db.session.delete(note)
+    db.session.commit()
+    flash('🗑️ Nota eliminada exitosamente', 'info')
     return redirect(url_for('notes'))
+
+@app.route('/note/<int:note_id>/request-publish', methods=['POST'])
+@require_login
+def request_publish_note(note_id):
+    note = Note.query.get_or_404(note_id)
+    
+    if note.user_id != current_user.id:
+        flash('No tienes permisos para esta acción', 'error')
+        return redirect(url_for('notes'))
+    
+    if note.status == NoteStatus.PUBLISHED:
+        flash('Esta nota ya está publicada', 'info')
+    elif note.status == NoteStatus.PENDING:
+        flash('Esta nota ya está pendiente de aprobación', 'info')
+    else:
+        note.status = NoteStatus.PENDING
+        db.session.commit()
+        flash('📤 Solicitud de publicación enviada. Esperando aprobación del administrador.', 'success')
+    
+    return redirect(url_for('notes'))
+
+@app.route('/admin')
+@require_admin
+def admin_panel():
+    pending_notes = Note.query.filter_by(status=NoteStatus.PENDING).order_by(Note.created_at.desc()).all()
+    published_notes = Note.query.filter_by(status=NoteStatus.PUBLISHED).order_by(Note.updated_at.desc()).limit(10).all()
+    all_publications = Publication.query.order_by(Publication.updated_at.desc()).all()
+    
+    return render_template('admin.html',
+                         pending_notes=pending_notes,
+                         published_notes=published_notes,
+                         all_publications=all_publications,
+                         bio_short=BIO_SHORT, 
+                         bio_extended=BIO_EXTENDED,
+                         active_tab='admin')
+
+@app.route('/admin/note/<int:note_id>/approve', methods=['POST'])
+@require_admin
+def approve_note(note_id):
+    note = Note.query.get_or_404(note_id)
+    
+    note.status = NoteStatus.PUBLISHED
+    note.approved_by = current_user.id
+    note.approved_at = pd.Timestamp.now()
+    db.session.commit()
+    
+    flash(f'✅ Nota "{note.title}" aprobada y publicada', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/note/<int:note_id>/reject', methods=['POST'])
+@require_admin
+def reject_note(note_id):
+    note = Note.query.get_or_404(note_id)
+    
+    note.status = NoteStatus.PRIVATE
+    db.session.commit()
+    
+    flash(f'❌ Nota "{note.title}" rechazada y marcada como privada', 'info')
+    return redirect(url_for('admin_panel'))

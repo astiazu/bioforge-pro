@@ -41,6 +41,30 @@
                     <p class="text-muted small">{{ bio_extended }}</p>
                 </div>
                 
+                <!-- User Info -->
+                {% if current_user.is_authenticated %}
+                <div class="card bg-dark border-secondary mb-4">
+                    <div class="card-body text-center">
+                        {% if current_user.profile_image_url %}
+                        <img src="{{ current_user.profile_image_url }}" 
+                             alt="{{ current_user.full_name }}" 
+                             class="rounded-circle mb-2" 
+                             width="50" height="50" 
+                             style="object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-user-circle fa-3x text-info mb-2"></i>
+                        {% endif %}
+                        <h6 class="text-light mb-1">{{ current_user.full_name }}</h6>
+                        <small class="text-muted">{{ current_user.email }}</small>
+                        <div class="mt-2">
+                            <span class="badge {% if current_user.is_admin() %}bg-success{% else %}bg-info{% endif %}">
+                                {% if current_user.is_admin() %}Administrador{% else %}Usuario{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
                 <!-- Navigation -->
                 <nav class="nav flex-column">
                     <a class="nav-link {% if active_tab == 'home' %}active{% endif %}" href="{{ url_for('index') }}">
@@ -52,12 +76,34 @@
                     <a class="nav-link {% if active_tab == 'portfolio' %}active{% endif %}" href="{{ url_for('portfolio') }}">
                         <i class="fas fa-folder me-2"></i>Portafolio
                     </a>
+                    
+                    {% if current_user.is_authenticated %}
                     <a class="nav-link {% if active_tab == 'notes' %}active{% endif %}" href="{{ url_for('notes') }}">
-                        <i class="fas fa-sticky-note me-2"></i>Notas
+                        <i class="fas fa-sticky-note me-2"></i>Mis Notas
                     </a>
+                    {% endif %}
+                    
                     <a class="nav-link {% if active_tab == 'data_analysis' %}active{% endif %}" href="{{ url_for('data_analysis') }}">
                         <i class="fas fa-chart-line me-2"></i>Análisis de Datos
                     </a>
+                    
+                    {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <hr class="text-secondary">
+                    <a class="nav-link {% if active_tab == 'admin' %}active{% endif %}" href="{{ url_for('admin_panel') }}">
+                        <i class="fas fa-cog me-2"></i>Administración
+                    </a>
+                    {% endif %}
+                    
+                    <hr class="text-secondary">
+                    {% if current_user.is_authenticated %}
+                    <a class="nav-link text-warning" href="{{ url_for('replit_auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                    </a>
+                    {% else %}
+                    <a class="nav-link text-success" href="{{ url_for('replit_auth.login') }}">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    {% endif %}
                 </nav>
             </div>
             

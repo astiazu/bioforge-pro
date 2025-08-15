@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}{% if publication %}Editar Publicación{% else %}Nueva Publicación{% endif %} - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-6">
+                    <i class="fas fa-newspaper me-3 text-info"></i>
+                    {% if publication %}Editar Publicación{% else %}Nueva Publicación{% endif %}
+                </h1>
+                <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Panel
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Detalles de la Publicación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="title" 
+                                           name="title" 
+                                           value="{{ publication.title if publication else '' }}" 
+                                           placeholder="Título de la publicación..."
+                                           required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="type" class="form-label">Tipo <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="type" name="type" required>
+                                        <option value="">Seleccionar tipo...</option>
+                                        {% set types = ["Educativo", "Caso de éxito", "Autoridad técnica", "Tutorial", "Análisis"] %}
+                                        {% for pub_type in types %}
+                                        <option value="{{ pub_type }}" {% if publication and publication.type == pub_type %}selected{% endif %}>
+                                            {{ pub_type }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="excerpt" class="form-label">Resumen/Extracto</label>
+                            <textarea class="form-control" 
+                                      id="excerpt" 
+                                      name="excerpt" 
+                                      rows="3" 
+                                      placeholder="Breve resumen de la publicación (opcional)...">{{ publication.excerpt if publication else '' }}</textarea>
+                            <div class="form-text">Máximo 500 caracteres</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Contenido <span class="text-danger">*</span></label>
+                            <textarea class="form-control" 
+                                      id="content" 
+                                      name="content" 
+                                      rows="15" 
+                                      placeholder="Contenido completo de la publicación..."
+                                      required>{{ publication.content if publication else '' }}</textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Puedes usar markdown y HTML básico para formato
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Etiquetas</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="tags" 
+                                   name="tags" 
+                                   value="{{ publication.tags if publication else '' }}" 
+                                   placeholder="python, datos, análisis, tutorial (separadas por comas)">
+                            <div class="form-text">Etiquetas separadas por comas para mejorar la búsqueda</div>
+                        </div>
+                        
+                        {% if publication %}
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-1">
+                                        <strong>Estado:</strong> 
+                                        <span class="badge {% if publication.is_published %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                            {% if publication.is_published %}Publicado{% else %}Borrador{% endif %}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-1">
+                                        <strong>Creada:</strong> {{ publication.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="text-muted mb-1">
+                                        <strong>Modificada:</strong> {{ publication.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if publication %}Actualizar{% else %}Crear{% endif %} Publicación
+                                </button>
+                                <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            
+                            {% if publication %}
+                            <div>
+                                <a href="{{ url_for('view_publication', pub_id=publication.id) }}" 
+                                   class="btn btn-info me-2" target="_blank">
+                                    <i class="fas fa-external-link-alt me-2"></i>Vista Previa
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_publication', pub_id=publication.id) }}" 
+                                      class="d-inline">
+                                    <button type="submit" 
+                                            class="btn btn-danger" 
+                                            onclick="return confirm('¿Estás seguro de eliminar esta publicación?')">
+                                        <i class="fas fa-trash me-2"></i>Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counter for excerpt
+const excerptTextarea = document.getElementById('excerpt');
+const maxExcerptLength = 500;
+
+if (excerptTextarea) {
+    const counterDiv = document.createElement('div');
+    counterDiv.className = 'form-text text-end mt-1';
+    excerptTextarea.parentNode.appendChild(counterDiv);
+    
+    function updateCounter() {
+        const remaining = maxExcerptLength - excerptTextarea.value.length;
+        counterDiv.textContent = `${remaining} caracteres restantes`;
+        counterDiv.className = `form-text text-end mt-1 ${remaining < 0 ? 'text-danger' : remaining < 50 ? 'text-warning' : ''}`;
+    }
+    
+    excerptTextarea.addEventListener('input', updateCounter);
+    updateCounter();
+}
+
+// Auto-save functionality
+let saveTimer;
+const formInputs = document.querySelectorAll('#title, #type, #excerpt, #content, #tags');
+
+function autoSave() {
+    const draft = {
+        title: document.getElementById('title').value,
+        type: document.getElementById('type').value,
+        excerpt: document.getElementById('excerpt').value,
+        content: document.getElementById('content').value,
+        tags: document.getElementById('tags').value,
+        timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('publication_draft', JSON.stringify(draft));
+}
+
+function loadDraft() {
+    const draft = localStorage.getItem('publication_draft');
+    if (draft && !document.getElementById('title').value) {
+        const data = JSON.parse(draft);
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('type').value = data.type || '';
+        document.getElementById('excerpt').value = data.excerpt || '';
+        document.getElementById('content').value = data.content || '';
+        document.getElementById('tags').value = data.tags || '';
+    }
+}
+
+formInputs.forEach(input => {
+    input.addEventListener('input', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(autoSave, 2000);
+    });
+});
+
+// Load draft on page load
+{% if not publication %}
+loadDraft();
+{% endif %}
+
+// Clear draft on form submit
+document.querySelector('form').addEventListener('submit', () => {
+    localStorage.removeItem('publication_draft');
+});
+</script>
+{% endblock %}

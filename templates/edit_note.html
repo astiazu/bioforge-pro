@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}{% if note %}Editar Nota{% else %}Nueva Nota{% endif %} - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-6">
+                    <i class="fas fa-edit me-3 text-info"></i>
+                    {% if note %}Editar Nota{% else %}Nueva Nota{% endif %}
+                </h1>
+                <a href="{{ url_for('notes') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Notas
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        Detalles de la Nota
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   value="{{ note.title if note else '' }}" 
+                                   placeholder="Escribe el título de tu nota..."
+                                   required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Contenido <span class="text-danger">*</span></label>
+                            <textarea class="form-control" 
+                                      id="content" 
+                                      name="content" 
+                                      rows="12" 
+                                      placeholder="Escribe el contenido de tu nota aquí..."
+                                      required>{{ note.content if note else '' }}</textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Puedes usar markdown básico para formato
+                            </div>
+                        </div>
+                        
+                        {% if note %}
+                        <div class="mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-1">
+                                        <strong>Estado:</strong> 
+                                        <span class="badge {{ note.status_class }}">{{ note.status_display }}</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-1">
+                                        <strong>Creada:</strong> {{ note.created_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                                {% if note.approved_at %}
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-1">
+                                        <strong>Aprobada:</strong> {{ note.approved_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                                {% if note.updated_at != note.created_at %}
+                                <div class="col-md-6">
+                                    <p class="text-muted mb-1">
+                                        <strong>Última modificación:</strong> {{ note.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <hr>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-success me-2">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if note %}Actualizar Nota{% else %}Crear Nota{% endif %}
+                                </button>
+                                <a href="{{ url_for('notes') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            
+                            {% if note and not current_user.is_admin() %}
+                            <div>
+                                {% if note.status.value == 'private' %}
+                                <form method="POST" action="{{ url_for('request_publish_note', note_id=note.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-info">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        Solicitar Publicación
+                                    </button>
+                                </form>
+                                {% elif note.status.value == 'pending' %}
+                                <span class="badge bg-warning text-dark p-2">
+                                    <i class="fas fa-clock me-1"></i>Pendiente de Aprobación
+                                </span>
+                                {% elif note.status.value == 'published' %}
+                                <span class="badge bg-success p-2">
+                                    <i class="fas fa-check-circle me-1"></i>Publicada
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Preview Card -->
+            {% if note %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-eye me-2"></i>Vista Previa
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ note.title }}</h5>
+                    <div class="card-text" style="white-space: pre-wrap;">{{ note.content }}</div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Por {{ note.author.full_name }} • {{ note.created_at.strftime('%d/%m/%Y') }}
+                        </small>
+                        <span class="badge {{ note.status_class }}">{{ note.status_display }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-save draft functionality
+let saveTimer;
+const titleInput = document.getElementById('title');
+const contentInput = document.getElementById('content');
+
+function autoSave() {
+    const draft = {
+        title: titleInput.value,
+        content: contentInput.value,
+        timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('note_draft', JSON.stringify(draft));
+}
+
+function loadDraft() {
+    const draft = localStorage.getItem('note_draft');
+    if (draft && !titleInput.value && !contentInput.value) {
+        const data = JSON.parse(draft);
+        titleInput.value = data.title || '';
+        contentInput.value = data.content || '';
+    }
+}
+
+[titleInput, contentInput].forEach(input => {
+    input.addEventListener('input', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(autoSave, 1000);
+    });
+});
+
+// Load draft on page load
+loadDraft();
+
+// Clear draft on form submit
+document.querySelector('form').addEventListener('submit', () => {
+    localStorage.removeItem('note_draft');
+});
+</script>
+{% endblock %}

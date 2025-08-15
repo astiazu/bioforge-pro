@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}{{ publication.title }} - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('publications') }}">Publicaciones</a></li>
+                    <li class="breadcrumb-item active">{{ publication.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <article class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Publication Header -->
+            <header class="mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge {{ publication.type_color.replace('text-', 'bg-') }} mb-2">
+                            <i class="fas {{ publication.type_icon }} me-1"></i>
+                            {{ publication.type }}
+                        </span>
+                        <h1 class="display-6 mb-3">{{ publication.title }}</h1>
+                    </div>
+                    
+                    {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('edit_publication', pub_id=publication.id) }}">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ url_for('delete_publication', pub_id=publication.id) }}" 
+                                      onsubmit="return confirm('¿Estás seguro?')">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-trash me-2"></i>Eliminar
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Publication Meta -->
+                <div class="d-flex flex-wrap align-items-center text-muted mb-4">
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-user me-1"></i>
+                        Por {{ publication.author.full_name }}
+                    </div>
+                    
+                    {% if publication.published_at %}
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ publication.published_at.strftime('%d de %B, %Y') }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if publication.read_time %}
+                    <div class="me-4 mb-2">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ publication.read_time }} min de lectura
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-2">
+                        <i class="fas fa-eye me-1"></i>
+                        <span id="viewCount">-</span> visualizaciones
+                    </div>
+                </div>
+                
+                <!-- Tags -->
+                {% if publication.tag_list %}
+                <div class="mb-4">
+                    {% for tag in publication.tag_list %}
+                    <span class="badge bg-dark me-2 mb-1">#{{ tag }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </header>
+            
+            <!-- Publication Content -->
+            <div class="card">
+                <div class="card-body">
+                    {% if publication.excerpt and publication.excerpt != publication.content[:500] %}
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-lightbulb me-2"></i>Resumen
+                        </h6>
+                        <p class="mb-0">{{ publication.excerpt }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="publication-content" style="line-height: 1.6;">
+                        {{ publication.content | safe | replace('\n', '<br>') }}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Share Section -->
+            <div class="card mt-4 bg-dark border-secondary">
+                <div class="card-body">
+                    <h6 class="card-title text-light">
+                        <i class="fas fa-share-alt me-2"></i>
+                        Compartir esta publicación
+                    </h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="shareOn('twitter')">
+                            <i class="fab fa-twitter me-1"></i>Twitter
+                        </button>
+                        <button class="btn btn-info btn-sm" onclick="shareOn('linkedin')">
+                            <i class="fab fa-linkedin me-1"></i>LinkedIn
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="shareOn('whatsapp')">
+                            <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="copyLink()">
+                            <i class="fas fa-link me-1"></i>Copiar enlace
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{{ url_for('publications') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver a Publicaciones
+                </a>
+                
+                <a href="{{ url_for('index') }}#contact" class="btn btn-info">
+                    <i class="fas fa-envelope me-2"></i>Contactar al Autor
+                </a>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 2rem;">
+                <!-- Author Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>Sobre el Autor
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-circle fa-4x text-secondary mb-3"></i>
+                        <h6 class="card-title">José Luis Astiazu</h6>
+                        <p class="card-text text-muted small">{{ bio_short }}</p>
+                        <a href="{{ url_for('portfolio') }}" class="btn btn-outline-info btn-sm">
+                            Ver Portafolio
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Related Content -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-bookmark me-2"></i>Contenido Relacionado
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="{{ url_for('publications') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-newspaper me-2 text-info"></i>
+                                Más Publicaciones
+                            </a>
+                            <a href="{{ url_for('portfolio') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-folder me-2 text-success"></i>
+                                Ver Portafolio
+                            </a>
+                            <a href="{{ url_for('data_analysis') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-chart-line me-2 text-warning"></i>
+                                Análisis de Datos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+
+<script>
+// Share functions
+function shareOn(platform) {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent(document.title);
+    const text = encodeURIComponent('{{ publication.excerpt or publication.title }}');
+    
+    let shareUrl = '';
+    
+    switch(platform) {
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${text}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+            break;
+        case 'whatsapp':
+            shareUrl = `https://wa.me/?text=${text}%20${url}`;
+            break;
+    }
+    
+    if (shareUrl) {
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>¡Copiado!';
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-secondary');
+        }, 2000);
+    });
+}
+
+// Track view count (simple localStorage-based counter)
+function trackView() {
+    const publicationId = '{{ publication.id }}';
+    const viewKey = `publication_${publicationId}_viewed`;
+    const countKey = `publication_${publicationId}_count`;
+    
+    if (!localStorage.getItem(viewKey)) {
+        localStorage.setItem(viewKey, 'true');
+        let count = parseInt(localStorage.getItem(countKey) || '0');
+        count++;
+        localStorage.setItem(countKey, count.toString());
+    }
+    
+    const count = localStorage.getItem(countKey) || '0';
+    document.getElementById('viewCount').textContent = count;
+}
+
+// Initialize view tracking
+trackView();
+</script>
+{% endblock %}
