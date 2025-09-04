@@ -1,0 +1,82 @@
+<!-- templates/public/perfil_profesional.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Foto y datos principales -->
+        <div class="col-lg-4 text-center mb-4">
+            <img src="{{ doctor.profile_photo }}" 
+                 class="img-fluid rounded-circle mb-3" 
+                 alt="{{ doctor.username }}"
+                 style="width: 150px; height: 150px; object-fit: cover;">
+            <h2>{{ doctor.username }}</h2>
+            <p class="text-primary h5">{{ doctor.specialty }}</p>
+            <span class="badge bg-primary mb-3">{{ doctor.professional_category }}</span>
+            <p class="text-muted">{{ doctor.bio }}</p>
+            
+            {% if doctor.years_experience %}
+            <p><strong>{{ doctor.years_experience }} años</strong> de experiencia</p>
+            {% endif %}
+        </div>
+
+        <!-- Detalles -->
+        <div class="col-lg-8">
+            <!-- Servicios -->
+            {% if doctor.services %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Servicios que ofrezco</h4>
+                    <p>{{ doctor.services }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Habilidades -->
+            {% if doctor.skills %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Habilidades</h4>
+                    <div class="row">
+                        {% for skill in doctor.skills %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ skill.name }}</span>
+                                <span>{{ skill.level }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" 
+                                     role="progressbar" 
+                                     style="width: {{ skill.level }}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Consultorios -->
+            {% if clinics %}
+            <div class="card">
+                <div class="card-body">
+                    <h4>Ubicaciones</h4>
+                    {% for clinic in clinics %}
+                    <div class="mb-3 p-3 border rounded">
+                        <h5>{{ clinic.name }}</h5>
+                        <p class="mb-1"><i class="fas fa-map-marker-alt"></i> {{ clinic.address }}</p>
+                        <p class="mb-1"><i class="fas fa-phone"></i> {{ clinic.phone }}</p>
+                        <a href="{{ url_for('routes.calendario_turnos', doctor_id=doctor.id, clinic_id=clinic.id) }}" 
+                           class="btn btn-success btn-sm">
+                            Pedir turno aquí
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

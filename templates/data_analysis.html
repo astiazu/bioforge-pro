@@ -1,3 +1,4 @@
+<!-- templates/data_analisys.html -->
 {% extends "base.html" %}
 
 {% block title %}Análisis de Datos - Portafolio José Luis Astiazu{% endblock %}
@@ -158,6 +159,18 @@
                 </div>
             </div>
         </div>
+        <!-- Botón de descarga -->
+        <div class="mt-3 text-center">
+            {% if current_user.is_authenticated %}
+                <button id="downloadChart" class="btn btn-success">
+                    <i class="fas fa-download"></i> Descargar Gráfico como PNG
+                </button>
+            {% else %}
+                <small class="text-bg-warning p-2 rounded">
+                    Para descargar el gráfico, debes estar registrado.
+                </small>
+            {% endif %}
+        </div>
     </div>
     
     <!-- Info Section -->
@@ -206,5 +219,6 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/data-analysis.js') }}"></script>
 {% endblock %}

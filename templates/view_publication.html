@@ -1,3 +1,4 @@
+<!-- # template/view_publication.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ publication.title }} - Portafolio José Luis Astiazu{% endblock %}
@@ -8,8 +9,8 @@
         <div class="col-12">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('publications') }}">Publicaciones</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('routes.index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('routes.publications') }}">Publicaciones</a></li>
                     <li class="breadcrumb-item active">{{ publication.title }}</li>
                 </ol>
             </nav>
@@ -29,7 +30,7 @@
                         <h1 class="display-6 mb-3">{{ publication.title }}</h1>
                     </div>
                     
-                    {% if current_user.is_authenticated and current_user.is_admin() %}
+                    {% if current_user.is_authenticated and current_user.is_admin %}
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
                                 type="button" data-bs-toggle="dropdown">
@@ -37,13 +38,13 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('edit_publication', pub_id=publication.id) }}">
+                                <a class="dropdown-item" href="{{ url_for('routes.edit_publication', pub_id=publication.id) }}">
                                     <i class="fas fa-edit me-2"></i>Editar
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ url_for('delete_publication', pub_id=publication.id) }}" 
+                                <form method="POST" action="{{ url_for('routes.delete_publication', pub_id=publication.id) }}" 
                                       onsubmit="return confirm('¿Estás seguro?')">
                                     <button type="submit" class="dropdown-item text-danger">
                                         <i class="fas fa-trash me-2"></i>Eliminar
@@ -136,11 +137,11 @@
             
             <!-- Navigation -->
             <div class="d-flex justify-content-between mt-5">
-                <a href="{{ url_for('publications') }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('routes.publications') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Volver a Publicaciones
                 </a>
                 
-                <a href="{{ url_for('index') }}#contact" class="btn btn-info">
+                <a href="{{ url_for('routes.index') }}#contact" class="btn btn-info">
                     <i class="fas fa-envelope me-2"></i>Contactar al Autor
                 </a>
             </div>
@@ -160,7 +161,7 @@
                         <i class="fas fa-user-circle fa-4x text-secondary mb-3"></i>
                         <h6 class="card-title">José Luis Astiazu</h6>
                         <p class="card-text text-muted small">{{ bio_short }}</p>
-                        <a href="{{ url_for('portfolio') }}" class="btn btn-outline-info btn-sm">
+                        <a href="{{ url_for('routes.portfolio') }}" class="btn btn-outline-info btn-sm">
                             Ver Portafolio
                         </a>
                     </div>
@@ -175,15 +176,15 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <a href="{{ url_for('publications') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('routes.publications') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-newspaper me-2 text-info"></i>
                                 Más Publicaciones
                             </a>
-                            <a href="{{ url_for('portfolio') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('routes.portfolio') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-folder me-2 text-success"></i>
                                 Ver Portafolio
                             </a>
-                            <a href="{{ url_for('data_analysis') }}" class="list-group-item list-group-item-action">
+                            <a href="{{ url_for('routes.data_analysis') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-chart-line me-2 text-warning"></i>
                                 Análisis de Datos
                             </a>

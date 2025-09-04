@@ -1,0 +1,23 @@
+# Entorno virtual
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Base de datos
+instance/
+portfolio.db
+
+# Archivos temporales
+temp_csv/
+uploads/
+static/uploads/
+
+# Variables de entorno
+.env
+.flaskenv
+
+# IDE
+.DS_Store
+.vscode/
+.idea/

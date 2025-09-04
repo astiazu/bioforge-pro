@@ -1,172 +1,101 @@
+<!-- templates/notes.html -->
 {% extends "base.html" %}
 
-{% block title %}Mis Notas - Portafolio José Luis Astiazu{% endblock %}
-
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-5">
-                <div class="text-center w-100">
-                    <h1 class="display-5 mb-3">
-                        <i class="fas fa-sticky-note me-3 text-info"></i>
-                        Mis Notas
-                    </h1>
-                    <p class="lead text-muted">
-                        Crea, gestiona y comparte tus ideas y pensamientos
-                    </p>
-                </div>
-            </div>
+<div class="container mt-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Mis Notas</h2>
+    <a href="{{ url_for('routes.edit_note') }}" class="btn btn-primary">➕ Nueva
+      nota</a>
+  </div>
+
+  <!-- Mis notas -->
+  {% if user_notes %}
+  <h5 class="mb-3">Tus Notas</h5>
+  <div class="row">
+    {% for note in user_notes %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ note.title }}</h5>
+          <p class="card-text text-muted">{{ note.content[:100] }}...</p>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('routes.edit_note', note_id=note.id) }}"
+              class="btn btn-sm btn-outline-primary">Editar</a>
+            <a href="{{ url_for('routes.view_note', note_id=note.id) }}"
+              class="btn btn-sm btn-outline-info">Ver</a>
+            {% if note.status == 'private' %}
+            <form method="POST"
+              action="{{ url_for('routes.request_publish_note', note_id=note.id) }}"
+              class="d-inline">
+              <button type="submit" class="btn btn-sm btn-warning text-light">📤
+                Solicitar Publicar</button>
+            </form>
+            {% endif %}
+          </div>
+          <small class="text-muted mt-2 d-block">
+            Estado: <span class="badge {{ note.status_class }}">{{
+              note.status_display }}</span>
+          </small>
         </div>
+      </div>
     </div>
-    
-    <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-center gap-3">
-                <a href="{{ url_for('edit_note') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Nueva Nota
-                </a>
-                {% if current_user.is_admin() %}
-                <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-info">
-                    <i class="fas fa-cog me-2"></i>Panel Admin
-                </a>
-                {% endif %}
-            </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Notas de otros usuarios (solo admin) -->
+  {% if current_user.is_admin and other_notes %}
+  <h5 class="mb-3 mt-5">Notas de Usuarios ({{ other_notes|length }})</h5>
+  <div class="row">
+    {% for note in other_notes %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100 border-warning">
+        <div class="card-body">
+          <h5 class="card-title">{{ note.title }}</h5>
+          <p class="card-text text-muted">{{ note.content[:100] }}...</p>
+          <p class="text-muted small">
+            Por: {{ note.author.username }} |
+            Estado: <span class="badge {{ note.status_class }}">{{
+              note.status_display }}</span>
+          </p>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('routes.view_note', note_id=note.id) }}"
+              class="btn btn-sm btn-outline-info">Ver</a>
+            <a href="{{ url_for('routes.edit_note', note_id=note.id) }}"
+              class="btn btn-sm btn-outline-warning">Editar</a>
+            {% if note.status == 'pending' %}
+            <form method="POST"
+              action="{{ url_for('routes.admin_approve_note', note_id=note.id) }}"
+              class="d-inline">
+              <button type="submit" class="btn btn-sm btn-success">✅
+                Aprobar</button>
+            </form>
+            <form method="POST"
+              action="{{ url_for('routes.admin_reject_note', note_id=note.id) }}"
+              class="d-inline">
+              <button type="submit" class="btn btn-sm btn-danger">❌
+                Rechazar</button>
+            </form>
+            {% else %}
+            <form method="POST"
+              action="{{ url_for('routes.delete_note', note_id=note.id) }}"
+              class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-danger"
+                onclick="return confirm('¿Eliminar?')">Eliminar</button>
+            </form>
+            {% endif %}
+          </div>
         </div>
+      </div>
     </div>
-    
-    <!-- Notes Grid -->
-    <div class="row g-4">
-        {% if user_notes %}
-            {% for note in user_notes %}
-            <div class="col-lg-4 col-md-6">
-                <div class="card h-100">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <h6 class="card-title mb-0">{{ note.title }}</h6>
-                            <span class="badge {{ note.status_class }}">{{ note.status_display }}</span>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text text-muted">{{ note.content[:150] }}{% if note.content|length > 150 %}...{% endif %}</p>
-                        
-                        <div class="mt-auto">
-                            <small class="text-muted d-block mb-2">
-                                <i class="fas fa-calendar me-1"></i>
-                                {{ note.created_at.strftime('%d/%m/%Y %H:%M') }}
-                            </small>
-                            
-                            {% if note.status.value == 'published' %}
-                            <small class="text-success d-block mb-2">
-                                <i class="fas fa-check-circle me-1"></i>
-                                Aprobada el {{ note.approved_at.strftime('%d/%m/%Y') if note.approved_at }}
-                            </small>
-                            {% elif note.status.value == 'pending' %}
-                            <small class="text-warning d-block mb-2">
-                                <i class="fas fa-clock me-1"></i>
-                                Pendiente de aprobación
-                            </small>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="btn-group btn-group-sm">
-                                {% if note.status.value == 'published' %}
-                                <a href="{{ url_for('view_note', note_id=note.id) }}" class="btn btn-info" title="Ver">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{{ url_for('edit_note', note_id=note.id) }}" class="btn btn-warning" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}" class="d-inline">
-                                    <button type="submit" class="btn btn-danger" title="Eliminar" onclick="return confirm('¿Eliminar esta nota?')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            {% if note.status.value == 'private' %}
-                            <form method="POST" action="{{ url_for('request_publish_note', note_id=note.id) }}" class="d-inline">
-                                <button type="submit" class="btn btn-success btn-sm" title="Solicitar publicación">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-        <!-- Empty State -->
-        <div class="col-12">
-            <div class="text-center py-5">
-                <i class="fas fa-sticky-note fa-5x text-muted mb-4 opacity-50"></i>
-                <h4 class="text-muted mb-3">No tienes notas aún</h4>
-                <p class="text-muted mb-4">
-                    Las notas te permiten guardar ideas, pensamientos y contenido que después 
-                    puedes solicitar publicar para compartir con otros.
-                </p>
-                <a href="{{ url_for('edit_note') }}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-plus me-2"></i>Crear tu Primera Nota
-                </a>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    
-    <!-- Info Section -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="card bg-dark border-secondary">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2 text-info"></i>
-                        Sobre el Sistema de Notas
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-lock fa-2x text-secondary me-3"></i>
-                                <div>
-                                    <h6 class="text-light mb-2">Privadas</h6>
-                                    <p class="text-muted small mb-0">
-                                        Tus notas inician como privadas. Solo tú puedes verlas y editarlas.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-paper-plane fa-2x text-warning me-3"></i>
-                                <div>
-                                    <h6 class="text-light mb-2">Solicitar Publicación</h6>
-                                    <p class="text-muted small mb-0">
-                                        Puedes solicitar que tu nota sea revisada para publicación pública.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-globe fa-2x text-success me-3"></i>
-                                <div>
-                                    <h6 class="text-light mb-2">Publicadas</h6>
-                                    <p class="text-muted small mb-0">
-                                        Una vez aprobadas, las notas aparecen en la sección de publicaciones.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- No hay notas -->
+  {% if not user_notes and not other_notes %}
+  <p class="text-muted">No tenés notas aún.</p>
+  {% endif %}
 </div>
 {% endblock %}

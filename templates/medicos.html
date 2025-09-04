@@ -1,0 +1,45 @@
+<!-- templates/medicos.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Profesionales Disponibles</h2>
+
+    {% if current_user.is_authenticated and current_user.is_professional %}
+        <!-- ✅ Médico ve un mensaje personalizado -->
+        <div class="alert alert-info text-center">
+            <h4>👋 Hola, {{ current_user.username }}</h4>
+            <p>Este es tu espacio profesional.</p>
+            <div class="mt-3">
+                <a href="{{ url_for('routes.mi_perfil') }}" class="btn btn-primary me-2">Ver mi perfil</a>
+                <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-success">Gestionar mi agenda</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- ✅ Pacientes ven lista de médicos -->
+        {% if doctors %}
+        <div class="row">
+            {% for doctor in doctors %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ doctor.username }}</h5>
+                        {% if doctor.specialty %}
+                        <p class="text-primary fw-bold mb-1"><i class="fas fa-stethoscope"></i> {{ doctor.specialty }}</p>
+                        {% endif %}
+                        {% if doctor.bio %}
+                        <p class="card-text text-muted">{{ doctor.bio[:80] }}{% if doctor.bio|length > 80 %}...{% endif %}</p>
+                        {% endif %}
+                        <a href="{{ url_for('routes.perfil_medico', doctor_id=doctor.id) }}" 
+                           class="btn btn-primary btn-sm">Ver consultorios</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No hay profesionales registrados aún.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+<!-- templates/admin/roles.html -->
+{% extends "base.html" %}
+
+{% block title %}Gestión de Roles - Panel Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🔐 Gestión de Roles de Usuario</h2>
+        <a href="{{ url_for('routes.admin_nuevo_rol') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Rol
+        </a>
+    </div>
+
+    {% if message %}
+    <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+
+    {% if roles %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Rol</th>
+                    <th>Descripción</th>
+                    <th>Usuarios</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rol in roles %}
+                <tr>
+                    <td><strong>{{ rol.name }}</strong></td>
+                    <td>{{ rol.description or 'Sin descripción' }}</td>
+                    <td>{{ rol.users|length }}</td>
+                    <td>
+                        {% if rol.is_active %}
+                        <span class="badge bg-success">Activo</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Desactivar/activar -->
+                        <form method="POST" action="{{ url_for('routes.admin_toggle_rol', rol_id=rol.id) }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm 
+                                {% if rol.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                                {% if rol.is_active %}Desactivar{% else %}Activar{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning text-center">
+        <strong>No hay roles definidos.</strong> Crea uno nuevo para empezar.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

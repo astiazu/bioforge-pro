@@ -1,0 +1,30 @@
+<!-- templates/editar_consultorio.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Editar Consultorio</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ clinic.name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="address" class="form-label">Dirección</label>
+            <input type="text" class="form-control" id="address" name="address" value="{{ clinic.address }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label">Teléfono</label>
+            <input type="text" class="form-control" id="phone" name="phone" value="{{ clinic.phone }}">
+        </div>
+        <div class="mb-3">
+            <label for="specialty" class="form-label">Especialidad</label>
+            <input type="text" class="form-control" id="specialty" name="specialty" value="{{ clinic.specialty }}">
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Actualizar</button>
+            <a href="{{ url_for('routes.perfil_medico', doctor_id=current_user.id) }}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+<!-- templates/profesionales.html -->
+{% extends "base.html" %}
+
+{% block title %}Profesionales - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-5">Encuentra al profesional que necesitas</h1>
+        <p class="lead text-muted">Expertos verificados en tecnología, salud, educación y más</p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('routes.profesionales') }}">
+                        <div class="row align-items-center">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <select name="category" class="form-select">
+                                    <option value="">Todos los roles</option>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>
+                                        {{ cat }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100">Filtrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de profesionales -->
+    <div class="row g-4">
+        {% for prof in professionals %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-light">
+                <div class="position-relative">
+                    <img src="{{ prof.profile_photo }}" 
+                         class="card-img-top" 
+                         alt="{{ prof.username }}"
+                         style="height: 200px; object-fit: cover;">
+                    <!-- ✅ Mostrar rol con buen contraste -->
+                    <span class="position-absolute top-0 end-0 m-2 badge bg-primary text-white fs-6">
+                        {{ prof.role_name }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark">{{ prof.username }}</h5>
+                    <p class="text-primary fw-bold">{{ prof.specialty }}</p>
+                    
+                    <!-- ✅ Texto visible: usar color más oscuro -->
+                    <p class="card-text text-dark-75" style="opacity: 0.8;">
+                        {% set bio = prof.bio or '' %}
+                        {{ bio[:120] }}{% if bio | length > 120 %}...{% endif %}
+                    </p>
+                    
+                    <!-- Habilidades -->
+                    <div class="mb-3">
+                        {% set user_skills = prof.skills if prof.skills else [] %}
+                        {% for skill in user_skills[:3] %}
+                            {% if skill.get('name') %}
+                                <span class="badge bg-info text-dark me-1">{{ skill.name }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('routes.perfil_publico_profesional', url_slug=prof.url_slug) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            Ver perfil
+                        </a>
+                        {% if prof.clinics and prof.clinics|length > 0 %}
+                        <a href="{{ url_for('routes.calendario_turnos', doctor_id=prof.id, clinic_id=prof.clinics[0].id) }}" 
+                           class="btn btn-success btn-sm">
+                            Pedir turno
+                        </a>
+                        {% else %}
+                        <button class="btn btn-secondary btn-sm" disabled>Sin agenda</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not professionals %}
+    <div class="text-center py-5">
+        <h4>No hay profesionales en esta categoría</h4>
+        <a href="{{ url_for('routes.profesionales') }}" class="btn btn-secondary">Ver todos</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

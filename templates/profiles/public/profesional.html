@@ -1,0 +1,27 @@
+<!-- templates/profiles/public/profesional.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ doctor.username }} - Perfil{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <img src="{{ doctor.profile_photo or '/static/img/default-avatar.png' }}" 
+             class="rounded-circle mb-3" 
+             alt="{{ doctor.username }}" 
+             style="width: 150px; height: 150px; object-fit: cover;">
+        <h1>{{ doctor.username }}</h1>
+        
+        <p class="lead text-primary">{{ doctor.specialty }}</p>
+        <p>{{ doctor.bio }}</p>
+        <p>{{ doctor.bio }}</p>
+    </div>
+
+    <!-- ✅ Aquí va el contenido específico por rol -->
+    {% if doctor.role_name == 'Tienda' %}
+        {% include 'profiles/public/tienda_content.html' %}
+    {% elif doctor.role_name == 'Profesional' %}
+        {% include 'profiles/public/profesional_content.html' %}
+    {% endif %}
+</div>
+{% endblock %}

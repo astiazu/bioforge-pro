@@ -1,0 +1,49 @@
+<!-- templates/turnos.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>📅 Disponibilidad - {{ clinic.name }}</h3>
+            <p class="mb-0">{{ clinic.address }} | Tel: {{ clinic.phone }}</p>
+        </div>
+        <div class="card-body">
+            <!-- ✅ Usa 'availability', no 'grouped' -->
+            {% if availability %}
+                <!-- Agrupar manualmente por fecha -->
+                {% set seen_dates = [] %}
+                {% for slot in availability %}
+                    {% if slot.date not in seen_dates %}
+                        {% if not seen_dates %}{% set _ = seen_dates.append(slot.date) %}{% endif %}
+                        <div class="mb-4">
+                            <h5 class="text-primary">{{ slot.date.strftime('%A %d de %B') }}</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for s in availability if s.date == slot.date %}
+                                <div class="d-inline-block">
+                                    <form method="POST" action="{{ url_for('routes.reservar_turno') }}" class="text-center">
+                                        <input type="hidden" name="availability_id" value="{{ s.id }}">
+                                        <div class="mb-2">
+                                            <input type="text" name="patient_name" placeholder="Tu nombre" required class="form-control form-control-sm">
+                                            <input type="email" name="patient_email" placeholder="Tu email" required class="form-control form-control-sm mt-1">
+                                        </div>
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            {{ s.time.strftime('%H:%M') }}
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-calendar-alt"></i>
+                    No hay disponibilidad para este consultorio.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

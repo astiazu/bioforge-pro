@@ -1,0 +1,84 @@
+<!-- templates/editar_perfil_medico.html -->
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">✏️ Editar Perfil Profesional</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="specialty" class="form-label">Especialidad</label>
+                                    <input type="text" class="form-control" id="specialty" name="specialty" value="{{ user.specialty }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="license_number" class="form-label">Matrícula</label>
+                                    <input type="text" class="form-control" id="license_number" name="license_number" value="{{ user.license_number }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Biografía</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="4">{{ user.bio }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="years_experience" class="form-label">Años de experiencia</label>
+                            <input type="number" class="form-control" id="years_experience" name="years_experience" value="{{ user.years_experience }}">
+                        </div>
+
+                        <!-- ✅ Servicios que ofrece -->
+                        <div class="mb-3">
+                            <label for="services" class="form-label">Servicios que ofreces</label>
+                            <textarea class="form-control" id="services" name="services" rows="3" placeholder="Ej: Consulta inicial, seguimiento, terapia cognitivo-conductual">{{ user.services }}</textarea>
+                            <div class="form-text">Describe brevemente los servicios o tratamientos que ofrecés.</div>
+                        </div>
+
+                        <!-- ✅ Campo para el slug -->
+                        <div class="mb-3">
+                            <label for="url_slug" class="form-label">Tu enlace público</label>
+                            <div class="input-group">
+                                <span class="input-group-text">/profesional/</span>
+                                <input type="text" class="form-control" id="url_slug" name="url_slug"
+                                       value="{{ user.url_slug or user.username|lower|replace(' ', '-') }}"
+                                       placeholder="tu-nombre">
+                            </div>
+                            <div class="form-text">
+                                Este será tu enlace: <code>/profesional/tu-enlace</code>
+                            </div>
+                        </div>
+
+                        <!-- ✅ Subida de imagen -->
+                        <div class="mb-3">
+                            <label for="profile_photo" class="form-label">Foto de perfil</label>
+                            {% if user.profile_photo %}
+                                <div class="mb-2">
+                                    <img src="{{ user.profile_photo }}" alt="Foto actual" class="rounded" width="100">
+                                </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="profile_photo" name="profile_photo" accept="image/*">
+                            <div class="form-text">JPG, PNG o GIF. Máx 2MB.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                            <a href="{{ url_for('routes.mi_perfil') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

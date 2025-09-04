@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - {{ current_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <h2>Editar Perfil</h2>
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="specialty" class="form-label">Especialidad</label>
+                    <input type="text" class="form-control" id="specialty" name="specialty" value="{{ user.specialty }}">
+                </div>
+                <div class="mb-3">
+                    <label for="professional_category" class="form-label">Categoría Profesional</label>
+                    <input type="text" class="form-control" id="professional_category" name="professional_category" value="{{ user.professional_category }}">
+                </div>
+                <div class="mb-3">
+                    <label for="bio" class="form-label">Biografía</label>
+                    <textarea class="form-control" id="bio" name="bio" rows="4">{{ user.bio }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="years_experience" class="form-label">Años de experiencia</label>
+                    <input type="number" class="form-control" id="years_experience" name="years_experience" value="{{ user.years_experience }}">
+                </div>
+                <div class="mb-3">
+                    <label for="services" class="form-label">Servicios que ofreces</label>
+                    <textarea class="form-control" id="services" name="services" rows="3">{{ user.services }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="url_slug" class="form-label">Enlace personalizado (URL)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">/{{ request.url_root.split('//')[1].split('/')[0] }}/profesional/</span>
+                        <input type="text" class="form-control" id="url_slug" name="url_slug" value="{{ user.url_slug or user.username|lower|replace(' ', '-') }}">
+                    </div>
+                    <div class="form-text">Este será tu enlace público: <code>/profesional/tu-enlace</code></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Perfil</button>
+            </form>
+        </div>
+        <div class="col-lg-4">
+            <h5>Turnos Recibidos</h5>
+            {% if turnos_recibidos %}
+                <ul class="list-group">
+                    {% for turno in turnos_recibidos %}
+                        <li class="list-group-item">
+                            {{ turno.patient.username }} - {{ turno.availability.date }} {{ turno.availability.time }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No tienes turnos aún.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

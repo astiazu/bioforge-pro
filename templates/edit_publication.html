@@ -1,3 +1,4 @@
+<!-- templates/edit:publication.html-->
 {% extends "base.html" %}
 
 {% block title %}{% if publication %}Editar Publicación{% else %}Nueva Publicación{% endif %} - Portafolio José Luis Astiazu{% endblock %}
@@ -11,7 +12,7 @@
                     <i class="fas fa-newspaper me-3 text-info"></i>
                     {% if publication %}Editar Publicación{% else %}Nueva Publicación{% endif %}
                 </h1>
-                <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                <a href="{{ url_for('routes.admin_panel') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Volver al Panel
                 </a>
             </div>
@@ -125,18 +126,18 @@
                                     <i class="fas fa-save me-2"></i>
                                     {% if publication %}Actualizar{% else %}Crear{% endif %} Publicación
                                 </button>
-                                <a href="{{ url_for('admin_panel') }}" class="btn btn-secondary">
+                                <a href="{{ url_for('routes.admin_panel') }}" class="btn btn-secondary">
                                     <i class="fas fa-times me-2"></i>Cancelar
                                 </a>
                             </div>
                             
                             {% if publication %}
                             <div>
-                                <a href="{{ url_for('view_publication', pub_id=publication.id) }}" 
+                                <a href="{{ url_for('routes.view_publication', pub_id=publication.id) }}" 
                                    class="btn btn-info me-2" target="_blank">
                                     <i class="fas fa-external-link-alt me-2"></i>Vista Previa
                                 </a>
-                                <form method="POST" action="{{ url_for('delete_publication', pub_id=publication.id) }}" 
+                                <form method="POST" action="{{ url_for('routes.delete_publication', pub_id=publication.id) }}" 
                                       class="d-inline">
                                     <button type="submit" 
                                             class="btn btn-danger" 
@@ -211,7 +212,7 @@ formInputs.forEach(input => {
 
 // Load draft on page load
 {% if not publication %}
-loadDraft();
+    loadDraft();
 {% endif %}
 
 // Clear draft on form submit

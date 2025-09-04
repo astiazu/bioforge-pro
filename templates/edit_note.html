@@ -1,3 +1,4 @@
+<!-- templates/edit_note.html -->
 {% extends "base.html" %}
 
 {% block title %}{% if note %}Editar Nota{% else %}Nueva Nota{% endif %} - Portafolio José Luis Astiazu{% endblock %}
@@ -11,7 +12,7 @@
                     <i class="fas fa-edit me-3 text-info"></i>
                     {% if note %}Editar Nota{% else %}Nueva Nota{% endif %}
                 </h1>
-                <a href="{{ url_for('notes') }}" class="btn btn-secondary">
+                <a href="{{ url_for('routes.notes') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Volver a Notas
                 </a>
             </div>
@@ -28,7 +29,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="title" class="form-label">Título <span class="text-danger">*</span></label>
                             <input type="text" 
@@ -51,6 +52,39 @@
                             <div class="form-text">
                                 <i class="fas fa-info-circle me-1"></i>
                                 Puedes usar markdown básico para formato
+                            </div>
+                        </div>
+
+                        <!-- ✅ Imagen destacada -->
+                        <div class="mb-3">
+                            <label for="featured_image" class="form-label">Imagen destacada</label>
+                            
+                            <!-- Vista previa si ya existe -->
+                            {% if note and note.featured_image %}
+                                <div class="mb-2">
+                                    <img src="{{ note.featured_image }}" 
+                                         alt="Imagen actual" 
+                                         class="img-fluid rounded" 
+                                         style="max-height: 200px; object-fit: cover;">
+                                </div>
+                            {% endif %}
+                            
+                            <input type="url" 
+                                   class="form-control mb-2" 
+                                   id="image_url" 
+                                   name="image_url" 
+                                   value="{{ note.featured_image if note }}"
+                                   placeholder="https://ejemplo.com/imagen.jpg">
+                            <div class="form-text">O pega una URL de imagen</div>
+                            
+                            <div class="mt-2">
+                                <label for="upload_image" class="form-label">O sube una imagen</label>
+                                <input type="file" 
+                                       class="form-control" 
+                                       id="upload_image" 
+                                       name="upload_image" 
+                                       accept="image/*">
+                                <div class="form-text">JPG, PNG o GIF (máx. 2MB)</div>
                             </div>
                         </div>
                         
@@ -93,18 +127,18 @@
                                     <i class="fas fa-save me-2"></i>
                                     {% if note %}Actualizar Nota{% else %}Crear Nota{% endif %}
                                 </button>
-                                <a href="{{ url_for('notes') }}" class="btn btn-secondary">
+                                <a href="{{ url_for('routes.notes') }}" class="btn btn-secondary">
                                     <i class="fas fa-times me-2"></i>Cancelar
                                 </a>
                             </div>
                             
-                            {% if note and not current_user.is_admin() %}
+                            {% if note and not current_user.is_admin %}
                             <div>
                                 {% if note.status.value == 'private' %}
-                                <form method="POST" action="{{ url_for('request_publish_note', note_id=note.id) }}" class="d-inline">
+                                <form method="POST" action="{{ url_for('routes.request_publish_note', note_id=note.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-info">
                                         <i class="fas fa-paper-plane me-2"></i>
-                                        Solicitar Publicación
+                                        Solicitar Publicación ahora
                                     </button>
                                 </form>
                                 {% elif note.status.value == 'pending' %}
@@ -132,12 +166,17 @@
                     </h6>
                 </div>
                 <div class="card-body">
+                    <!-- ✅ Imagen en vista previa -->
+                    {% if note.featured_image %}
+                        <img src="{{ note.featured_image }}" class="img-fluid rounded mb-3" style="max-height: 300px; object-fit: cover;">
+                    {% endif %}
+                    
                     <h5 class="card-title">{{ note.title }}</h5>
                     <div class="card-text" style="white-space: pre-wrap;">{{ note.content }}</div>
                     <hr>
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
-                            Por {{ note.author.full_name }} • {{ note.created_at.strftime('%d/%m/%Y') }}
+                            Por {{ note.author.username }} • {{ note.created_at.strftime('%d/%m/%Y') }}
                         </small>
                         <span class="badge {{ note.status_class }}">{{ note.status_display }}</span>
                     </div>
@@ -158,6 +197,7 @@ function autoSave() {
     const draft = {
         title: titleInput.value,
         content: contentInput.value,
+        featured_image: document.getElementById('image_url').value,
         timestamp: new Date().toISOString()
     };
     localStorage.setItem('note_draft', JSON.stringify(draft));
@@ -169,14 +209,19 @@ function loadDraft() {
         const data = JSON.parse(draft);
         titleInput.value = data.title || '';
         contentInput.value = data.content || '';
+        if (data.featured_image) {
+            document.getElementById('image_url').value = data.featured_image;
+        }
     }
 }
 
-[titleInput, contentInput].forEach(input => {
-    input.addEventListener('input', () => {
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(autoSave, 1000);
-    });
+[titleInput, contentInput, document.getElementById('image_url')].forEach(input => {
+    if (input) {
+        input.addEventListener('input', () => {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(autoSave, 1000);
+        });
+    }
 });
 
 // Load draft on page load

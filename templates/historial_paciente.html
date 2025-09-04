@@ -1,0 +1,69 @@
+<!-- templates/historial_paciente.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Historial Clínico - {{ patient.username }}</h2>
+        <a href="{{ url_for('routes.nueva_nota', patient_id=patient.id) }}" class="btn btn-success">
+            + Nueva Nota
+        </a>
+    </div>
+
+    <!-- Información del paciente -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Paciente: {{ patient.username }}</h5>
+            <p><strong>Email:</strong> {{ patient.email }}</p>
+            <p><strong>Total de turnos:</strong> {{ turnos|length }}</p>
+        </div>
+    </div>
+
+    <!-- Turnos anteriores -->
+    <h4>📅 Turnos Anteriores</h4>
+    {% if turnos %}
+    <div class="table-responsive mb-4">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Consultorio</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for turno in turnos %}
+                <tr>
+                    <td>{{ turno.availability.date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ turno.availability.time.strftime('%H:%M') }}</td>
+                    <td>{{ turno.availability.clinic.name }}</td>
+                    <td><span class="badge bg-success">{{ turno.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No hay turnos registrados.</p>
+    {% endif %}
+
+    <!-- Notas clínicas -->
+    <h4>📝 Notas Clínicas</h4>
+    {% if notas %}
+        {% for nota in notas %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <h6 class="mb-1">{{ nota.title }}</h6>
+                    <small class="text-muted">{{ nota.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                </div>
+                <p class="card-text">{{ nota.notes }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">Aún no hay notas clínicas para este paciente.</p>
+    {% endif %}
+</div>
+{% endblock %}

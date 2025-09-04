@@ -1,0 +1,35 @@
+<!-- templates/admin/nuevo_rol.html -->
+{% extends "base.html" %}
+
+{% block title %}Nuevo Rol - Panel Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-tag"></i> Crear Nuevo Rol</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nombre del Rol *</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="form-text">Ej: Profesional, Tienda, Profesor, Visitante</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <button type="submit" class="btn btn-primary">Crear Rol</button>
+                            <a href="{{ url_for('routes.admin_roles') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

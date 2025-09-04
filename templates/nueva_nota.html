@@ -1,0 +1,20 @@
+<!-- templates/nueva_nota.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>➕ Nueva Nota Clínica - {{ patient.username }}</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">Título</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="notes" class="form-label">Notas</label>
+            <textarea class="form-control" id="notes" name="notes" rows="8" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar Nota</button>
+        <a href="{{ url_for('routes.historial_paciente', patient_id=patient.id) }}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+<!-- templates/view_note.html -->
 {% extends "base.html" %}
 
 {% block title %}{{ note.title }} - Portafolio José Luis Astiazu{% endblock %}
@@ -8,8 +9,8 @@
         <div class="col-12">
             <nav aria-label="breadcrumb" class="mb-4">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Inicio</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('publications') }}">Publicaciones</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('routes.index') }}">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('routes.publications') }}">Publicaciones</a></li>
                     <li class="breadcrumb-item active">{{ note.title }}</li>
                 </ol>
             </nav>
@@ -29,7 +30,7 @@
                         <h1 class="display-6 mb-3">{{ note.title }}</h1>
                     </div>
                     
-                    {% if current_user.is_authenticated and (current_user.is_admin() or current_user.id == note.user_id) %}
+                    {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == note.user_id) %}
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
                                 type="button" data-bs-toggle="dropdown">
@@ -37,14 +38,14 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li>
-                                <a class="dropdown-item" href="{{ url_for('edit_note', note_id=note.id) }}">
+                                <a class="dropdown-item" href="{{ url_for('routes.edit_note', note_id=note.id) }}">
                                     <i class="fas fa-edit me-2"></i>Editar
                                 </a>
                             </li>
-                            {% if current_user.is_admin() or current_user.id == note.user_id %}
+                            {% if current_user.is_admin or current_user.id == note.user_id %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="POST" action="{{ url_for('delete_note', note_id=note.id) }}" 
+                                <form method="POST" action="{{ url_for('routes.delete_note', note_id=note.id) }}" 
                                       onsubmit="return confirm('¿Estás seguro?')">
                                     <button type="submit" class="dropdown-item text-danger">
                                         <i class="fas fa-trash me-2"></i>Eliminar
@@ -55,13 +56,18 @@
                         </ul>
                     </div>
                     {% endif %}
+                    {% if current_user.id == note.user_id and note.status == 'private' %}
+                        <form method="POST" action="{{ url_for('routes.request_publish_note', note_id=note.id) }}">
+                            <button type="submit" class="btn btn-warning">📤 Solicitar Publicación</button>
+                        </form>
+                    {% endif %}
                 </div>
                 
                 <!-- Note Meta -->
                 <div class="d-flex flex-wrap align-items-center text-muted mb-4">
                     <div class="me-4 mb-2">
                         <i class="fas fa-user me-1"></i>
-                        Por {{ note.author.full_name }}
+                        Por {{ note.author.username }}
                     </div>
                     
                     <div class="me-4 mb-2">
@@ -109,7 +115,7 @@
                                 <button class="btn btn-outline-info btn-sm" onclick="shareNote()">
                                     <i class="fas fa-share-alt me-1"></i>Compartir
                                 </button>
-                                <a href="{{ url_for('index') }}#contact" class="btn btn-info btn-sm">
+                                <a href="{{ url_for('routes.index') }}#contact" class="btn btn-info btn-sm">
                                     <i class="fas fa-envelope me-1"></i>Contacto
                                 </a>
                             </div>
@@ -121,16 +127,16 @@
             
             <!-- Navigation -->
             <div class="d-flex justify-content-between mt-5">
-                <a href="{{ url_for('publications') }}" class="btn btn-outline-secondary">
+                <a href="{{ url_for('routes.publications') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Volver a Publicaciones
                 </a>
                 
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('notes') }}" class="btn btn-info">
+                <a href="{{ url_for('routes.notes') }}" class="btn btn-info">
                     <i class="fas fa-sticky-note me-2"></i>Mis Notas
                 </a>
                 {% else %}
-                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
                     <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
                 </a>
                 {% endif %}
@@ -150,14 +156,14 @@
                     <div class="card-body text-center">
                         {% if note.author.profile_image_url %}
                         <img src="{{ note.author.profile_image_url }}" 
-                             alt="{{ note.author.full_name }}" 
+                             alt="{{ note.author.username }}" 
                              class="rounded-circle mb-3" 
                              width="80" height="80" 
                              style="object-fit: cover;">
                         {% else %}
                         <i class="fas fa-user-circle fa-4x text-secondary mb-3"></i>
                         {% endif %}
-                        <h6 class="card-title">{{ note.author.full_name }}</h6>
+                        <h6 class="card-title">{{ note.author.username }}</h6>
                         <p class="card-text text-muted small">
                             Miembro desde {{ note.author.created_at.strftime('%B %Y') }}
                         </p>
@@ -179,13 +185,13 @@
                         
                         {% if current_user.is_authenticated %}
                         <div class="d-grid">
-                            <a href="{{ url_for('notes') }}" class="btn btn-primary btn-sm">
+                            <a href="{{ url_for('routes.notes') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus me-2"></i>Escribir una Nota
                             </a>
                         </div>
                         {% else %}
                         <div class="d-grid">
-                            <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-primary btn-sm">
+                            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm">
                                 <i class="fas fa-sign-in-alt me-2"></i>Únete a la Comunidad
                             </a>
                         </div>
@@ -210,7 +216,6 @@ function shareNote() {
             url: window.location.href
         });
     } else {
-        // Fallback: copy to clipboard
         navigator.clipboard.writeText(window.location.href).then(() => {
             const btn = event.target.closest('button');
             const originalText = btn.innerHTML;

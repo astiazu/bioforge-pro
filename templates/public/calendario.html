@@ -1,0 +1,24 @@
+<!-- templates/calendario.html -->
+<div class="container mt-5">
+    <h3>Selecciona un día</h3>
+    <div class="dias-semana d-flex justify-content-center gap-3 mb-4">
+        {% set dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"] %}
+        {% for i in range(7) %}
+            <div class="dia text-center" style="width: 60px;">
+                <div class="nombre {{ 'text-danger' if i in [5,6] else '' }}">
+                    {{ dias[i] }}
+                </div>
+                <div class="numero bg-light py-2 mt-1 rounded">
+                    {{ fecha_dia(i).strftime('%d') }}
+                </div>
+                <button class="btn btn-outline-primary btn-sm mt-2" 
+                        onclick="cargarHorarios({{ i }})">
+                    Ver
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Horarios se cargan aquí -->
+    <div id="horarios"></div>
+</div>
