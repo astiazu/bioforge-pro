@@ -1,100 +1,100 @@
-<!-- template/publications.html-->
+<!-- templates/publications.html -->
 {% extends "base.html" %}
 
-{% block title %}Publicaciones - Portafolio José Luis Astiazu{% endblock %}
+{% block title %}Publicaciones - José Luis Astiazu{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center mb-5">
-                <h1 class="display-5 mb-3">
-                    <i class="fas fa-newspaper me-3 text-info"></i>
-                    Ejemplos de Publicaciones
-                </h1>
-                <p class="lead text-muted">
-                    Artículos y casos de estudio que demuestran experiencia y conocimiento en análisis de datos
-                </p>
-            </div>
+<div class="container mt-5">
+    <!-- Encabezado -->
+    <div class="text-center mb-5">
+        <h1 class="display-5">
+            <i class="fas fa-newspaper me-3 text-info"></i>
+            Ejemplos de Publicaciones
+        </h1>
+        <p class="lead text-muted">
+            Artículos educativos, casos de éxito y análisis de datos
+        </p>
+    </div>
+
+    <!-- Barra de búsqueda y filtros -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" action="{{ url_for('routes.publications') }}" class="d-flex">
+                <input type="text" name="q" class="form-control flex-grow-1" placeholder="Buscar por título o etiqueta...">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">Todas las categorías</option>
+                <option value="Educativo">Educativo</option>
+                <option value="Caso de éxito">Caso de éxito</option>
+                <option value="Análisis">Análisis</option>
+                <option value="Opinión">Opinión</option>
+            </select>
         </div>
     </div>
-    
-    <div class="row g-4">
-        {% for publication in publications %}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <span class="badge 
-                                {% if publication.type == 'Educativo' %}bg-info
-                                {% elif publication.type == 'Caso de éxito' %}bg-success
-                                {% else %}bg-warning text-dark
-                                {% endif %} me-2">
-                                {{ publication.type }}
-                            </span>
-                            <h5 class="card-title d-inline-block mb-0">{{ publication.title }}</h5>
-                        </div>
-                        <div class="col-auto">
-                            {% if publication.type == 'Educativo' %}
-                                <i class="fas fa-graduation-cap text-info"></i>
-                            {% elif publication.type == 'Caso de éxito' %}
-                                <i class="fas fa-trophy text-success"></i>
-                            {% else %}
-                                <i class="fas fa-star text-warning"></i>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
+
+    <!-- Publicaciones principales (4 tarjetas) -->
+    <div class="row g-4 mb-5">
+        {% for pub in publications[:4] %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" 
+                     alt="{{ pub.title }}" 
+                     style="height: 150px; object-fit: cover;">
                 <div class="card-body">
-                    <p class="card-text text-muted">{{ publication.content }}</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>Publicado recientemente
-                        </small>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary me-2">
-                                <i class="fas fa-share me-1"></i>Compartir
-                            </button>
-                            {% if publication.id %}
-                                <a href="{{ url_for('routes.view_publication', pub_id=publication.id) }}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-external-link-alt me-1"></i>Leer más
-                                </a>
-                            {% else %}
-                                <button class="btn btn-sm btn-outline-info" disabled>
-                                    <i class="fas fa-external-link-alt me-1"></i>Próximamente
-                                </button>
-                            {% endif %}
-                        </div>
+                    <span class="badge bg-secondary">{{ pub.type }}</span>
+                    <h6 class="card-title mt-2">{{ pub.title }}</h6>
+                    <p class="card-text text-muted small">{{ pub.excerpt|truncate(100) }}</p>
+                    <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">
+                        Leer más
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Publicaciones restantes en cuadrícula -->
+    <div class="row g-4">
+        {% for pub in publications[4:] %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" 
+                     alt="{{ pub.title }}" 
+                     style="height: 180px; object-fit: cover;">
+                <div class="card-body">
+                    <span class="badge bg-secondary">{{ pub.type }}</span>
+                    <h6 class="card-title mt-2">{{ pub.title }}</h6>
+                    <p class="card-text text-muted small">{{ pub.excerpt|truncate(120) }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted">{{ pub.published_at.strftime('%d/%m/%Y') }}</small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">
+                            Leer más
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    
+
+    <!-- Publicidad (opcional) -->
     <div class="row mt-5">
         <div class="col-12">
-            <div class="card bg-dark border-secondary">
-                <div class="card-body text-center">
-                    <h4 class="card-title text-light mb-3">
-                        <i class="fas fa-lightbulb me-2 text-warning"></i>
-                        ¿Te interesa este tipo de contenido?
-                    </h4>
-                    <p class="card-text text-muted mb-4">
-                        Suscríbete para recibir más artículos sobre análisis de datos, 
-                        Python y casos de éxito reales.
-                    </p>
-                    <div class="row justify-content-center">
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="email" class="form-control" placeholder="Tu email aquí...">
-                                <button class="btn btn-info" type="button">
-                                    <i class="fas fa-paper-plane me-1"></i>Suscribirse
-                                </button>
-                            </div>
+            <div class="bg-dark text-white p-4 rounded">
+                <div class="text-center">
+                    <h5>¿Te interesa este tipo de contenido?</h5>
+                    <p class="text-muted">Suscríbete para recibir más artículos sobre análisis de datos, Python y casos de éxito reales.</p>
+                    <form method="POST" action="{{ url_for('routes.subscribe') }}">
+                        <div class="d-flex gap-2">
+                            <input type="email" name="email" class="form-control" placeholder="Tu email aquí..." required>
+                            <button type="submit" class="btn btn-success">Suscribirse</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

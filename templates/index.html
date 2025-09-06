@@ -9,9 +9,9 @@
             <div class="text-center mb-5">
                 <h1 class="display-4 mb-3">
                     <i class="fas fa-chart-bar me-3 text-info"></i>
-                    Portafolio Profesional – José Luis Astiazu
+                    Portafolio – Datos Consultora
                 </h1>
-                <p class="lead text-muted">
+                <p class="lead text-info">
                     Bienvenido a mi portafolio interactivo. Aquí encontrarás información sobre mi experiencia, 
                     casos de éxito, publicaciones y ejemplos de análisis de datos.
                 </p>
@@ -102,16 +102,41 @@
     <div class="row mt-5">
         <div class="col-12 text-center">
             <h3 class="mb-4">¿Listo para trabajar juntos?</h3>
-            <p class="text-muted mb-4">
+            <p class="text-info mb-4">
                 Transformemos tus datos en decisiones estratégicas. 
-                Contacta conmigo para discutir tu próximo proyecto.
+                Contacta con nosotros para discutir tu próximo proyecto.
             </p>
-            <a href="mailto:jose.luis.astiazu@example.com" class="btn btn-outline-info btn-lg me-3">
+            <form method="POST" action="{{ url_for('routes.contacto') }}" class="mt-4">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <input type="email" name="email" class="form-control" placeholder="Tu email" required>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <input type="text" name="asunto" class="form-control" placeholder="Asunto">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <textarea name="mensaje" class="form-control" rows="4" placeholder="Tu mensaje" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <a>
+                            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                        </a>
+                        <a href="https://wa.me/5493544404054" class="btn btn-outline-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </form>
+            <!--
+            <a class="btn btn-outline-info btn-lg me-3">
                 <i class="fas fa-envelope me-2"></i>Enviar Email
             </a>
             <a href="https://wa.me/5493544404054" class="btn btn-outline-success btn-lg" target="_blank">
                 <i class="fab fa-whatsapp me-2"></i>WhatsApp
-            </a>
+            </a>-->
         </div>
     </div>
 </div>

@@ -29,6 +29,12 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="email" class="form-label">Email para notificaciones</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                            <div class="form-text">Este email recibirá notificaciones cuando alguien reserve un turno.</div>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="bio" class="form-label">Biografía</label>
                             <textarea class="form-control" id="bio" name="bio" rows="4">{{ user.bio }}</textarea>
                         </div>

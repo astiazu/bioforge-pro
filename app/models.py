@@ -84,6 +84,7 @@ class User(UserMixin, db.Model):
     years_experience = db.Column(db.Integer)
     profile_photo = db.Column(db.String(200))
     license_number = db.Column(db.String(100))
+    email = db.Column(db.String(150), unique=True, nullable=False)
     services = db.Column(db.Text)
     skills = db.Column(db.Text)
 
@@ -165,6 +166,7 @@ class Publication(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     published_at = db.Column(db.DateTime, nullable=True)
+    image_url = db.Column(db.String(300), nullable=True)
 
     # ✅ Relación bidireccional
     author = db.relationship("User", back_populates="publications")
@@ -287,4 +289,11 @@ class UserRole(db.Model):
 
     def __repr__(self):
         return f"<UserRole {self.name}>"
+    
+# app/models.py
+class Subscriber(db.Model):
+    __tablename__ = "subscribers"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
     

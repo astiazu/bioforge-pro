@@ -9,22 +9,24 @@
             <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary">📅 Mi Agenda</a>
             <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">🏥 Nuevo Consultorio</a>
             <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-outline-warning">👤 Editar Perfil</a>
+        </div>
     </div>
 
     <div class="row">
         <div class="col-md-8">
-            <div class="card mb-4">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <h5>{{ current_user.username }}</h5>
+                    <h5 class="mb-3">{{ current_user.username }}</h5>
                     <p><strong>Especialidad:</strong> {{ current_user.specialty }}</p>
                     <p><strong>Años de experiencia:</strong> {{ current_user.years_experience }}</p>
                     <p><strong>Servicios:</strong> {{ current_user.services }}</p>
                     <p><strong>Bio:</strong> {{ current_user.bio }}</p>
+                    <p><strong>Email:</strong> {{ current_user.email }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
+            <div class="card bg-light">
                 <div class="card-header bg-info text-white">
                     <h5 class="mb-0">Turnos Recibidos</h5>
                 </div>
@@ -41,6 +43,17 @@
                         <p class="text-muted">No tienes turnos aún.</p>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tienda Online (opcional) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6>🛒 Tienda Online</h6>
+                <p>Próximamente podrás crear tu propia tienda online desde aquí.</p>
+                <button class="btn btn-outline-secondary btn-sm">Solicitar acceso</button>
             </div>
         </div>
     </div>

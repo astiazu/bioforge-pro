@@ -1,0 +1,25 @@
+<!-- templates/components/contact_form.html -->
+<div class="contact-form-container">
+    <form method="POST" action="{{ url_for('routes.contacto') }}" class="mt-4">
+        <h5>📩 Envíame un mensaje</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+            </div>
+            <div class="col-md-6">
+                <input type="email" name="email" class="form-control" placeholder="Tu email" required>
+            </div>
+            <div class="col-12">
+                <input type="text" name="asunto" class="form-control" placeholder="Asunto" value="{{ 'Consulta sobre servicios' if request.endpoint == 'routes.profesionales' else '' }}">
+            </div>
+            <div class="col-12">
+                <textarea name="mensaje" class="form-control" rows="4" placeholder="Tu mensaje" required></textarea>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-paper-plane me-2"></i>Enviar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

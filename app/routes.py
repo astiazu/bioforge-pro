@@ -10,7 +10,7 @@ from flask import (render_template, request, redirect, url_for, flash, jsonify, 
 from functools import wraps
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from app.models import User, Note, Publication, NoteStatus, Clinic, Availability, Appointment, MedicalRecord, Schedule, UserRole
+from app.models import User, Note, Publication, NoteStatus, Clinic, Availability, Appointment, MedicalRecord, Schedule, UserRole, Subscriber
 from app import db, mail
 from flask_mail import Message
 
@@ -74,6 +74,90 @@ def enviar_confirmacion_turno(appointment):
 
 routes = Blueprint("routes", __name__)
 
+def enviar_notificacion_turno_reservado(appointment):
+    """
+    Notifica al admin y al profesional cuando se reserva un turno
+    """
+    try:
+        msg = Message(
+            subject="🔔 Nuevo turno reservado",
+            recipients=["astiazu@gmail.com"],  # Cambia por tu email de admin
+            body=f"""
+        Nuevo turno reservado:
+
+        Paciente: {appointment.patient.username}
+        Email: {appointment.patient.email}
+
+        Profesional: {appointment.availability.clinic.doctor.username}
+        Consultorio: {appointment.availability.clinic.name}
+        Dirección: {appointment.availability.clinic.address}
+        Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
+        Hora: {appointment.availability.time.strftime('%H:%M')}
+
+        Este mensaje fue generado automáticamente por el sistema.
+                    """.strip(),
+                    html=f"""
+        <h2>🔔 Nuevo turno reservado</h2>
+        <p><strong>Paciente:</strong> {appointment.patient.username}</p>
+        <p><strong>Email:</strong> {appointment.patient.email}</p>
+        <hr>
+        <p><strong>Profesional:</strong> {appointment.availability.clinic.doctor.username}</p>
+        <p><strong>Consultorio:</strong> {appointment.availability.clinic.name}</p>
+        <p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
+        <p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
+        <p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
+        <p><em>Este mensaje fue generado automáticamente por el sistema.</em></p>
+                    """
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error al enviar notificación de turno: {str(e)}")
+        return False
+
+def enviar_notificacion_profesional(appointment):
+    """
+    Envía una notificación al profesional cuando se reserva un turno
+    """
+    try:
+        msg = Message(
+            subject=f"📅 Nuevo turno: {appointment.availability.date.strftime('%d/%m/%Y')} a las {appointment.availability.time.strftime('%H:%M')}",
+            recipients=[appointment.availability.clinic.doctor.email],
+            body=f"""
+Hola {appointment.availability.clinic.doctor.username},
+
+Has recibido una nueva reserva de turno:
+
+Paciente: {appointment.patient.username}
+Email: {appointment.patient.email}
+Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
+Hora: {appointment.availability.time.strftime('%H:%M')}
+Consultorio: {appointment.availability.clinic.name}
+Dirección: {appointment.availability.clinic.address}
+
+¡Gestiona tus turnos desde tu perfil profesional!
+
+Saludos,
+Equipo de BioForge
+            """.strip(),
+            html=f"""
+<h2>📅 Nuevo turno reservado</h2>
+<p><strong>Paciente:</strong> {appointment.patient.username}</p>
+<p><strong>Email:</strong> {appointment.patient.email}</p>
+<hr>
+<p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
+<p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
+<p><strong>Consultorio:</strong> {appointment.availability.clinic.name}</p>
+<p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
+<p><em>Este mensaje fue generado automáticamente por el sistema.</em></p>
+            """
+        )
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error al enviar notificación al profesional: {str(e)}")
+        return False
+    
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -84,7 +168,7 @@ def require_admin(f):
     return decorated_function
 
 BIO_SHORT = "📊 Consultor freelance en Analítica de Datos y Sistemas • Formador en Python y BI • Certificado Google Data Analytics • Transformo datos en decisiones."
-BIO_EXTENDED = """Soy José Luis Astiazu, consultor independiente en análisis de datos, big data y sistemas..."""
+BIO_EXTENDED = """Somos una consultora independiente en análisis de datos, big data y sistemas..."""
 
 PUBLICATIONS = [
     {
@@ -143,91 +227,6 @@ def register():
 
     return render_template("auth/register.html", roles_activos=roles_activos)
 
-@routes.route("/publications")
-def publications():
-    db_publications = Publication.query.filter_by(is_published=True).order_by(Publication.published_at.desc()).all()
-    combined = []
-    for pub in db_publications:
-        if not pub.published_at:
-            pub.published_at = pub.created_at or datetime.utcnow()
-        combined.append({
-            "id": pub.id,
-            "type": pub.type,
-            "title": pub.title,
-            "content": pub.excerpt or pub.content[:200] + "...",
-            "published_at": pub.published_at,
-            "author": pub.author.username if pub.author else "José Luis Astiazu",
-            "is_db": True
-        })
-    for pub in PUBLICATIONS:
-        combined.append({
-            "id": pub["id"],
-            "type": pub["type"],
-            "title": pub["title"],
-            "content": pub["content"][:200] + "...",
-            "published_at": pub.get("published_at", datetime.now()),
-            "author": "José Luis Astiazu",
-            "is_db": False
-        })
-    combined.sort(key=lambda x: x["published_at"], reverse=True)
-    return render_template(
-        "publications.html",
-        publications=combined,
-        bio_short=BIO_SHORT,
-        bio_extended=BIO_EXTENDED,
-        active_tab="publications"
-    )
-
-@routes.route('/publication/<int:pub_id>')
-def view_publication(pub_id):
-    publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
-    if publication:
-        # Asignar type_color según el tipo
-        type_colors = {
-            'Educativo': 'text-primary',
-            'Caso de éxito': 'text-success',
-            'Análisis': 'text-warning',
-            'Opinión': 'text-info'
-        }
-        publication.type_color = type_colors.get(publication.type, 'text-secondary')
-        return render_template(
-            'view_publication.html',
-            publication=publication,
-            bio_short=BIO_SHORT,
-            bio_extended=BIO_EXTENDED
-        )
-    static_pub = next((p for p in PUBLICATIONS if p['id'] == pub_id), None)
-    if static_pub:
-        # Mapear type a color
-        type_colors = {
-            'Educativo': 'text-primary',
-            'Caso de éxito': 'text-success',
-            'Análisis': 'text-warning',
-            'Opinión': 'text-info'
-        }
-        type_color = type_colors.get(static_pub['type'], 'text-secondary')
-
-        pub_data = {
-            'id': pub_id,
-            'title': static_pub['title'],
-            'content': static_pub['content'],
-            'type': static_pub['type'],
-            'type_color': type_color,
-            'author': {'full_name': 'José Luis Astiazu'},
-            'published_at': datetime.utcnow(),
-            'excerpt': static_pub.get('excerpt', ''),
-            'read_time': static_pub.get('read_time', 5),
-            'tags': static_pub.get('tags', ''),
-            'tag_list': [tag.strip() for tag in static_pub.get('tags', '').split(',')] if static_pub.get('tags') else []
-        }
-        return render_template(
-            'view_publication.html',
-            publication=pub_data,
-            bio_short=BIO_SHORT,
-            bio_extended=BIO_EXTENDED
-        )
-    abort(404)
-    
 @routes.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
@@ -340,6 +339,112 @@ def admin_reject_note(note_id):
     db.session.commit()
     flash(f'❌ Nota "{note.title}" rechazada y marcada como privada', 'info')
     return redirect(url_for('routes.admin_panel'))
+
+@routes.route("/publications")
+def publications():
+    # Filtros
+    q = request.args.get('q', '').strip()
+    category = request.args.get('category', '')
+
+    # Obtener publicaciones de la DB
+    db_query = Publication.query.filter_by(is_published=True)
+    if q:
+        db_query = db_query.filter(
+            Publication.title.ilike(f"%{q}%") |
+            Publication.content.ilike(f"%{q}%") |
+            Publication.tags.ilike(f"%{q}%")
+        )
+    if category:
+        db_query = db_query.filter_by(type=category)
+    
+    db_publications = db_query.order_by(Publication.published_at.desc()).all()
+
+    # Lista combinada
+    combined = []
+
+    # Añadir publicaciones de la DB
+    for pub in db_publications:
+        if not pub.published_at:
+            pub.published_at = pub.created_at or datetime.utcnow()
+        combined.append({
+            "id": pub.id,
+            "type": pub.type,
+            "title": pub.title,
+            "content": pub.excerpt or (pub.content[:200] + "..."),
+            "published_at": pub.published_at,
+            "author": pub.author.username if pub.author else "José Luis Astiazu",
+            "is_db": True,
+            "image_url": pub.image_url or "/static/img/default-article.jpg"
+        })
+
+    # Añadir publicaciones estáticas (si existen)
+    if 'PUBLICATIONS' in globals():
+        for pub in PUBLICATIONS:
+            if category and pub["type"] != category:
+                continue
+            combined.append({
+                "id": pub["id"],
+                "type": pub["type"],
+                "title": pub["title"],
+                "content": pub["content"][:200] + "...",
+                "published_at": pub.get("published_at", datetime.now()),
+                "author": "José Luis Astiazu",
+                "is_db": False,
+                "image_url": pub.get("image_url", "/static/img/default-article.jpg")
+            })
+
+    # Ordenar por fecha
+    combined.sort(key=lambda x: x["published_at"], reverse=True)
+
+    return render_template(
+        "publications.html",
+        publications=combined,
+        bio_short=BIO_SHORT,
+        bio_extended=BIO_EXTENDED,
+        active_tab="publications",
+        selected_category=category,
+        search_query=q
+    )
+
+@routes.route('/publication/<int:pub_id>')
+def view_publication(pub_id):
+    publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
+    
+    if publication:
+        # ✅ PASO 1: Usa el type_color del modelo (property)
+        return render_template(
+            'view_publication.html',
+            publication=publication,
+            bio_short=BIO_SHORT,
+            bio_extended=BIO_EXTENDED
+        )
+    
+    # Publicación estática (opcional)
+    static_pub = next((p for p in PUBLICATIONS if p['id'] == pub_id), None)
+    if static_pub:
+        type_colors = {
+            'Educativo': 'text-primary',
+            'Caso de éxito': 'text-success',
+            'Análisis': 'text-warning',
+            'Opinión': 'text-info'
+        }
+        pub_data = {
+            'id': pub_id,
+            'title': static_pub['title'],
+            'content': static_pub['content'],
+            'type': static_pub['type'],
+            'type_color': type_colors.get(static_pub['type'], 'text-secondary'),
+            'author': {'full_name': 'José Luis Astiazu'},
+            'published_at': datetime.utcnow(),
+        }
+        return render_template(
+            'view_publication.html',
+            publication=pub_data,
+            bio_short=BIO_SHORT,
+            bio_extended=BIO_EXTENDED
+        )
+    
+    abort(404)
 
 @routes.route('/admin/publication/new', methods=['GET', 'POST'])
 @require_admin
@@ -754,6 +859,7 @@ def editar_perfil_medico():
         current_user.bio = request.form.get('bio', '').strip()
         current_user.years_experience = request.form.get('years_experience', type=int)
         current_user.services = request.form.get('services', '').strip()
+        current_user.email = request.form.get('email', '').strip()  # ✅ Guarda el email
 
         # ✅ Solo cambiar slug si el usuario lo modificó
         url_slug_input = request.form.get('url_slug', '').strip()
@@ -891,15 +997,20 @@ def reservar_turno():
     if not availability_id:
         flash('Turno no válido', 'danger')
         return redirect(url_for('routes.medicos'))
+
     availability = Availability.query.get_or_404(availability_id)
     if availability.is_booked:
         flash('Este turno ya fue reservado', 'info')
         return redirect(url_for('routes.turnos_por_clinica', clinic_id=availability.clinic_id))
+
     patient_name = request.form.get('patient_name', '').strip()
     patient_email = request.form.get('patient_email', '').strip()
+
     if not patient_name or not patient_email:
         flash('Por favor completa tu nombre y email', 'warning')
         return redirect(url_for('routes.turnos_por_clinica', clinic_id=availability.clinic_id))
+
+    # Buscar o crear paciente
     patient = User.query.filter_by(email=patient_email).first()
     if not patient:
         patient = User(
@@ -911,6 +1022,8 @@ def reservar_turno():
         patient.set_password("temp" + patient_email)
         db.session.add(patient)
         db.session.flush()
+
+    # Crear cita
     appointment = Appointment(
         availability_id=availability_id,
         patient_id=patient.id,
@@ -919,11 +1032,22 @@ def reservar_turno():
     availability.is_booked = True
     db.session.add(appointment)
     db.session.commit()
-    exito = enviar_confirmacion_turno(appointment)
-    if exito:
-        flash('✅ ¡Turno reservado! Revisa tu email para confirmación.', 'success')
+
+    # ✅ Enviar todas las notificaciones
+    exito_paciente = enviar_confirmacion_turno(appointment)
+    exito_admin = enviar_notificacion_turno_reservado(appointment)
+    exito_profesional = enviar_notificacion_profesional(appointment)
+
+    # Mensajes de feedback
+    if exito_paciente and exito_admin and exito_profesional:
+        flash('✅ ¡Turno reservado! Se han enviado todas las confirmaciones.', 'success')
+    elif exito_paciente and exito_profesional:
+        flash('✅ ¡Turno reservado! Notificación al admin falló, pero paciente y profesional fueron notificados.', 'info')
+    elif exito_paciente:
+        flash('✅ Turno reservado, pero no pudimos notificar al admin ni al profesional.', 'info')
     else:
-        flash('✅ Turno reservado, pero no pudimos enviarte un email.', 'info')
+        flash('✅ Turno reservado, pero no pudimos enviar los correos.', 'info')
+
     return redirect(url_for('routes.confirmacion_turno', appointment_id=appointment.id))
 
 @routes.route('/turno/confirmado/<int:appointment_id>')
@@ -1179,6 +1303,74 @@ def eliminar_agenda(schedule_id):
 
     return redirect(url_for('routes.mi_agenda'))
 
+@routes.route('/contacto', methods=['POST'])
+def contacto():
+    try:
+        # Obtener datos del formulario
+        nombre = request.form.get('nombre', '').strip()
+        email = request.form.get('email', '').strip()
+        mensaje = request.form.get('mensaje', '').strip()
+        asunto = request.form.get('asunto', 'Contacto desde el sitio web').strip()
+
+        # Validar datos
+        if not all([nombre, email, mensaje]):
+            flash('Por favor completa todos los campos', 'error')
+            return redirect(url_for('routes.index'))
+
+        if len(nombre) < 2 or len(asunto) < 3 or len(mensaje) < 10:
+            flash('Los datos no son válidos', 'error')
+            return redirect(url_for('routes.index'))
+
+        # Enviar email
+        msg = Message(
+            subject=f"📩 {asunto}",
+            recipients=["astiazu@gmail.com"],  # Cambia por tu email
+            reply_to=email,
+            body=f"""
+                Nuevo mensaje de contacto:
+
+                Nombre: {nombre}
+                Email: {email}
+                Asunto: {asunto}
+
+                Mensaje:
+                {mensaje}
+
+                ---
+                Este mensaje fue enviado desde tu sitio web.
+            """
+        )
+        mail.send(msg)
+        
+        flash('✅ ¡Gracias por tu mensaje! Te responderé pronto.', 'success')
+        
+    except Exception as e:
+        current_app.logger.error(f"Error al enviar email: {str(e)}")
+        flash('❌ Hubo un error al enviar tu mensaje. Intenta más tarde.', 'danger')
+    
+    return redirect(url_for('routes.index'))
+
+@routes.route('/subscribe', methods=['POST'])
+def subscribe():
+    email = request.form.get('email', '').strip()
+    
+    if not email:
+        flash('Por favor ingresa un email válido', 'error')
+    else:
+        # Evitar duplicados
+        if Subscriber.query.filter_by(email=email).first():
+            flash('✅ Ya estás suscripto. ¡Gracias!', 'info')
+        else:
+            subscriber = Subscriber(email=email)
+            db.session.add(subscriber)
+            try:
+                db.session.commit()
+                flash('✅ ¡Gracias por suscribirte! Pronto recibirás contenido exclusivo.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash('❌ Hubo un error. Intenta más tarde.', 'danger')
+    
+    return redirect(request.referrer or url_for('routes.index'))
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):
