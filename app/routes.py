@@ -189,6 +189,10 @@ PUBLICATIONS = [
 def index():
     return render_template("index.html", bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED, active_tab="home")
 
+@routes.route('/health')
+def health():
+    return 'OK', 200
+
 @routes.route("/auth/register", methods=["GET", "POST"])
 def register():
     roles_activos = UserRole.query.filter_by(is_active=True).all()
