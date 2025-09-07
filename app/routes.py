@@ -3,6 +3,7 @@ import os
 import uuid
 import pandas as pd
 import json
+import time
 from uuid import uuid4
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -22,6 +23,7 @@ UPLOAD_FOLDER = 'temp_csv'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def generar_slug_unico(base_slug):
+    from app.models import User  # ✅ Importación segura
     slug = re.sub(r'[^a-z0-9-]+', '-', base_slug.lower())
     slug = re.sub(r'-+', '-', slug).strip('-')
     original_slug = slug
@@ -414,43 +416,22 @@ def publications():
 
 @routes.route('/publication/<int:pub_id>')
 def view_publication(pub_id):
-    publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
+    # ✅ El admin puede ver cualquier publicación (incluso borradores)
+    if current_user.is_authenticated and current_user.is_admin:
+        publication = Publication.query.get_or_404(pub_id)
+    else:
+        # Público solo ve publicadas
+        publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
     
-    if publication:
-        # ✅ PASO 1: Usa el type_color del modelo (property)
-        return render_template(
-            'view_publication.html',
-            publication=publication,
-            bio_short=BIO_SHORT,
-            bio_extended=BIO_EXTENDED
-        )
-    
-    # Publicación estática (opcional)
-    static_pub = next((p for p in PUBLICATIONS if p['id'] == pub_id), None)
-    if static_pub:
-        type_colors = {
-            'Educativo': 'text-primary',
-            'Caso de éxito': 'text-success',
-            'Análisis': 'text-warning',
-            'Opinión': 'text-info'
-        }
-        pub_data = {
-            'id': pub_id,
-            'title': static_pub['title'],
-            'content': static_pub['content'],
-            'type': static_pub['type'],
-            'type_color': type_colors.get(static_pub['type'], 'text-secondary'),
-            'author': {'full_name': 'José Luis Astiazu'},
-            'published_at': datetime.utcnow(),
-        }
-        return render_template(
-            'view_publication.html',
-            publication=pub_data,
-            bio_short=BIO_SHORT,
-            bio_extended=BIO_EXTENDED
-        )
-    
-    abort(404)
+    if not publication:
+        abort(404)
+
+    return render_template(
+        'view_publication.html',
+        publication=publication,
+        bio_short=BIO_SHORT,
+        bio_extended=BIO_EXTENDED
+    )
 
 @routes.route('/admin/publication/new', methods=['GET', 'POST'])
 @require_admin
@@ -461,25 +442,39 @@ def new_publication():
         pub_type = request.form.get('type', '').strip()
         excerpt = request.form.get('excerpt', '').strip()
         tags = request.form.get('tags', '').strip()
-        
+        is_published = 'is_published' in request.form
+
         if not title or not content or not pub_type:
             flash('Por favor completa todos los campos requeridos', 'error')
             return render_template('edit_publication.html', publication=None, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
-        
-        publication = Publication()
-        publication.title = title
-        publication.content = content
-        publication.type = pub_type
-        publication.excerpt = excerpt
-        publication.tags = tags
-        publication.user_id = current_user.id
-        publication.is_published = True  # ✅ Clave
-        publication.published_at = datetime.now()  # ✅ Clave
+
+        # ✅ Crear publicación
+        publication = Publication(
+            title=title,
+            content=content,
+            type=pub_type,
+            excerpt=excerpt,
+            tags=tags,
+            user_id=current_user.id,
+            is_published=is_published,
+            published_at=datetime.now() if is_published else None
+        )
         db.session.add(publication)
+        db.session.flush()  # Para obtener el ID
+
+        # ✅ Manejo de imagen subida
+        if 'image_file' in request.files:
+            file = request.files['image_file']
+            if file.filename != '':
+                filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
+                filepath = os.path.join('static/uploads', filename)
+                file.save(filepath)
+                publication.image_url = f"/static/uploads/{filename}"
+
         db.session.commit()
         flash('✅ Publicación creada exitosamente', 'success')
         return redirect(url_for('routes.admin_panel'))
-    
+
     return render_template('edit_publication.html', publication=None, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
 
 @routes.route('/admin/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
@@ -488,17 +483,41 @@ def edit_publication(pub_id):
     publication = Publication.query.get_or_404(pub_id)
     
     if request.method == 'POST':
-        # ... (campos)
+        publication.title = request.form.get('title', '').strip()
+        publication.content = request.form.get('content', '').strip()
+        publication.type = request.form.get('type', '').strip()
+        publication.excerpt = request.form.get('excerpt', '').strip()
+        publication.tags = request.form.get('tags', '').strip()
+        is_published = 'is_published' in request.form  # ✅ Captura el checkbox
 
-        # ✅ Si está publicada, asegurar fecha
-        if publication.is_published:
-            if not publication.published_at:
-                publication.published_at = datetime.now()
-        
+        # ✅ Actualizar estado de publicación
+        publication.is_published = is_published
+        if is_published and not publication.published_at:
+            publication.published_at = datetime.now()
+        elif not is_published:
+            publication.published_at = None
+
+        # ✅ Manejo de imagen: solo si se sube una nueva
+        if 'image_file' in request.files and request.files['image_file'].filename != '':
+            file = request.files['image_file']
+            
+            # Eliminar imagen anterior si existe
+            if publication.image_url and os.path.exists('.' + publication.image_url):
+                os.remove('.' + publication.image_url)
+            
+            # Guardar nueva imagen
+            filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
+            filepath = os.path.join('static/uploads', filename)
+            file.save(filepath)
+            publication.image_url = f"/static/uploads/{filename}"
+
+        # ✅ Si no se sube nueva imagen, conserva la anterior
+        # (no se hace nada, ya está en publication.image_url)
+
         db.session.commit()
         flash('✅ Publicación actualizada exitosamente', 'success')
         return redirect(url_for('routes.admin_panel'))
-    
+
     return render_template('edit_publication.html', publication=publication, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
 
 @routes.route('/admin/publication/<int:pub_id>/delete', methods=['POST'])
