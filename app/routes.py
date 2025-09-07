@@ -175,13 +175,15 @@ PUBLICATIONS = [
         "id": 1001,
         "type": "Educativo",
         "title": "El error más común en análisis de datos",
-        "content": "En mi experiencia como consultor, el error más común que veo..."
+        "content": "En mi experiencia como consultor, el error más común que veo...",
+        "image_url": "/static/img/default-article.jpg"
     },
     {
         "id": 1002,
         "type": "Caso de éxito",
         "title": "Cómo optimicé un proceso de ETL con Python",
-        "content": "Un cliente tenía un proceso de carga de datos que tardaba 8 horas..."
+        "content": "Un cliente tenía un proceso de carga de datos que tardaba 8 horas...",
+        "image_url": "/static/img/default-article.jpg"
     }
 ]
 
