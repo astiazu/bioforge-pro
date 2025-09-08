@@ -28,15 +28,17 @@ def create_app():
 
     # === Configuración Principal ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo-cambia-esto-en-produccion"
-    
+
+    # ✅ Usa DATABASE_URL (PostgreSQL en Render) o fallback a SQLite solo en local
     if os.environ.get('DATABASE_URL'):
         database_url = os.environ.get('DATABASE_URL')
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///portfolio.db"
-    
+        # Solo para desarrollo local
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # === Configuración de Email (Gmail) ===
@@ -45,20 +47,23 @@ def create_app():
     app.config["MAIL_USE_TLS"] = True
     app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME") or "astiazu@gmail.com"
     app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
-    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Salud", app.config["MAIL_USERNAME"])
+    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
 
     # === Inicializar extensiones ===
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
-    migrate.init_app(app, db)  # ✅ Aquí está mejor
+    migrate.init_app(app, db)
     login_manager.login_view = "auth.login"
 
-    # === Registrar blueprints y modelos ===
+    # ✅ Crear tablas al iniciar (solo si no existen)
     with app.app_context():
         from app.models import User
         from app.routes import routes
         from app.auth import auth
+
+        # ✅ Crea todas las tablas si no existen
+        db.create_all()
 
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
