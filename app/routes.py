@@ -36,28 +36,28 @@ def generar_slug_unico(base_slug):
 def enviar_confirmacion_turno(appointment):
     try:
         msg = Message(
-            subject="✅ Confirmación de turno médico",
+            subject="✅ Confirmación de visita",
             recipients=[appointment.patient.email],
             body=f"""
         Hola {appointment.patient.username},
-        Tu turno ha sido reservado con éxito:
-        🔹 Médico: {appointment.availability.clinic.doctor.username}
-        🔹 Consultorio: {appointment.availability.clinic.name}
+        Tu visita ha sido reservada con éxito:
+        🔹 Profesional: {appointment.availability.clinic.doctor.username}
+        🔹 Ubicación: {appointment.availability.clinic.name}
         🔹 Dirección: {appointment.availability.clinic.address}
         🔹 Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
         🔹 Hora: {appointment.availability.time.strftime('%H:%M')}
         Gracias por usar nuestra plataforma.
         ¡Te esperamos!
         Saludos,
-        Equipo de Salud Digital
+        Equipo de FuerzaBruta
         """.strip(),
         html=f"""
-        <h2>✅ Confirmación de turno</h2>
+        <h2>✅ Confirmación de Visita</h2>
         <p>Hola <strong>{appointment.patient.username}</strong>,</p>
-        <p>Tu turno ha sido reservado con éxito:</p>
+        <p>Tu visita ha sido reservada con éxito:</p>
         <ul>
             <li><strong>Médico:</strong> {appointment.availability.clinic.doctor.username}</li>
-            <li><strong>Consultorio:</strong> {appointment.availability.clinic.name}</li>
+            <li><strong>Ubicación:</strong> {appointment.availability.clinic.name}</li>
             <li><strong>Dirección:</strong> {appointment.availability.clinic.address}</li>
             <li><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</li>
             <li><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</li>
@@ -65,7 +65,7 @@ def enviar_confirmacion_turno(appointment):
         <p>Gracias por usar nuestra plataforma.<br>
         ¡Te esperamos!</p>
         <p>Saludos,<br>
-        <strong>Equipo de Salud Digital</strong></p>
+        <strong>Equipo de FuerzaBruta</strong></p>
         """.strip()
         )
         mail.send(msg)
@@ -78,20 +78,20 @@ routes = Blueprint("routes", __name__)
 
 def enviar_notificacion_turno_reservado(appointment):
     """
-    Notifica al admin y al profesional cuando se reserva un turno
+    Notifica al admin y al profesional cuando se reserva una Visita
     """
     try:
         msg = Message(
             subject="🔔 Nuevo turno reservado",
             recipients=["astiazu@gmail.com"],  # Cambia por tu email de admin
             body=f"""
-        Nuevo turno reservado:
+        Nueva visita reservada:
 
-        Paciente: {appointment.patient.username}
+        Visita/Paciente: {appointment.patient.username}
         Email: {appointment.patient.email}
 
         Profesional: {appointment.availability.clinic.doctor.username}
-        Consultorio: {appointment.availability.clinic.name}
+        Ubicación: {appointment.availability.clinic.name}
         Dirección: {appointment.availability.clinic.address}
         Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
         Hora: {appointment.availability.time.strftime('%H:%M')}
@@ -99,12 +99,12 @@ def enviar_notificacion_turno_reservado(appointment):
         Este mensaje fue generado automáticamente por el sistema.
                     """.strip(),
                     html=f"""
-        <h2>🔔 Nuevo turno reservado</h2>
-        <p><strong>Paciente:</strong> {appointment.patient.username}</p>
+        <h2>🔔 Nueva visita reservada</h2>
+        <p><strong>Visita/Paciente:</strong> {appointment.patient.username}</p>
         <p><strong>Email:</strong> {appointment.patient.email}</p>
         <hr>
         <p><strong>Profesional:</strong> {appointment.availability.clinic.doctor.username}</p>
-        <p><strong>Consultorio:</strong> {appointment.availability.clinic.name}</p>
+        <p><strong>Ubicación:</strong> {appointment.availability.clinic.name}</p>
         <p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
         <p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
         <p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
@@ -123,33 +123,33 @@ def enviar_notificacion_profesional(appointment):
     """
     try:
         msg = Message(
-            subject=f"📅 Nuevo turno: {appointment.availability.date.strftime('%d/%m/%Y')} a las {appointment.availability.time.strftime('%H:%M')}",
+            subject=f"📅 Nueva visita: {appointment.availability.date.strftime('%d/%m/%Y')} a las {appointment.availability.time.strftime('%H:%M')}",
             recipients=[appointment.availability.clinic.doctor.email],
             body=f"""
 Hola {appointment.availability.clinic.doctor.username},
 
-Has recibido una nueva reserva de turno:
+Has recibido una nueva reserva de visita:
 
-Paciente: {appointment.patient.username}
+Visita/Paciente: {appointment.patient.username}
 Email: {appointment.patient.email}
 Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
 Hora: {appointment.availability.time.strftime('%H:%M')}
-Consultorio: {appointment.availability.clinic.name}
+Ubicación: {appointment.availability.clinic.name}
 Dirección: {appointment.availability.clinic.address}
 
 ¡Gestiona tus turnos desde tu perfil profesional!
 
 Saludos,
-Equipo de BioForge
+Equipo de FuerzaBruta
             """.strip(),
             html=f"""
 <h2>📅 Nuevo turno reservado</h2>
-<p><strong>Paciente:</strong> {appointment.patient.username}</p>
+<p><strong>Visita/Paciente:</strong> {appointment.patient.username}</p>
 <p><strong>Email:</strong> {appointment.patient.email}</p>
 <hr>
 <p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
 <p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
-<p><strong>Consultorio:</strong> {appointment.availability.clinic.name}</p>
+<p><strong>Ubicación:</strong> {appointment.availability.clinic.name}</p>
 <p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
 <p><em>Este mensaje fue generado automáticamente por el sistema.</em></p>
             """
