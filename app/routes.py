@@ -436,6 +436,11 @@ def view_publication(pub_id):
 @routes.route('/admin/publication/new', methods=['GET', 'POST'])
 @require_admin
 def new_publication():
+    # ✅ Asegurar que la carpeta existe
+    upload_folder = 'static/uploads'
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder, exist_ok=True)
+
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
@@ -480,6 +485,11 @@ def new_publication():
 @routes.route('/admin/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
 @require_admin
 def edit_publication(pub_id):
+    # ✅ Asegurar que la carpeta existe
+    upload_folder = 'static/uploads'
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder, exist_ok=True)
+        
     publication = Publication.query.get_or_404(pub_id)
     
     if request.method == 'POST':
