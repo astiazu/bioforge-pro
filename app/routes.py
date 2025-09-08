@@ -1391,19 +1391,69 @@ def subscribe():
     
     if not email:
         flash('Por favor ingresa un email válido', 'error')
-    else:
-        # Evitar duplicados
-        if Subscriber.query.filter_by(email=email).first():
-            flash('✅ Ya estás suscripto. ¡Gracias!', 'info')
-        else:
-            subscriber = Subscriber(email=email)
-            db.session.add(subscriber)
-            try:
-                db.session.commit()
-                flash('✅ ¡Gracias por suscribirte! Pronto recibirás contenido exclusivo.', 'success')
-            except Exception as e:
-                db.session.rollback()
-                flash('❌ Hubo un error. Intenta más tarde.', 'danger')
+        return redirect(request.referrer or url_for('routes.index'))
+    
+    # Evitar duplicados
+    if Subscriber.query.filter_by(email=email).first():
+        flash('✅ Ya estás suscripto. ¡Gracias!', 'info')
+        return redirect(request.referrer or url_for('routes.index'))
+
+    # Guardar suscriptor
+    subscriber = Subscriber(email=email)
+    db.session.add(subscriber)
+    
+    try:
+        db.session.commit()
+        
+        # ✅ Enviar correo de bienvenida
+        try:
+            msg = Message(
+                subject="✅ ¡Bienvenido a nuestro newsletter!",
+                recipients=[email],
+                body=f"""
+                Hola,
+
+                ¡Gracias por suscribirte a nuestro newsletter!
+
+                Pronto recibirás contenido exclusivo sobre:
+                - Análisis de datos
+                - Python
+                - Casos de éxito reales
+                - Cursos y talleres prácticos sobre IA
+                - Automatización
+                - Notas de Interés, etc ...
+
+                Saludos,
+                José Luis Astiazu
+                """.strip(),
+                html=f"""
+                <h2>✅ ¡Bienvenido a nuestro newsletter!</h2>
+                <p>Hola,</p>
+                <p>¡Gracias por suscribirte a nuestro newsletter!</p>
+                <h4>Pronto recibirás contenido exclusivo sobre:</h4>
+                <ul>
+                    <li>Análisis de datos</li>
+                    <li>Python</li>
+                    <li>Casos de éxito reales</li>
+                    <li>Cursos y talleres prácticos sobre IA</li>
+                    <li>Automatización</li>
+                    <li>Notas de Interés, etc... </li>
+                </ul>
+                <p>Saludos,<br>
+                <strong>José Luis Astiazu</strong></p>
+                """
+            )
+            mail.send(msg)
+        except Exception as e:
+            current_app.logger.error(f"Error al enviar email de bienvenida: {str(e)}")
+            # No falla si el email no se envía, pero se registra
+
+        flash('✅ ¡Gracias por suscribirte! Revisa tu email para confirmación.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error al guardar suscriptor: {str(e)}")
+        flash('❌ Hubo un error al guardar tu suscripción. Intenta más tarde.', 'danger')
     
     return redirect(request.referrer or url_for('routes.index'))
 
