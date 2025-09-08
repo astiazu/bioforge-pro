@@ -489,7 +489,7 @@ def edit_publication(pub_id):
     upload_folder = 'static/uploads'
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder, exist_ok=True)
-        
+
     publication = Publication.query.get_or_404(pub_id)
     
     if request.method == 'POST':
@@ -925,7 +925,7 @@ def editar_perfil_medico():
                     filepath = os.path.join('static/uploads/profiles', filename)
                     os.makedirs(os.path.dirname(filepath), exist_ok=True)
                     file.save(filepath)
-                    current_user.profile_photo = f"/{filepath}"
+                    current_user.profile_photo = f"/static/uploads/profiles/{filename}"
                 else:
                     flash('Formato no permitido. Usa JPG, PNG o GIF.', 'warning')
 
