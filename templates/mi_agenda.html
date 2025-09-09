@@ -14,8 +14,8 @@
 
     <!-- Consultorios -->
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">📍 Consultorios</h5>
+        <div class="card-header bg-primary text-black-50">
+            <h5 class="mb-0">📍 Lugar de Atención</h5>
         </div>
         <div class="card-body">
             {% if clinics %}
@@ -32,14 +32,14 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-muted">No tienes consultorios. <a href="{{ url_for('routes.nuevo_consultorio') }}">Crea uno</a>.</p>
+                <p class="text-primary">No tienes consultorios. <a href="{{ url_for('routes.nuevo_consultorio') }}">Crea uno</a>.</p>
             {% endif %}
         </div>
     </div>
 
     <!-- Agendas -->
     <div class="card mb-4">
-        <div class="card-header bg-success text-white">
+        <div class="card-header bg-success text-black-50">
             <h5 class="mb-0">🕒 Horarios de Atención</h5>
         </div>
         <div class="card-body">
@@ -50,7 +50,7 @@
                             <tr>
                                 <th>Día</th>
                                 <th>Horario</th>
-                                <th>Consultorio</th>
+                                <th>Ubicación</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -74,7 +74,7 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted">No tienes horarios definidos.</p>
+                <p class="text-primary">No tienes horarios definidos.</p>
             {% endif %}
         </div>
     </div>
@@ -121,11 +121,11 @@
         <div class="modal-content">
             <form method="POST" action="{{ url_for('routes.nueva_agenda') }}">
                 <div class="modal-header">
-                    <h5 class="modal-title">Añadir Horario de Atención</h5>
+                    <h5 class="modal-title text-primary">Añadir Horario de Atención</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
+                    <div class="mb-3 text-primary">
                         <label>Día de la semana</label>
                         <select name="day_of_week" class="form-control" required>
                             {% for i, nombre in days.items() %}
@@ -133,8 +133,8 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label>Consultorio</label>
+                    <div class="mb-3 text-primary">
+                        <label>Ubicación</label>
                         <select name="clinic_id" class="form-control" required>
                             {% for c in clinics %}
                             <option value="{{ c.id }}">{{ c.name }}</option>
@@ -142,11 +142,11 @@
                         </select>
                     </div>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-6 text-primary">
                             <label>Hora de inicio</label>
                             <input type="time" name="start_time" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6 text-primary">
                             <label>Hora de fin</label>
                             <input type="time" name="end_time" class="form-control" required>
                         </div>
