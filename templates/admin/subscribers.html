@@ -1,0 +1,60 @@
+<!-- templates/admin/subscribers.html -->
+{% extends "base.html" %}
+
+{% block title %}Gestionar Suscriptores - Panel Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>📧 Suscriptores</h2>
+                <a href="{{ url_for('routes.admin_panel') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver al Panel
+                </a>
+            </div>
+
+            {% if subscribers %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Email</th>
+                                    <th>Fecha de Suscripción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subscribers %}
+                                <tr>
+                                    <td>{{ sub.id }}</td>
+                                    <td>{{ sub.email }}</td>
+                                    <td>{{ sub.subscribed_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('routes.admin_delete_subscriber', sub_id=sub.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-danger btn-sm" 
+                                                    onclick="return confirm('¿Eliminar suscriptor {{ sub.email }}?')">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-envelope-open-text me-2"></i>
+                No hay suscriptores registrados aún.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

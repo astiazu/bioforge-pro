@@ -1,0 +1,77 @@
+<!-- templates/admin/edit_user.html -->
+{% extends "base.html" %}
+
+{% block title %}Editar Usuario - Panel Admin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>✏️ Editar Usuario</h2>
+                <a href="{{ url_for('routes.admin_users') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Nombre de usuario</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" id="is_professional" name="is_professional" {% if user.is_professional %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_professional">Es profesional</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" {% if user.is_admin %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_admin">Es administrador</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role_id" class="form-label">Rol</label>
+                            <select class="form-select" id="role_id" name="role_id">
+                                <option value="">Seleccionar rol...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}" {% if user.role_id == role.id %}selected{% endif %}>{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Cambiar contraseña -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Nueva Contraseña (opcional)</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Dejar vacío para no cambiar">
+                            <div class="form-text">Deja este campo vacío si no deseas cambiar la contraseña.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                            <a href="{{ url_for('routes.admin_users') }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

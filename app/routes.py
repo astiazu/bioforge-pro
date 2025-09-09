@@ -317,13 +317,17 @@ def admin_panel():
     published_notes = Note.query.filter_by(status=NoteStatus.PUBLISHED).all()
     all_publications = Publication.query.all()
     all_roles = UserRole.query.all()  # ✅ Añadido
-    
+    total_users = User.query.count()
+    total_subscribers = Subscriber.query.count()
+
     return render_template(
         "admin/admin_panel.html",
         pending_notes=pending_notes,
         published_notes=published_notes,
         all_publications=all_publications,
-        all_roles=all_roles,  # ✅ Pasado al template
+        all_roles=all_roles,
+        total_users=total_users,
+        total_subscribers=total_subscribers,  
         bio_short=BIO_SHORT,
         bio_extended=BIO_EXTENDED
     )
@@ -1337,6 +1341,75 @@ def eliminar_agenda(schedule_id):
         flash('❌ Error al eliminar agenda', 'danger')
 
     return redirect(url_for('routes.mi_agenda'))
+
+@routes.route('/admin/users')
+@require_admin
+def admin_users():
+    users = User.query.all()
+    total_admins = User.query.filter_by(is_admin=True).count()  # ✅ Calcula aquí
+    return render_template('admin/users.html', users=users, total_admins=total_admins)
+
+@routes.route('/admin/users/<int:user_id>/edit', methods=['GET', 'POST'])
+@require_admin
+def admin_edit_user(user_id):
+    user = User.query.get_or_404(user_id)
+    total_admins = User.query.filter_by(is_admin=True).count()
+    can_delete = not user.is_admin or total_admins > 1
+
+    if request.method == 'POST':
+        user.username = request.form.get('username', '').strip()
+        user.email = request.form.get('email', '').strip()
+        user.is_professional = 'is_professional' in request.form
+        user.is_admin = 'is_admin' in request.form
+        user.role_id = request.form.get('role_id', type=int)
+
+        # ✅ Cambiar contraseña si se ingresa una nueva
+        password = request.form.get('password', '').strip()
+        if password:
+            user.set_password(password)
+
+        try:
+            db.session.commit()
+            flash('✅ Usuario actualizado', 'success')
+            return redirect(url_for('routes.admin_users'))
+        except Exception as e:
+            db.session.rollback()
+            flash('❌ Error al guardar', 'danger')
+
+    roles = UserRole.query.all()
+    return render_template(
+        'admin/edit_user.html', 
+        user=user, 
+        roles=roles,
+        can_delete=can_delete
+    )
+
+@routes.route('/admin/users/<int:user_id>/delete', methods=['POST'])
+@require_admin
+def admin_delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.is_admin and User.query.filter_by(is_admin=True).count() == 1:
+        flash('❌ No puedes eliminar el único admin', 'danger')
+    else:
+        db.session.delete(user)
+        db.session.commit()
+        flash('✅ Usuario eliminado', 'success')
+    return redirect(url_for('routes.admin_users'))
+
+@routes.route('/admin/subscribers')
+@require_admin
+def admin_subscribers():
+    subscribers = Subscriber.query.order_by(Subscriber.subscribed_at.desc()).all()
+    return render_template('admin/subscribers.html', subscribers=subscribers)
+
+@routes.route('/admin/subscribers/<int:sub_id>/delete', methods=['POST'])
+@require_admin
+def admin_delete_subscriber(sub_id):
+    subscriber = Subscriber.query.get_or_404(sub_id)
+    db.session.delete(subscriber)
+    db.session.commit()
+    flash('✅ Suscriptor eliminado', 'success')
+    return redirect(url_for('routes.admin_subscribers'))
 
 @routes.route('/contacto', methods=['POST'])
 def contacto():
