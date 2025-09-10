@@ -172,22 +172,22 @@ def require_admin(f):
 BIO_SHORT = "📊 Consultor freelance en Analítica de Datos y Sistemas • Formador en Python y BI • Certificado Google Data Analytics • Transformo datos en decisiones."
 BIO_EXTENDED = """Somos una consultora independiente en análisis de datos, big data y sistemas..."""
 
-PUBLICATIONS = [
-    {
-        "id": 1001,
-        "type": "Educativo",
-        "title": "El error más común en análisis de datos",
-        "content": "En mi experiencia como consultor, el error más común que veo...",
-        "image_url": "/static/img/default-article.jpg"
-    },
-    {
-        "id": 1002,
-        "type": "Caso de éxito",
-        "title": "Cómo optimicé un proceso de ETL con Python",
-        "content": "Un cliente tenía un proceso de carga de datos que tardaba 8 horas...",
-        "image_url": "/static/img/default-article.jpg"
-    }
-]
+# PUBLICATIONS = [
+#     {
+#         "id": 1001,
+#         "type": "Educativo",
+#         "title": "El error más común en análisis de datos",
+#         "content": "En mi experiencia como consultor, el error más común que veo...",
+#         "image_url": "/static/img/default-article.jpg"
+#     },
+#     {
+#         "id": 1002,
+#         "type": "Caso de éxito",
+#         "title": "Cómo optimicé un proceso de ETL con Python",
+#         "content": "Un cliente tenía un proceso de carga de datos que tardaba 8 horas...",
+#         "image_url": "/static/img/default-article.jpg"
+#     }
+# ]
 
 @routes.route("/")
 def index():
@@ -354,45 +354,45 @@ def admin_reject_note(note_id):
 
 @routes.route("/publications")
 def publications():
-    # Filtros
+    # Filtros generales
     q = request.args.get('q', '').strip()
     category = request.args.get('category', '')
 
-    # Obtener publicaciones de la DB
+    # Consulta base: solo publicadas
     db_query = Publication.query.filter_by(is_published=True)
+
     if q:
         db_query = db_query.filter(
             Publication.title.ilike(f"%{q}%") |
             Publication.content.ilike(f"%{q}%") |
             Publication.tags.ilike(f"%{q}%")
         )
+    
     if category:
         db_query = db_query.filter_by(type=category)
     
-    db_publications = db_query.order_by(Publication.published_at.desc()).all()
+    all_publications = db_query.order_by(Publication.published_at.desc()).all()
 
-    # Lista combinada
+    # Lista combinada (DB + estáticas si existen)
     combined = []
-
-    # Añadir publicaciones de la DB
-    for pub in db_publications:
+    for pub in all_publications:
         if not pub.published_at:
             pub.published_at = pub.created_at or datetime.utcnow()
         combined.append({
             "id": pub.id,
             "type": pub.type,
             "title": pub.title,
-            "content": pub.excerpt or (pub.content[:200] + "..."),
+            "content": (pub.excerpt or pub.content[:200]) + "..." if len(pub.content) > 200 else pub.content,
             "published_at": pub.published_at,
             "author": pub.author.username if pub.author else "José Luis Astiazu",
             "is_db": True,
-            "image_url": pub.image_url or "/static/img/default-article.jpg"
+            "image_url": pub.image_url or "/static/img/default-article.jpg",
+            "view_count": pub.view_count or 0
         })
 
-    # Añadir publicaciones estáticas (si existen)
     if 'PUBLICATIONS' in globals():
         for pub in PUBLICATIONS:
-            if category and pub["type"] != category:
+            if category and pub.get("type") != category:
                 continue
             combined.append({
                 "id": pub["id"],
@@ -402,41 +402,51 @@ def publications():
                 "published_at": pub.get("published_at", datetime.now()),
                 "author": "José Luis Astiazu",
                 "is_db": False,
-                "image_url": pub.get("image_url", "/static/img/default-article.jpg")
+                "image_url": pub.get("image_url", "/static/img/default-article.jpg"),
+                "view_count": pub.get("view_count", 0)
             })
 
     # Ordenar por fecha
     combined.sort(key=lambda x: x["published_at"], reverse=True)
 
+    # Sección 1: Carrusel (3 primeras)
+    carousel_items = combined[:3]
+
+    # Sección 2: Publicación principal + 4 tarjetas
+    main_pub = combined[0] if combined else None
+    side_pubs = combined[1:5]  # 4 siguientes
+
+    # Sección 3: Resto de publicaciones
+    rest_pubs = combined[5:]
+
+    # Sección 4: Sociales y Cultura (por tipo o etiquetas)
+    social_culture_tags = ['social', 'cultura', 'arte', 'música', 'teatro']
+    sociales_y_cultura = [
+        p for p in combined 
+        if 'social' in p['type'].lower() or any(tag in (p.get('tags') or '').lower() for tag in social_culture_tags)
+    ]
+
+    # Sección 5: Deportes
+    deportes_tags = ['deporte', 'fútbol', 'tenis', 'atletismo', 'natación']
+    deportes = [
+        p for p in combined 
+        if 'deporte' in p['type'].lower() or any(tag in (p.get('tags') or '').lower() for tag in deportes_tags)
+    ]
+
     return render_template(
         "publications.html",
-        publications=combined,
+        carousel_items=carousel_items,
+        main_pub=main_pub,
+        side_pubs=side_pubs,
+        rest_pubs=rest_pubs,
+        sociales_y_cultura=sociales_y_cultura,
+        deportes=deportes,
         bio_short=BIO_SHORT,
         bio_extended=BIO_EXTENDED,
         active_tab="publications",
         selected_category=category,
         search_query=q
     )
-
-@routes.route('/publication/<int:pub_id>')
-def view_publication(pub_id):
-    # ✅ El admin puede ver cualquier publicación (incluso borradores)
-    if current_user.is_authenticated and current_user.is_admin:
-        publication = Publication.query.get_or_404(pub_id)
-    else:
-        # Público solo ve publicadas
-        publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
-    
-    if not publication:
-        abort(404)
-
-    return render_template(
-        'view_publication.html',
-        publication=publication,
-        bio_short=BIO_SHORT,
-        bio_extended=BIO_EXTENDED
-    )
-
 @routes.route('/admin/publication/new', methods=['GET', 'POST'])
 @require_admin
 def new_publication():
@@ -485,6 +495,31 @@ def new_publication():
         return redirect(url_for('routes.admin_panel'))
 
     return render_template('edit_publication.html', publication=None, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
+
+@routes.route('/publication/<int:pub_id>')
+def view_publication(pub_id):
+    # ✅ El admin puede ver cualquier publicación (incluso borradores)
+    if current_user.is_authenticated and current_user.is_admin:
+        publication = Publication.query.get_or_404(pub_id)
+    else:
+        # Público solo ve publicadas
+        publication = Publication.query.filter_by(id=pub_id, is_published=True).first()
+    
+    if not publication:
+        abort(404)
+    
+    # ✅ Incrementar contador de vistas
+    if publication.view_count is None:
+        publication.view_count = 0
+    publication.view_count += 1
+    db.session.commit()
+
+    return render_template(
+        'view_publication.html',
+        publication=publication,
+        bio_short=BIO_SHORT,
+        bio_extended=BIO_EXTENDED 
+    )
 
 @routes.route('/admin/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
 @require_admin
@@ -543,6 +578,17 @@ def delete_publication(pub_id):
     flash('🗑️ Publicación eliminada exitosamente', 'info')
     return redirect(url_for('routes.admin_panel'))
 
+@routes.route('/publicaciones-destacadas')
+def destacadas():
+    destacadas = Publication.query.filter_by(is_published=True).order_by(Publication.view_count.desc()).limit(5).all()
+    return render_template(
+        'destacadas.html',
+        destacadas=destacadas,
+        bio_short=BIO_SHORT,
+        bio_extended=BIO_EXTENDED,
+        active_tab="destacadas"
+    )
+
 @routes.route("/portfolio")
 def portfolio():
     return render_template("portfolio.html", bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED, active_tab="portfolio")
@@ -569,24 +615,68 @@ def notes():
 @routes.route('/note/<int:note_id>')
 def view_note(note_id):
     note = Note.query.get_or_404(note_id)
-    
-    # ✅ Permitir ver si:
-    # - Está publicada
-    # - O el usuario es el dueño
-    # - O es admin
-    if not current_user.is_authenticated:
-        if note.status != NoteStatus.PUBLISHED:
-            abort(404)
-    else:
-        if note.status != NoteStatus.PUBLISHED and note.user_id != current_user.id and not current_user.is_admin:
-            abort(404)
+    # Obtener email del usuario autenticado o de la sesión
+    current_user_email = current_user.email if current_user.is_authenticated else None
+    session_email = session.get('subscriber_email')
 
-    # ✅ Aumentar contador de vistas solo si está publicada
+    # Verificar si el email del usuario está en subscribers
+    is_subscriber_db = False
+    if current_user_email:
+        is_subscriber_db = Subscriber.query.filter_by(email=current_user_email).first() is not None
+
+    # Verificar si el email en sesión está en subscribers
+    is_subscriber_session = False
+    if session_email:
+        is_subscriber_session = Subscriber.query.filter_by(email=session_email).first() is not None
+
+    # Puede ver si: está registrado (User) o su email está en subscribers
+    can_view = current_user.is_authenticated or is_subscriber_db or is_subscriber_session
+
+    # Imprimir para depurar
+    print(f"Email del usuario actual: {current_user_email}")
+    print(f"Email en sesión (suscriptor): {session_email}")
+    print(f"¿Email de usuario en subscribers? {is_subscriber_db}")
+    print(f"¿Email de sesión en subscribers? {is_subscriber_session}")
+    print(f"¿Puede ver el contenido? {can_view}")
+
+    # ✅ Verificar si el usuario es suscriptor 
+    if 'subscriber_email' in session:
+        subscriber = Subscriber.query.filter_by(email=session['subscriber_email']).first()
+        is_subscriber = subscriber is not None
+    else:
+        is_subscriber = False
+
+    print(f"is_subscriber: {is_subscriber}")
+    
+    # ✅ Verificar permisos
+    if note.status == NoteStatus.PUBLISHED:
+        # Si es nota pública, cualquiera puede verla (pero vamos a registrar vistas)
+        can_view = True
+    else:
+        # Si es privada o pendiente, solo dueño o admin
+        if not current_user.is_authenticated:
+            can_view = False
+        else:
+            can_view = (note.user_id == current_user.id or current_user.is_admin)
+    
+    if is_subscriber_db or current_user_email:
+        can_view = True
+
+    if not can_view:
+        flash("Regístrate o suscríbete para acceder al contenido exclusivo.", "info")
+        return redirect(url_for('routes.profesionales'))
+
+    # ✅ Solo aumentar vistas si es PUBLISHED
     if note.status == NoteStatus.PUBLISHED:
         note.view_count += 1
         db.session.commit()
 
-    return render_template("view_note.html", note=note, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
+    return render_template(
+        "view_note.html",
+        note=note,
+        bio_short=BIO_SHORT,
+        bio_extended=BIO_EXTENDED
+    )
 
 @routes.route('/note/new', methods=['GET', 'POST'])
 @routes.route('/note/<int:note_id>/edit', methods=['GET', 'POST'])
@@ -844,10 +934,18 @@ def profesionales():
 def perfil_profesional(url_slug):
     professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
     clinics = Clinic.query.filter_by(doctor_id=professional.id, is_active=True).all()
+    
+    # ✅ Obtener notas del profesional: públicas, privadas y pendientes
+    published_notes = Note.query.filter(
+        Note.user_id == professional.id,
+        Note.status.in_([NoteStatus.PUBLISHED, NoteStatus.PRIVATE, NoteStatus.PENDING])
+    ).order_by(Note.approved_at.desc().nullslast(), Note.created_at.desc()).all()
+
     return render_template(
         'public/perfil_profesional.html',
-        doctor=professional,  # mantener doctor por compatibilidad
+        doctor=professional,
         clinics=clinics,
+        published_notes=published_notes,
         active_tab='profesionales'
     )
 

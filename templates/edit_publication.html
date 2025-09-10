@@ -48,7 +48,7 @@
                                     <label for="type" class="form-label">Tipo <span class="text-danger">*</span></label>
                                     <select class="form-select" id="type" name="type" required>
                                         <option value="">Seleccionar tipo...</option>
-                                        {% set types = ["Educativo", "Caso de éxito", "Autoridad técnica", "Tutorial", "Análisis"] %}
+                                        {% set types = ["Educativo", "Caso de éxito", "Tecnología", "Tutoriales", "Análisis", "Política", "Cultura", "Deportes"] %}
                                         {% for pub_type in types %}
                                         <option value="{{ pub_type }}" {% if publication and publication.type == pub_type %}selected{% endif %}>
                                             {{ pub_type }}
@@ -211,6 +211,7 @@ function autoSave() {
     localStorage.setItem('publication_draft', JSON.stringify(draft));
 }
 
+/*
 function loadDraft() {
     const draft = localStorage.getItem('publication_draft');
     if (draft && !document.getElementById('title').value) {
@@ -222,6 +223,7 @@ function loadDraft() {
         document.getElementById('tags').value = data.tags || '';
     }
 }
+*/
 
 formInputs.forEach(input => {
     input.addEventListener('input', () => {
@@ -230,9 +232,10 @@ formInputs.forEach(input => {
     });
 });
 
-// ✅ Corregido: sin punto y coma
+/* / ✅ Corregido: sin punto y coma
 {% if not publication %}
     loadDraft();
 {% endif %}
+*/
 </script>
 {% endblock %}

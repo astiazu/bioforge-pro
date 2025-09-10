@@ -167,6 +167,7 @@ class Publication(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     published_at = db.Column(db.DateTime, nullable=True)
     image_url = db.Column(db.String(300), nullable=True)
+    view_count = db.Column(db.Integer, default=0)
 
     # ✅ Relación bidireccional
     author = db.relationship("User", back_populates="publications")

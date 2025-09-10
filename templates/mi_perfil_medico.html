@@ -7,7 +7,7 @@
         <h2>👤 Mi Perfil</h2>
         <div>
             <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary">📅 Mi Agenda</a>
-            <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">🏥 Nuevo Consultorio</a>
+            <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">🏥 Nueva Ubicación</a>
             <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-outline-warning">👤 Editar Perfil</a>
         </div>
     </div>
@@ -28,7 +28,7 @@
         <div class="col-md-4">
             <div class="card bg-light">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Turnos Recibidos</h5>
+                    <h5 class="mb-0">Citas Recibidas</h5>
                 </div>
                 <div class="card-body">
                     {% if turnos_recibidos %}
@@ -40,7 +40,7 @@
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted">No tienes turnos aún.</p>
+                        <p class="text-muted">No tienes citas aún.</p>
                     {% endif %}
                 </div>
             </div>

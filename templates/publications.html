@@ -5,22 +5,12 @@
 
 {% block content %}
 <div class="container mt-5">
-    <!-- Encabezado -->
-    <div class="text-center mb-5">
-        <h1 class="display-5">
-            <i class="fas fa-newspaper me-3 text-info"></i>
-            Publicaciones
-        </h1>
-        <p class="lead text-primary">
-            Artículos educativos, casos de éxito y análisis de datos
-        </p>
-    </div>
 
-    <!-- Barra de búsqueda y filtros -->
+    <!-- 1. Filtros -->
     <div class="row mb-4">
         <div class="col-md-8">
             <form method="GET" action="{{ url_for('routes.publications') }}" class="d-flex">
-                <input type="text" name="q" class="form-control flex-grow-1" placeholder="Buscar por título o etiqueta...">
+                <input type="text" name="q" class="form-control flex-grow-1" placeholder="Buscar...">
                 <button type="submit" class="btn btn-primary">Buscar</button>
             </form>
         </div>
@@ -31,48 +21,120 @@
                 <option value="Caso de éxito">Caso de éxito</option>
                 <option value="Análisis">Análisis</option>
                 <option value="Opinión">Opinión</option>
+                <option value="Opinión">Cultura</option>
+                <option value="Opinión">Deportes</option>
             </select>
         </div>
     </div>
 
-    <!-- Publicaciones principales (4 tarjetas) -->
+    <!-- 2. Carrusel: 3 publicaciones -->
+    <h3 class="mb-4">📌 Publicaciones Destacadas</h3>
+    <div id="carouselPublications" class="carousel slide mb-5" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for pub in carousel_items %}
+            <div class="carousel-item {% if loop.index0 == 0 %}active{% endif %}">
+                <div class="card bg-light d-flex flex-row align-items-center p-3">
+                    <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                         class="me-3" style="width: 120px; height: 80px; object-fit: cover;">
+                    <div>
+                        <h6>{{ pub.title }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas
+                            {{ pub.published_at.strftime('%d %b %Y') }} •
+                            Por {{ pub.author }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselPublications" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselPublications" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+
+    <!-- 3. Publicaciones Actuales -->
+    <h3 class="mb-4">📰 Publicaciones Actuales</h3>
     <div class="row g-4 mb-5">
-        {% for pub in publications[:4] %}
+        <!-- Principal -->
+        <div class="col-lg-6">
+            {% if main_pub %}
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ main_pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 250px; object-fit: cover;">
+                <div class="card-body">
+                    <span class="badge bg-secondary">{{ main_pub.type }}</span>
+                    <h5 class="card-title mt-2">{{ main_pub.title }}</h5>
+                    <p class="card-text small text-muted">{{ main_pub.content|truncate(150) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small><i class="fas fa-eye me-1"></i>
+                            {{ main_pub.view_count }} vistas
+                            {{ main_pub.published_at.strftime('%d %b %Y') }} •
+                            Por {{ main_pub.author }}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=main_pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 4 Tarjetas (2x2) -->
+        <div class="col-lg-6">
+            <div class="row g-3">
+                {% for pub in side_pubs %}
+                <div class="col-6">
+                    <div class="card h-100 shadow-sm border-light" style="max-height: 200px;">
+                        <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                             class="card-img-top" style="height: 100px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title small m-0">
+                                {{ pub.title|truncate(40) }}
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small><i class="fas fa-eye me-1"></i>
+                                    {{ pub.view_count }} vistas
+                                    {{ pub.published_at.strftime('%d %b %Y') }} •
+                                    Por {{ pub.author }}
+                                </small>
+                                <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Resto de publicaciones -->
+    <h3 class="mb-4">📚 Otras Publicaciones</h3>
+    <div class="row g-4 mb-5">
+        {% for pub in rest_pubs %}
         <div class="col-lg-3 col-md-6">
             <div class="card h-100 shadow-sm border-light">
                 <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
-                     class="card-img-top" 
-                     alt="{{ pub.title }}" 
-                     style="height: 150px; object-fit: cover;">
-                <div class="card-body">
-                    <span class="badge bg-secondary">{{ pub.type }}</span>
-                    <h6 class="card-title mt-2">{{ pub.title }}</h6>
-                    <p class="card-text text-muted small">{{ pub.excerpt|truncate(100) }}</p>
-                    <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">
-                        Leer más
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Publicaciones restantes en cuadrícula -->
-    <div class="row g-4">
-        {% for pub in publications[4:] %}
-        <div class="col-lg-4 col-md-6">
-            <div class="card h-100 shadow-sm border-light">
-                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
-                     class="card-img-top" 
-                     alt="{{ pub.title }}" 
-                     style="height: 180px; object-fit: cover;">
-                <div class="card-body">
-                    <span class="badge bg-secondary">{{ pub.type }}</span>
-                    <h6 class="card-title mt-2">{{ pub.title }}</h6>
-                    <p class="card-text text-muted small">{{ pub.excerpt|truncate(120) }}</p>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <small class="text-muted">{{ pub.published_at.strftime('%d/%m/%Y') }}</small>
-                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <span class="badge bg-secondary">
+                        {{ pub.type }}
+                    </span>
+                    <h6 class="card-title mt-2">
+                        {{ pub.title|truncate(50) }}
+                    </h6>
+                    <p class="card-text small text-muted">{{ pub.content|truncate(100) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small><i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas
+                            {{ pub.published_at.strftime('%d %b %Y') }} •
+                            Por {{ pub.author }}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" 
+                            class="btn btn-outline-primary btn-sm">
                             Leer más
                         </a>
                     </div>
@@ -82,13 +144,59 @@
         {% endfor %}
     </div>
 
+    <!-- 5. Sociales y Cultura -->
+    {% if sociales_y_cultura %}
+    <h3 class="mb-4">🎭 Sociales y Cultura</h3>
+    <div class="row g-4 mb-5">
+        {% for pub in sociales_y_cultura %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
+                    <p class="card-text small text-muted">{{ pub.content|truncate(100) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small><i class="fas fa-eye me-1"></i>{{ pub.view_count }} vistas</small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 6. Deportes -->
+    {% if deportes %}
+    <h3 class="mb-4">⚽ Deportes</h3>
+    <div class="row g-4 mb-5">
+        {% for pub in deportes %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
+                    <p class="card-text small text-muted">{{ pub.content|truncate(100) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small><i class="fas fa-eye me-1"></i>{{ pub.view_count }} vistas</small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Publicidad (opcional) -->
     <div class="row mt-5">
         <div class="col-12">
             <div class="bg-dark text-white p-4 rounded">
                 <div class="text-center">
                     <h5>¿Te interesa este tipo de contenido?</h5>
-                    <p class="text-muted">Suscríbete para recibir más artículos sobre análisis de datos, Python y casos de éxito reales.</p>
+                    <p class="text-primary">Suscríbete para recibir más artículos de tu interés o sobre análisis de datos, Python, casos de éxito o información general.</p>
                     <form method="POST" action="{{ url_for('routes.subscribe') }}">
                         <div class="d-flex gap-2">
                             <input type="email" name="email" class="form-control" placeholder="Tu email aquí..." required>
