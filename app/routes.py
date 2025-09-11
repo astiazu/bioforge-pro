@@ -1061,16 +1061,38 @@ def editar_perfil_medico():
             # ✅ No se modificó: mantener el actual
             redirect_slug = current_user.url_slug or f"profesional-{current_user.id}"
 
-        # ✅ Subir imagen
+        # ✅ Subir imagen a Cloudinary
         if 'profile_photo' in request.files:
             file = request.files['profile_photo']
             if file.filename != '':
                 if file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    filename = secure_filename(f"profile_{current_user.id}_{int(datetime.now().timestamp())}.jpg")
-                    filepath = os.path.join('static/uploads/profiles', filename)
-                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                    file.save(filepath)
-                    current_user.profile_photo = f"/static/uploads/profiles/{filename}"
+                    # Guardar temporalmente
+                    temp_dir = 'temp_uploads'
+                    os.makedirs(temp_dir, exist_ok=True)
+                    temp_path = os.path.join(temp_dir, secure_filename(file.filename))
+                    file.save(temp_path)
+
+                    # Subir a Cloudinary
+                    try:
+                        import cloudinary.uploader
+                        response = cloudinary.uploader.upload(
+                            temp_path,
+                            folder="profiles",
+                            public_id=f"profile_{current_user.id}",
+                            overwrite=True,
+                            transformation=[
+                                {'width': 400, 'height': 400, 'crop': 'fill'},
+                                {'quality': 'auto:good'}
+                            ]
+                        )
+                        current_user.profile_photo = response['secure_url']  # ✅ URL de Cloudinary
+                    except Exception as e:
+                        flash('❌ Error al subir la imagen', 'danger')
+                        print(f"Error Cloudinary: {e}")
+                    finally:
+                        # Limpiar archivo temporal
+                        if os.path.exists(temp_path):
+                            os.remove(temp_path)
                 else:
                     flash('Formato no permitido. Usa JPG, PNG o GIF.', 'warning')
 
