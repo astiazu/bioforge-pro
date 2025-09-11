@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 from app.models import User, Note, Publication, NoteStatus, Clinic, Availability, Appointment, MedicalRecord, Schedule, UserRole, Subscriber
 from app import db, mail
 from flask_mail import Message
+from app.utils import upload_to_cloudinary
 
 import re
 import chardet
@@ -391,7 +392,7 @@ def publications():
         })
 
     if 'PUBLICATIONS' in globals():
-        for pub in PUBLICATIONS:
+        for pub in publications:
             if category and pub.get("type") != category:
                 continue
             combined.append({
@@ -447,13 +448,14 @@ def publications():
         selected_category=category,
         search_query=q
     )
+
 @routes.route('/admin/publication/new', methods=['GET', 'POST'])
 @require_admin
 def new_publication():
-    # ✅ Asegurar que la carpeta existe
-    upload_folder = 'static/uploads'
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder, exist_ok=True)
+    # ✅ Asegurar que la carpeta existe / para local:
+    # upload_folder = 'static/uploads'
+    # if not os.path.exists(upload_folder):
+    #    os.makedirs(upload_folder, exist_ok=True)
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -481,14 +483,34 @@ def new_publication():
         db.session.add(publication)
         db.session.flush()  # Para obtener el ID
 
-        # ✅ Manejo de imagen subida
+        # ✅ Manejo de imagen subida para local:
+        # if 'image_file' in request.files:
+        #     file = request.files['image_file']
+        #     if file.filename != '':
+        #         filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
+        #         filepath = os.path.join('static/uploads', filename)
+        #         file.save(filepath)
+        #         publication.image_url = f"/static/uploads/{filename}"
+
+                # ✅ Manejo de imagen subida
         if 'image_file' in request.files:
             file = request.files['image_file']
             if file.filename != '':
-                filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
-                filepath = os.path.join('static/uploads', filename)
-                file.save(filepath)
-                publication.image_url = f"/static/uploads/{filename}"
+                # Guardar temporalmente
+                temp_dir = 'temp_uploads'
+                os.makedirs(temp_dir, exist_ok=True)
+                temp_path = os.path.join(temp_dir, secure_filename(file.filename))
+                file.save(temp_path)
+
+                # Subir a Cloudinary
+                image_url = upload_to_cloudinary(temp_path, folder="publications")
+
+                # Limpiar archivo temporal
+                os.remove(temp_path)
+
+                if image_url:
+                    publication.image_url = image_url  # ✅ Guarda URL de Cloudinary
+
 
         db.session.commit()
         flash('✅ Publicación creada exitosamente', 'success')
@@ -524,10 +546,11 @@ def view_publication(pub_id):
 @routes.route('/admin/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
 @require_admin
 def edit_publication(pub_id):
-    # ✅ Asegurar que la carpeta existe
-    upload_folder = 'static/uploads'
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder, exist_ok=True)
+    # ✅ Asegurar que la carpeta existe para local:
+    # upload_folder = 'static/uploads'
+    # if not os.path.exists(upload_folder):
+    #     os.makedirs(upload_folder, exist_ok=True)
+
 
     publication = Publication.query.get_or_404(pub_id)
     
@@ -547,21 +570,41 @@ def edit_publication(pub_id):
             publication.published_at = None
 
         # ✅ Manejo de imagen: solo si se sube una nueva
-        if 'image_file' in request.files and request.files['image_file'].filename != '':
-            file = request.files['image_file']
+        # if 'image_file' in request.files and request.files['image_file'].filename != '':
+        #     file = request.files['image_file']
             
-            # Eliminar imagen anterior si existe
-            if publication.image_url and os.path.exists('.' + publication.image_url):
-                os.remove('.' + publication.image_url)
+        #     # Eliminar imagen anterior si existe
+        #     if publication.image_url and os.path.exists('.' + publication.image_url):
+        #         os.remove('.' + publication.image_url)
             
-            # Guardar nueva imagen
-            filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
-            filepath = os.path.join('static/uploads', filename)
-            file.save(filepath)
-            publication.image_url = f"/static/uploads/{filename}"
+        #     # Guardar nueva imagen
+        #     filename = secure_filename(f"pub_{publication.id}_{int(time.time())}.jpg")
+        #     filepath = os.path.join('static/uploads', filename)
+        #     file.save(filepath)
+        #     publication.image_url = f"/static/uploads/{filename}"
 
         # ✅ Si no se sube nueva imagen, conserva la anterior
         # (no se hace nada, ya está en publication.image_url)
+                # ✅ Manejo de imagen: solo si se sube una nueva
+        if 'image_file' in request.files and request.files['image_file'].filename != '':
+            file = request.files['image_file']
+            
+            # Guardar temporalmente
+            temp_dir = 'temp_uploads'
+            os.makedirs(temp_dir, exist_ok=True)
+            temp_path = os.path.join(temp_dir, secure_filename(file.filename))
+            file.save(temp_path)
+
+            # Subir a Cloudinary
+            image_url = upload_to_cloudinary(temp_path, folder="publications")
+
+            # Limpiar archivo temporal
+            os.remove(temp_path)
+
+            if image_url:
+                publication.image_url = image_url  # ✅ Reemplaza con nueva URL
+
+        # ✅ Si no se sube nueva imagen, conserva la anterior (no hace nada)
 
         db.session.commit()
         flash('✅ Publicación actualizada exitosamente', 'success')

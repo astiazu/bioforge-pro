@@ -1,4 +1,5 @@
 # app/__init__.py
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -11,6 +12,14 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
 migrate = Migrate()
+
+# ✅ Añadir Cloudinary
+try:
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+except ImportError:
+    pass  # Lo instalaste con pip, pero por si acaso
 
 def create_app():
     app = Flask(
@@ -29,14 +38,12 @@ def create_app():
     # === Configuración Principal ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo-cambia-esto-en-produccion"
 
-    # ✅ Usa DATABASE_URL (PostgreSQL en Render) o fallback a SQLite solo en local
     if os.environ.get('DATABASE_URL'):
         database_url = os.environ.get('DATABASE_URL')
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
-        # Solo para desarrollo local
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
@@ -56,15 +63,21 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.login_view = "auth.login"
 
-    # ✅ Crear tablas al iniciar (solo si no existen)
+    # ✅ Configurar Cloudinary
     with app.app_context():
+        import cloudinary
+        cloudinary.config(
+            cloud_name=os.environ.get("CLOUD_NAME"),
+            api_key=os.environ.get("CLOUDINARY_API_KEY"),
+            api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+            secure=True
+        )
+
         from app.models import User
         from app.routes import routes
         from app.auth import auth
 
-        # ✅ Crea todas las tablas si no existen
         db.create_all()
-
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
