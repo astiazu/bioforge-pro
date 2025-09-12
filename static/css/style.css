@@ -2,7 +2,7 @@
 
 :root {
     --primary-color: #0d6efd;
-    --secondary-color: #6c757d;
+    --secondary-color: #dbdefc;
     --porf-color: #cce1e6;
     --success-color: #198754;
     --info-color: #0dcaf0;
@@ -18,6 +18,11 @@ body {
     line-height: 1.6;
     background-color: var(--dark-color);
     color: #fff;
+}
+
+/*bold text*/
+.bold-text {
+    font-weight: bold;
 }
 
 /* Sidebar Styles */
@@ -210,7 +215,7 @@ body {
 
 /* Dark theme consistency */
 .bg-dark {
-    background-color: #1a1a1a !important;
+    background-color: #000291 !important;
 }
 
 .border-secondary {
