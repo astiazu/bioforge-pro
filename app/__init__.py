@@ -19,7 +19,7 @@ try:
     import cloudinary.uploader
     import cloudinary.api
 except ImportError:
-    pass  # Lo instalaste con pip, pero por si acaso
+    pass 
 
 def create_app():
     app = Flask(

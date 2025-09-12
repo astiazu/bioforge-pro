@@ -675,12 +675,12 @@ def view_note(note_id):
     # Puede ver si: está registrado (User) o su email está en subscribers
     can_view = current_user.is_authenticated or is_subscriber_db or is_subscriber_session
 
-    # Imprimir para depurar
-    print(f"Email del usuario actual: {current_user_email}")
-    print(f"Email en sesión (suscriptor): {session_email}")
-    print(f"¿Email de usuario en subscribers? {is_subscriber_db}")
-    print(f"¿Email de sesión en subscribers? {is_subscriber_session}")
-    print(f"¿Puede ver el contenido? {can_view}")
+    # depurar
+    #print(f"Email del usuario actual: {current_user_email}")
+    #print(f"Email en sesión (suscriptor): {session_email}")
+    #print(f"¿Email de usuario en subscribers? {is_subscriber_db}")
+    #print(f"¿Email de sesión en subscribers? {is_subscriber_session}")
+    #print(f"¿Puede ver el contenido? {can_view}")
 
     # ✅ Verificar si el usuario es suscriptor 
     if 'subscriber_email' in session:
@@ -744,23 +744,50 @@ def edit_note(note_id=None):
             flash('Por favor completa el título y contenido', 'error')
             return render_template('edit_note.html', note=note, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
 
+        # ✅ Subir imagen a Cloudinary si hay archivo
+        featured_image = None
+        if upload_image and upload_image.filename != '':
+            if upload_image.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                # Guardar temporalmente
+                temp_dir = 'temp_uploads'
+                os.makedirs(temp_dir, exist_ok=True)
+                temp_path = os.path.join(temp_dir, secure_filename(upload_image.filename))
+                upload_image.save(temp_path)
+
+                # Subir a Cloudinary
+                try:
+                    import cloudinary.uploader
+                    response = cloudinary.uploader.upload(
+                        temp_path,
+                        folder="notes",
+                        transformation=[
+                            {'width': 800, 'height': 600, 'crop': 'limit'},
+                            {'quality': 'auto:good'}
+                        ]
+                    )
+                    featured_image = response['secure_url']
+                except Exception as e:
+                    db.session.rollback()
+                    flash('❌ Error al subir la imagen a Cloudinary', 'danger')
+                    print(f"Error Cloudinary: {e}")
+                    return render_template('edit_note.html', note=note, bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED)
+                finally:
+                    # Limpiar archivo temporal
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+            else:
+                flash('Formato de imagen no permitido. Usa JPG, PNG o GIF.', 'warning')
+
+        # ✅ Si no se subió archivo pero hay URL
+        elif image_url:
+            featured_image = image_url
+
+        # ✅ Actualizar o crear nota
         if note:
             note.title = title
             note.content = content
-
-            # ✅ Actualizar imagen
-            if upload_image and upload_image.filename != '':
-                if upload_image.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    filename = secure_filename(f"note_{note.id}_{int(datetime.now().timestamp())}.jpg")
-                    filepath = os.path.join('static/uploads/notes', filename)
-                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                    upload_image.save(filepath)
-                    note.featured_image = f"/{filepath}"
-                else:
-                    flash('Formato de imagen no permitido. Usa JPG, PNG o GIF.', 'warning')
-            elif image_url:
-                note.featured_image = image_url
-
+            if featured_image:
+                note.featured_image = featured_image
             db.session.commit()
             flash('✅ Nota actualizada', 'success')
         else:
@@ -768,20 +795,9 @@ def edit_note(note_id=None):
                 title=title,
                 content=content,
                 user_id=current_user.id,
-                status=NoteStatus.PRIVATE
+                status=NoteStatus.PRIVATE,
+                featured_image=featured_image
             )
-
-            # ✅ Añadir imagen
-            if upload_image and upload_image.filename != '':
-                if upload_image.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    filename = secure_filename(f"note_new_{int(datetime.now().timestamp())}.jpg")
-                    filepath = os.path.join('static/uploads/notes', filename)
-                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                    upload_image.save(filepath)
-                    new_note.featured_image = f"/{filepath}"
-            elif image_url:
-                new_note.featured_image = image_url
-
             db.session.add(new_note)
             db.session.commit()
             flash('✅ Nota creada', 'success')
