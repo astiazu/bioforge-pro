@@ -40,7 +40,7 @@
     <!-- Agendas -->
     <div class="card mb-4">
         <div class="card-header bg-success text-black-50">
-            <h5 class="mb-0">🕒 Horarios de Atención</h5>
+            <h5 class="mb-0">🕒 Horarios de Atención de visitas</h5>
         </div>
         <div class="card-body">
             {% if schedules %}
@@ -82,7 +82,7 @@
     <!-- Turnos Programados -->
     <div class="card">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0">✅ Turnos Programados</h5>
+            <h5 class="mb-0">✅ Agenda Programada</h5>
         </div>
         <div class="card-body">
             {% if appointments %}
@@ -93,7 +93,9 @@
                                 <th>Fecha</th>
                                 <th>Hora</th>
                                 <th>Paciente</th>
-                                <th>Consultorio</th>
+                                <th>Ubicación</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -103,13 +105,72 @@
                                 <td>{{ avail.time.strftime('%H:%M') }}</td>
                                 <td>{{ patient.username }}</td>
                                 <td>{{ avail.clinic.name }}</td>
+                                
+                                <!-- Estado del turno -->
+                                <td>
+                                    <span class="
+                                        badge 
+                                        {% if app.status == 'pending' %}bg-warning text-dark
+                                        {% elif app.status == 'confirmed' %}bg-primary
+                                        {% elif app.status == 'in_progress' %}bg-info
+                                        {% elif app.status == 'completed' %}bg-success
+                                        {% elif app.status == 'cancelled' %}bg-danger
+                                        {% else %}bg-secondary
+                                        {% endif %}
+                                    ">
+                                        {{ {
+                                            'pending': '⏳ Pendiente',
+                                            'confirmed': '✅ Confirmado',
+                                            'in_progress': '🔴 En consulta',
+                                            'completed': '✔️ Finalizado',
+                                            'cancelled': '❌ Cancelado'
+                                        }[app.status] }}
+                                    </span>
+                                </td>
+
+                                <!-- Acciones -->
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Botón según estado -->
+                                        {% if app.status == 'confirmed' %}
+                                            <a href="{{ url_for('routes.empezar_turno', appointment_id=app.id) }}" 
+                                            class="btn btn-warning btn-sm" title="Iniciar atención">
+                                                <i class="fas fa-play"></i>
+                                            </a>
+                                        {% elif app.status == 'in_progress' %}
+                                            <a href="{{ url_for('routes.finalizar_turno', appointment_id=app.id) }}" 
+                                            class="btn btn-success btn-sm" title="Finalizar">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        {% endif %}
+
+                                        <!-- Historial del paciente -->
+                                        <a href="{{ url_for('routes.historial_paciente', patient_id=patient.id) }}" 
+                                        class="btn btn-info btn-sm" title="Historial clínico">
+                                            <i class="fas fa-file-medical"></i>
+                                        </a>
+
+                                        <!-- Cancelar (solo si no está cancelado) -->
+                                        {% if app.status not in ['completed', 'cancelled'] %}
+                                        <form method="POST" action="{{ url_for('routes.cancelar_turno', appointment_id=app.id) }}" 
+                                            onsubmit="return confirm('¿Cancelar este turno?')" class="d-inline">
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Cancelar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted">No tienes turnos programados.</p>
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                    <p>No tienes Agenda de citas programada.</p>
+                </div>
             {% endif %}
         </div>
     </div>

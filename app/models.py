@@ -229,22 +229,26 @@ class Availability(db.Model):
 
     # ✅ Relaciones
     clinic = db.relationship("Clinic", back_populates="availability")
-    appointments = db.relationship("Appointment", back_populates="availability")
+    appointments = db.relationship("Appointment", back_populates="availability", cascade="all, delete-orphan")
 
+# app/models.py
 class Appointment(db.Model):
     __tablename__ = "appointments"
     
     id = db.Column(db.Integer, primary_key=True)
     availability_id = db.Column(db.Integer, db.ForeignKey("availability.id"))
     patient_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+    # ✅ Posibles valores: pending, confirmed, in_progress, completed, cancelled
     status = db.Column(db.String(20), default="confirmed")
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # ✅ Relación con MedicalRecord
+    # Relaciones
     clinical_note = db.relationship("MedicalRecord", back_populates="appointment")
     availability = db.relationship("Availability", back_populates="appointments")
     patient = db.relationship("User", back_populates="appointments")
-
+    
 class MedicalRecord(db.Model):
     __tablename__ = "medical_records"
     

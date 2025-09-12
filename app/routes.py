@@ -689,7 +689,7 @@ def view_note(note_id):
     else:
         is_subscriber = False
 
-    print(f"is_subscriber: {is_subscriber}")
+    #print(f"is_subscriber: {is_subscriber}")
     
     # ✅ Verificar permisos
     if note.status == NoteStatus.PUBLISHED:
@@ -1273,6 +1273,57 @@ def confirmacion_turno(appointment_id):
     appointment = Appointment.query.get_or_404(appointment_id)
     return render_template('confirmacion_turno.html', appointment=appointment)
 
+@routes.route('/turno/empezar/<int:appointment_id>')
+@login_required
+def empezar_turno(appointment_id):
+    if not current_user.is_professional:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.index'))
+
+    appointment = Appointment.query.get_or_404(appointment_id)
+    clinic = appointment.availability.clinic
+
+    if clinic.doctor_id != current_user.id:
+        flash('No puedes modificar este turno', 'danger')
+        return redirect(url_for('routes.mi_agenda'))
+
+    appointment.status = 'in_progress'
+    db.session.commit()
+    flash(f'🟢 Turno iniciado: {appointment.patient.username}', 'info')
+    return redirect(url_for('routes.mi_agenda'))
+
+
+@routes.route('/turno/finalizar/<int:appointment_id>')
+@login_required
+def finalizar_turno(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    clinic = appointment.availability.clinic
+
+    if clinic.doctor_id != current_user.id:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_agenda'))
+
+    appointment.status = 'completed'
+    db.session.commit()
+    flash(f'✅ Turno completado: {appointment.patient.username}', 'success')
+    return redirect(url_for('routes.mi_agenda'))
+
+
+@routes.route('/turno/cancelar/<int:appointment_id>', methods=['POST'])
+@login_required
+def cancelar_turno(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    clinic = appointment.availability.clinic
+
+    if clinic.doctor_id != current_user.id:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_agenda'))
+
+    appointment.status = 'cancelled'
+    db.session.commit()
+    flash(f'❌ Turno cancelado: {appointment.patient.username}', 'info')
+    return redirect(url_for('routes.mi_agenda'))
+
 @routes.route('/api/horarios/<int:doctor_id>/<int:clinic_id>/<string:fecha>')
 def api_horarios(doctor_id, clinic_id, fecha):
     try:
@@ -1387,22 +1438,66 @@ def nueva_nota(patient_id):
             return redirect(url_for('routes.historial_paciente', patient_id=patient_id))
     return render_template('nueva_nota.html', patient=patient)
 
+# @routes.route('/mi-agenda')
+# @login_required
+# def mi_agenda():
+#     if not current_user.is_professional:
+#         flash('Acceso denegado', 'danger')
+#         return redirect(url_for('routes.index'))
+    
+#     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+#     schedules = Schedule.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    
+#     appointments = db.session.query(Appointment, Availability, User)\
+#         .join(Availability).join(User, User.id == Appointment.patient_id)\
+#         .join(Clinic).filter(Clinic.doctor_id == current_user.id)\
+#         .order_by(Availability.date, Availability.time).all()
+
+#     days = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+
+#     return render_template(
+#         'mi_agenda.html',
+#         clinics=clinics,
+#         schedules=schedules,
+#         appointments=appointments,
+#         days=days,
+#         bio_short=BIO_SHORT,
+#         bio_extended=BIO_EXTENDED
+#     )
+
 @routes.route('/mi-agenda')
 @login_required
 def mi_agenda():
     if not current_user.is_professional:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
-    
+
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
     schedules = Schedule.query.filter_by(doctor_id=current_user.id, is_active=True).all()
-    
-    appointments = db.session.query(Appointment, Availability, User)\
-        .join(Availability).join(User, User.id == Appointment.patient_id)\
-        .join(Clinic).filter(Clinic.doctor_id == current_user.id)\
-        .order_by(Availability.date, Availability.time).all()
 
-    days = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    # ✅ Consulta optimizada con joins explícitos
+    try:
+        appointments = db.session.query(
+            Appointment,
+            Availability,
+            User  # paciente
+        ).select_from(Appointment)\
+         .join(Availability)\
+         .join(Clinic)\
+         .join(User, User.id == Appointment.patient_id)\
+         .filter(Clinic.doctor_id == current_user.id)\
+         .order_by(Availability.date, Availability.time)\
+         .all()
+
+    except Exception as e:
+        print(f"Error al obtener turnos: {e}")
+        flash('Hubo un problema al cargar los turnos.', 'warning')
+        appointments = []
+
+    days = {
+        0: 'Lunes', 1: 'Martes', 2: 'Miércoles',
+        3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
+    }
 
     return render_template(
         'mi_agenda.html',
