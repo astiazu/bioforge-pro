@@ -1,0 +1,209 @@
+<!-- templates/asistentes.html -->
+{% extends "base.html" %}
+{% block title %}Mis Asistentes{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>👥 Gestión de Asistentes</h1>
+        <a href="{{ url_for('routes.nuevo_asistente') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Nuevo Asistente
+        </a>
+    </div>
+
+    {# Asistentes Generales #}
+    {% if general_assistants %}
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Asistentes Generales</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for assistant in general_assistants %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100 shadow-sm hover-glow">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ assistant.name }}</h5>
+                                <p class="card-text"><i class="fas fa-envelope me-2"></i>{{ assistant.email or 'Sin email' }}</p>
+                                <p class="card-text"><i class="fab fa-whatsapp me-2"></i>{{ assistant.whatsapp or 'Sin WhatsApp' }}</p>
+                                <span class="badge bg-secondary badge-status">General</span>
+                                
+                                <!-- Botones de acción -->
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-info btn-sm btn-task" 
+                                            data-id="{{ assistant.id }}"
+                                            data-name="{{ assistant.name }}"
+                                            data-email="{{ assistant.email or '' }}"
+                                            data-whatsapp="{{ assistant.whatsapp or '' }}">
+                                        <i class="fas fa-tasks"></i> Tarea
+                                    </button>
+                                    <a href="{{ url_for('routes.editar_asistente', assistant_id=assistant.id) }}" 
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('routes.eliminar_asistente', assistant_id=assistant.id) }}" class="d-inline eliminar-form">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Estás seguro de eliminar este asistente?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Enlace para enviar WhatsApp -->
+                                {% if assistant.whatsapp %}
+                                <div class="mt-2">
+                                    <a href="https://wa.me/{{ assistant.whatsapp|replace('+','') }}?text=Hola%20{{ assistant.name }},%20tienes%20una%20nueva%20tarea%20asignada.%20Por%20favor%20ingresa%20al%20sistema%20para%20ver%20los%20detalles." 
+                                       target="_blank" 
+                                       class="btn btn-success btn-sm w-100">
+                                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {# Asistentes por Consultorio #}
+    {% for clinic, assistants in assistants_by_clinic.items() %}
+        {% if assistants %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{{ clinic.name }}</h5>
+                <p class="mb-0 small">{{ clinic.address }}</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for assistant in assistants %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100 shadow-sm hover-glow">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ assistant.name }}</h5>
+                                <p class="card-text"><i class="fas fa-envelope me-2"></i>{{ assistant.email or 'Sin email' }}</p>
+                                <p class="card-text"><i class="fab fa-whatsapp me-2"></i>{{ assistant.whatsapp or 'Sin WhatsApp' }}</p>
+                                <span class="badge bg-primary badge-status">Ubicación</span>
+                                
+                                <!-- Botones de acción -->
+                                <div class="mt-3 d-flex gap-2">
+                                    <button class="btn btn-info btn-sm btn-task" 
+                                            data-id="{{ assistant.id }}"
+                                            data-name="{{ assistant.name }}"
+                                            data-email="{{ assistant.email or '' }}"
+                                            data-whatsapp="{{ assistant.whatsapp or '' }}">
+                                        <i class="fas fa-tasks"></i> Tarea
+                                    </button>
+                                    <a href="{{ url_for('routes.editar_asistente', assistant_id=assistant.id) }}" 
+                                       class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="POST" action="{{ url_for('routes.eliminar_asistente', assistant_id=assistant.id) }}" class="d-inline eliminar-form">
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('¿Estás seguro de eliminar este asistente?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- Enlace para enviar WhatsApp -->
+                                {% if assistant.whatsapp %}
+                                <div class="mt-2">
+                                    <a href="https://wa.me/{{ assistant.whatsapp|replace('+','') }}?text=Hola%20{{ assistant.name }},%20tienes%20una%20nueva%20tarea%20asignada.%20Por%20favor%20ingresa%20al%20sistema%20para%20ver%20los%20detalles." 
+                                       target="_blank" 
+                                       class="btn btn-success btn-sm w-100">
+                                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {# Mensaje si no hay asistentes #}
+    {% if no_assistants %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4>No tienes asistentes registrados</h4>
+            <p class="text-secondary">Empieza añadiendo tu primer asistente.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para asignar tarea -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="taskForm" method="POST" action="{{ url_for('routes.nueva_tarea') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title text-black-50">📋 Asignar Tarea a <span id="assistantName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="assistant_id" id="assistantId">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label text-black-50">Título *</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label text-black-50">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label text-black-50">Fecha Límite</label>
+                        <input type="date" class="form-control" id="due_date" name="due_date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Asignar Tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-glow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1)!important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-task {
+        width: 32%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar el modal de tareas
+    const taskModal = document.getElementById('taskModal');
+    const taskModalInstance = new bootstrap.Modal(taskModal);
+    
+    document.querySelectorAll('.btn-task').forEach(button => {
+        button.addEventListener('click', function() {
+            const name = this.getAttribute('data-name');
+            const id = this.getAttribute('data-id');
+            
+            document.getElementById('assistantName').textContent = name;
+            document.getElementById('assistantId').value = id;
+            
+            taskModalInstance.show();
+        });
+    });
+});
+</script>
+{% endblock %}

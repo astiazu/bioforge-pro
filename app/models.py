@@ -84,7 +84,6 @@ class User(UserMixin, db.Model):
     years_experience = db.Column(db.Integer)
     profile_photo = db.Column(db.String(200))
     license_number = db.Column(db.String(100))
-    email = db.Column(db.String(150), unique=True, nullable=False)
     services = db.Column(db.Text)
     skills = db.Column(db.Text)
 
@@ -98,6 +97,7 @@ class User(UserMixin, db.Model):
     appointments = db.relationship("Appointment", foreign_keys="Appointment.patient_id", back_populates="patient", lazy="select")
     as_doctor_records = db.relationship("MedicalRecord", foreign_keys="MedicalRecord.doctor_id", back_populates="doctor", lazy="select")
     as_patient_records = db.relationship("MedicalRecord", foreign_keys="MedicalRecord.patient_id", back_populates="patient", lazy="select")
+    assistants = db.relationship("Assistant", back_populates="doctor", lazy="select")
     
     # ✅ Relación con rol (corregida)
     role_id = db.Column(db.Integer, db.ForeignKey("user_roles.id"))
@@ -135,7 +135,7 @@ class User(UserMixin, db.Model):
             "services": self.services or "",
             "skills": skills_data,
             "clinics": clinics_data,
-            "role_name": self.role.name if self.role else "Profesional"  # ✅ Añadido
+            "role_name": self.role.name if self.role else "Profesional"
         }
 
     def set_password(self, password):
@@ -217,7 +217,10 @@ class Clinic(db.Model):
     doctor = db.relationship("User", foreign_keys=[doctor_id], back_populates="clinics")
     availability = db.relationship("Availability", back_populates="clinic")
     schedules = db.relationship("Schedule", back_populates="clinic")
-    
+    # ✅ Relación con asistentes
+    assistants = db.relationship("Assistant", back_populates="clinic", cascade="all, delete-orphan", lazy="select")
+    tasks = db.relationship("Task", back_populates="clinic", cascade="all, delete-orphan")
+
 class Availability(db.Model):
     __tablename__ = "availability"
     
@@ -248,7 +251,7 @@ class Appointment(db.Model):
     clinical_note = db.relationship("MedicalRecord", back_populates="appointment")
     availability = db.relationship("Availability", back_populates="appointments")
     patient = db.relationship("User", back_populates="appointments")
-    
+
 class MedicalRecord(db.Model):
     __tablename__ = "medical_records"
     
@@ -295,10 +298,74 @@ class UserRole(db.Model):
     def __repr__(self):
         return f"<UserRole {self.name}>"
     
-# app/models.py
+
 class Subscriber(db.Model):
     __tablename__ = "subscribers"
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
     subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TaskStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+class Assistant(db.Model):
+    __tablename__ = "assistants"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=True)
+    whatsapp = db.Column(db.String(20), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Referencias con relaciones explícitas (sin backref en más de uno)
+    clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=False, index=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relaciones bidireccionales explícitas (back_populates)
+    tasks = db.relationship("Task", back_populates="assistant", cascade="all, delete-orphan")
+    clinic = db.relationship("Clinic", back_populates="assistants")
+    doctor = db.relationship("User", back_populates="assistants")  # Cambiado de backref a back_populates
+
+    # Restricción: un asistente no puede duplicarse en el mismo consultorio
+    __table_args__ = (
+        db.UniqueConstraint('clinic_id', 'name', name='uq_assistant_clinic_name'),
+    )
+
+    def __repr__(self):
+        return f"<Assistant {self.name} | Clínica: {self.clinic_id} | Médico: {self.doctor_id}>"
+
+    @property
+    def full_info(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "whatsapp": self.whatsapp,
+            "clinic_id": self.clinic_id,
+            "doctor_id": self.doctor_id,
+            "created_at": self.created_at.isoformat(),
+            "is_active": self.is_active
+        }
+
+class Task(db.Model):
+    __tablename__ = "tasks"
     
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    due_date = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(20), default=TaskStatus.PENDING.value, nullable=False)
+    
+    doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    assistant_id = db.Column(db.Integer, db.ForeignKey("assistants.id"), nullable=False)
+    clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=False)  # Para filtrar fácil
+
+    # Relaciones
+    doctor = db.relationship("User", foreign_keys=[doctor_id])
+    assistant = db.relationship("Assistant", back_populates="tasks")
+    clinic = db.relationship("Clinic", back_populates="tasks")

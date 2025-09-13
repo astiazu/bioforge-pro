@@ -1,0 +1,59 @@
+<!-- templates/editar_asistente.html -->
+{% extends "base.html" %}
+{% block title %}Editar Asistente{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0"><i class="fas fa-user-edit me-2"></i>Editar Asistente</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ assistant.name }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ assistant.email or '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="whatsapp" class="form-label">WhatsApp</label>
+                            <input type="text" class="form-control" id="whatsapp" name="whatsapp" 
+                                   value="{{ assistant.whatsapp or '' }}" placeholder="+54 9 11 1234-5678">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="clinic_id" class="form-label">Consultorio/Ubicación</label>
+                            <select class="form-select" id="clinic_id" name="clinic_id">
+                                <option value="">Asistente General (sin ubicación específica)</option>
+                                {% for clinic in clinics %}
+                                <option value="{{ clinic.id }}" {% if assistant.clinic_id == clinic.id %}selected{% endif %}>
+                                    {{ clinic.name }} - {{ clinic.address }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Deja vacío para mantenerlo como asistente general</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Volver
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

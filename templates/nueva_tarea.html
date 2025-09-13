@@ -1,0 +1,77 @@
+<!-- templates/nueva_tarea.html -->
+{% extends "base.html" %}
+{% block title %}Nueva Tarea{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-black">
+                    <h5 class="mb-0"><i class="fas fa-tasks me-2"></i> Asignar Nueva Tarea</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   placeholder="Ej: Preparar informe mensual" 
+                                   required>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="4"
+                                      placeholder="Detalles adicionales sobre la tarea..."></textarea>
+                        </div>
+
+                        <!-- Asistente -->
+                        <div class="mb-3">
+                            <label for="assistant_id" class="form-label">Asignar a *</label>
+                            <select class="form-select" id="assistant_id" name="assistant_id" required>
+                                <option value="" disabled selected>Selecciona un asistente</option>
+                                {% for assistant in assistants %}
+                                <option value="{{ assistant.id }}">{{ assistant.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Fecha límite -->
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Fecha límite (opcional)</label>
+                            <input type="date" class="form-control" id="due_date" name="due_date">
+                        </div>
+
+                        <!-- Estado inicial -->
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Estado inicial</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="pending" selected>Pendiente</option>
+                                <option value="in_progress">En progreso</option>
+                            </select>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-2"></i>Asignar y Notificar
+                            </button>
+                            <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Volver
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

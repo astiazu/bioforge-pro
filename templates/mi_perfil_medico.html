@@ -1,18 +1,30 @@
-<!-- templates/mi_perfil_medico.html --> 
+<!-- templates/mi_perfil_medico.html -->
 {% extends "base.html" %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>👤 Mi Perfil</h2>
-        <div>
-            <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary">📅 Mi Agenda</a>
-            <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">🏥 Nueva Ubicación</a>
-            <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-outline-warning">👤 Editar Perfil</a>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>👤 Mi Perfil Profesional</h2>
+            <div>
+                <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary">
+                    📅 Mi Agenda
+                </a>
+                <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">
+                    🏥 Nueva Ubicación
+                </a>
+                <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-info">
+                    👥 Mis Asistentes
+                </a>
+                <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-outline-warning">
+                    ✏️ Editar Perfil
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="row">
+        <!-- Información principal -->
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -25,6 +37,8 @@
                 </div>
             </div>
         </div>
+
+        <!-- Citas recibidas -->
         <div class="col-md-4">
             <div class="card bg-light">
                 <div class="card-header bg-info text-white">
@@ -42,6 +56,67 @@
                     {% else %}
                         <p class="text-muted">No tienes citas aún.</p>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección: Asistentes y Tareas -->
+    <div class="row mt-5">
+        <div class="col-lg-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Asistentes
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                Gestiona tu equipo
+                            </div>
+                            <p class="small text-muted mt-2">
+                                Agrega asistentes y delega responsabilidades.
+                            </p>
+                            <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-primary btn-sm mt-2">
+                                👥 Ver Asistentes
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tareas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    {% set pending_tasks = current_user.assigned_tasks | selectattr("status", "equalto", "pending") | list %}
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ pending_tasks_count }} pendientes
+                                    </div>
+                                    <p class="small text-muted mt-2">
+                                        De {{ total_tasks }} tareas asignadas
+                                    </p>
+                            </div>
+                            <p class="small text-muted mt-2">
+                                Revisa el progreso de las tareas asignadas.
+                            </p>
+                            <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-success btn-sm mt-2">
+                                📋 Ver Tareas
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

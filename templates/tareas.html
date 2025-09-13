@@ -1,0 +1,51 @@
+<!-- templates/tareas.html -->
+ {% extends "base.html" %}
+{% block title %}Tareas{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Mis Tareas</h2>
+        <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Tarea
+        </a>
+    </div>
+
+    {% if tasks %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Título</th>
+                    <th>Asistente</th>
+                    <th>Fecha Límite</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in tasks %}
+                <tr>
+                    <td>{{ t.title }}</td>
+                    <td>{{ t.assistant.name }}</td>
+                    <td>{{ t.due_date.strftime('%d/%m/%Y') if t.due_date else '-' }}</td>
+                    <td>
+                        <span class="badge {{ status_labels[t.status].class }}">
+                            {{ status_labels[t.status].text }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('routes.editar_tarea', task_id=t.id) }}" class="btn btn-sm btn-warning">Editar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-light text-center">
+        <p>No tienes tareas asignadas.</p>
+        <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary">Crear una</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!-- templates/editar_tarea.html -->
+{% extends "base.html" %}
+{% block title %}Editar Tarea{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i> Editar Tarea</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Título -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Título *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="title" 
+                                   name="title" 
+                                   value="{{ task.title }}"
+                                   required>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="4">{{ task.description or '' }}</textarea>
+                        </div>
+
+                        <!-- Asistente (solo lectura) -->
+                        <div class="mb-3">
+                            <label class="form-label">Asignado a</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   value="{{ task.assistant.name }}" 
+                                   readonly>
+                        </div>
+
+                        <!-- Fecha límite -->
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Fecha límite</label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="due_date" 
+                                   name="due_date"
+                                   value="{{ task.due_date.strftime('%Y-%m-%d') if task.due_date else '' }}">
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Estado</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="pending" {% if task.status == 'pending' %}selected{% endif %}>⏳ Pendiente</option>
+                                <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>🔴 En progreso</option>
+                                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>✅ Completada</option>
+                                <option value="cancelled" {% if task.status == 'cancelled' %}selected{% endif %}>❌ Cancelada</option>
+                            </select>
+                        </div>
+
+                        <!-- Información adicional -->
+                        <div class="alert alert-light small mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Al guardar, se actualizará el estado y se puede volver a notificar si es necesario.
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                            <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

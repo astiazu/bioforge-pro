@@ -4,7 +4,7 @@
 {% block title %}Mi Agenda{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid px-3 px-md-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📅 Mi Agenda</h2>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgenda">
@@ -82,94 +82,110 @@
     <!-- Turnos Programados -->
     <div class="card">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0">✅ Agenda Programada</h5>
+            <h5 class="mb-0">✅ Turnos Programados</h5>
         </div>
         <div class="card-body">
             {% if appointments %}
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Paciente</th>
-                                <th>Ubicación</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for app, avail, patient in appointments %}
-                            <tr>
-                                <td>{{ avail.date.strftime('%d/%m/%Y') }}</td>
-                                <td>{{ avail.time.strftime('%H:%M') }}</td>
-                                <td>{{ patient.username }}</td>
-                                <td>{{ avail.clinic.name }}</td>
-                                
-                                <!-- Estado del turno -->
-                                <td>
-                                    <span class="
-                                        badge 
-                                        {% if app.status == 'pending' %}bg-warning text-dark
-                                        {% elif app.status == 'confirmed' %}bg-primary
-                                        {% elif app.status == 'in_progress' %}bg-info
-                                        {% elif app.status == 'completed' %}bg-success
-                                        {% elif app.status == 'cancelled' %}bg-danger
-                                        {% else %}bg-secondary
-                                        {% endif %}
-                                    ">
-                                        {{ {
-                                            'pending': '⏳ Pendiente',
-                                            'confirmed': '✅ Confirmado',
-                                            'in_progress': '🔴 En consulta',
-                                            'completed': '✔️ Finalizado',
-                                            'cancelled': '❌ Cancelado'
-                                        }[app.status] }}
-                                    </span>
-                                </td>
+                <!-- Vista tabla (escritorio) -->
+                <div class="d-none d-lg-block">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Ubicación</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app, avail, patient in appointments %}
+                                <tr>
+                                    <td>{{ avail.date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ avail.time.strftime('%H:%M') }}</td>
+                                    <td>{{ patient.username }}</td>
+                                    <td>{{ avail.clinic.name }}</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-warning text-dark' if app.status == 'pending' else 'bg-primary' if app.status == 'confirmed' else 'bg-info' if app.status == 'in_progress' else 'bg-success' if app.status == 'completed' else 'bg-danger' }}">
+                                            {{ {
+                                                'pending': '⏳ Pendiente',
+                                                'confirmed': '✅ Confirmado',
+                                                'in_progress': '🔴 En consulta',
+                                                'completed': '✔️ Finalizado',
+                                                'cancelled': '❌ Cancelado'
+                                            }[app.status] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if app.status == 'confirmed' %}
+                                                <a href="{{ url_for('routes.empezar_turno', appointment_id=app.id) }}" class="btn btn-warning" title="Iniciar"><i class="fas fa-play"></i></a>
+                                            {% elif app.status == 'in_progress' %}
+                                                <a href="{{ url_for('routes.finalizar_turno', appointment_id=app.id) }}" class="btn btn-success" title="Finalizar"><i class="fas fa-check"></i></a>
+                                            {% endif %}
+                                            <a href="{{ url_for('routes.historial_paciente', patient_id=patient.id) }}" class="btn btn-info" title="Historial"><i class="fas fa-file-medical"></i></a>
+                                            {% if app.status not in ['completed', 'cancelled'] %}
+                                            <form method="POST" action="{{ url_for('routes.cancelar_turno', appointment_id=app.id) }}" onsubmit="return confirm('¿Cancelar?')" class="d-inline">
+                                                <button type="submit" class="btn btn-danger" title="Cancelar"><i class="fas fa-times"></i></button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                                <!-- Acciones -->
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <!-- Botón según estado -->
-                                        {% if app.status == 'confirmed' %}
-                                            <a href="{{ url_for('routes.empezar_turno', appointment_id=app.id) }}" 
-                                            class="btn btn-warning btn-sm" title="Iniciar atención">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                        {% elif app.status == 'in_progress' %}
-                                            <a href="{{ url_for('routes.finalizar_turno', appointment_id=app.id) }}" 
-                                            class="btn btn-success btn-sm" title="Finalizar">
-                                                <i class="fas fa-check"></i>
-                                            </a>
-                                        {% endif %}
-
-                                        <!-- Historial del paciente -->
-                                        <a href="{{ url_for('routes.historial_paciente', patient_id=patient.id) }}" 
-                                        class="btn btn-info btn-sm" title="Historial clínico">
-                                            <i class="fas fa-file-medical"></i>
-                                        </a>
-
-                                        <!-- Cancelar (solo si no está cancelado) -->
-                                        {% if app.status not in ['completed', 'cancelled'] %}
-                                        <form method="POST" action="{{ url_for('routes.cancelar_turno', appointment_id=app.id) }}" 
-                                            onsubmit="return confirm('¿Cancelar este turno?')" class="d-inline">
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Cancelar">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <!-- Vista tarjeta (móvil) -->
+                <div class="d-lg-none">
+                    {% for app, avail, patient in appointments %}
+                    <div class="card mb-3 shadow-sm border">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ patient.username }}</h6>
+                                    <small class="text-muted">
+                                        {{ avail.date.strftime('%d/%m/%Y') }} • {{ avail.time.strftime('%H:%M') }}
+                                    </small><br>
+                                    <small>{{ avail.clinic.name }}</small>
+                                </div>
+                                <span class="badge {{ 'bg-warning text-dark' if app.status == 'pending' else 'bg-primary' if app.status == 'confirmed' else 'bg-info' if app.status == 'in_progress' else 'bg-success' if app.status == 'completed' else 'bg-danger' }} small">
+                                    {{ {
+                                        'pending': 'Pendiente',
+                                        'confirmed': 'Confirmado',
+                                        'in_progress': 'En consulta',
+                                        'completed': 'Finalizado',
+                                        'cancelled': 'Cancelado'
+                                    }[app.status] }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <div class="btn-group btn-group-sm w-100">
+                                    {% if app.status == 'confirmed' %}
+                                        <a href="{{ url_for('routes.empezar_turno', appointment_id=app.id) }}" class="btn btn-warning btn-sm">Iniciar</a>
+                                    {% elif app.status == 'in_progress' %}
+                                        <a href="{{ url_for('routes.finalizar_turno', appointment_id=app.id) }}" class="btn btn-success btn-sm">Finalizar</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('routes.historial_paciente', patient_id=patient.id) }}" class="btn btn-info btn-sm">Historial</a>
+                                    {% if app.status not in ['completed', 'cancelled'] %}
+                                    <form method="POST" action="{{ url_for('routes.cancelar_turno', appointment_id=app.id) }}" onsubmit="return confirm('¿Cancelar?')" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             {% else %}
                 <div class="text-center text-muted py-3">
                     <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                    <p>No tienes Agenda de citas programada.</p>
+                    <p>No tienes turnos programados.</p>
                 </div>
             {% endif %}
         </div>

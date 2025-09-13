@@ -8,6 +8,22 @@
 <section class="hero-section bg-dark text-light py-5">
     <div class="container py-5">
         <div class="row align-items-center">
+            <!-- Logo/Brand con animación de texto -->
+            <div class="col-12 mb-4">
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4">
+                    <!-- GIF animado -->
+                    <img src="/static/img/logo-datos.gif" 
+                         alt="DatosConsultora" 
+                         style="height: 80px; width: auto;">
+                    
+                    <!-- Texto animado grande al lado del GIF -->
+                    <h2 id="animated-brand" class="m-0 fw-bold text-info" 
+                        style="font-size: 2.8rem; font-weight: 800; letter-spacing: -0.5px;">
+                        D<span>a</span><span>t</span><span>o</span><span>s</span>C<span>o</span><span>n</span><span>s</span><span>u</span><span>l</span><span>t</span><span>o</span><span>r</span><span>a</span>
+                    </h2>
+                </div>
+            </div>
+
             <div class="col-lg-7 mb-4 mb-lg-0">
                 <h1 class="display-4 fw-bold mb-3">
                     Transformamos datos en <span class="text-info">decisiones estratégicas</span>
@@ -32,6 +48,44 @@
             </div>
         </div>
     </div>
+
+    <style>
+        #animated-brand span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlide 0.6s forwards;
+        }
+        
+        @keyframes fadeInSlide {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Colores cíclicos: azul brillante y blanco con brillo */
+        #animated-brand span:nth-child(odd) {
+            color: #0dcaf0; /* Azul cian brillante */
+            text-shadow: 0 0 10px rgba(13, 202, 240, 0.5);
+            animation-delay: calc(0.1s * var(--i));
+        }
+        
+        #animated-brand span:nth-child(even) {
+            color: #ffffff; /* Blanco */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation-delay: calc(0.1s * var(--i));
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const spans = document.querySelectorAll('#animated-brand span');
+            spans.forEach((span, index) => {
+                span.style.setProperty('--i', index);
+            });
+        });
+    </script>
 </section>
 
 <!-- 2. Lo que hacemos -->
