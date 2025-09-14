@@ -9,19 +9,18 @@
     <div class="container py-5">
         <div class="row align-items-center">
             <!-- Logo/Brand con animación de texto -->
-            <div class="col-12 mb-4">
-                <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4">
-                    <!-- GIF animado -->
-                    <img src="/static/img/logo-datos.gif" 
-                         alt="DatosConsultora" 
-                         style="height: 80px; width: auto;">
-                    
-                    <!-- Texto animado grande al lado del GIF -->
-                    <h2 id="animated-brand" class="m-0 fw-bold text-info" 
-                        style="font-size: 2.8rem; font-weight: 800; letter-spacing: -0.5px;">
-                        D<span>a</span><span>t</span><span>o</span><span>s</span>C<span>o</span><span>n</span><span>s</span><span>u</span><span>l</span><span>t</span><span>o</span><span>r</span><span>a</span>
-                    </h2>
-                </div>
+            <div class="col-12 mb-4 text-center d-flex flex-column align-items-center">
+                <!-- GIF animado (tamaño responsivo) -->
+                <img src="/static/img/logo-datos.gif" 
+                     alt="DatosConsultora" 
+                     class="mb-3"
+                     style="height: 100px; width: auto;">
+                
+                <!-- Texto animado debajo del logo con tamaño escalable -->
+                <h2 id="animated-brand" class="m-0 fw-bold text-info text-center" 
+                    style="font-size: clamp(1.8rem, 6vw, 3.5rem); font-weight: 800;">
+                    # <span>D</span>a</span><span>t</span><span>o</span><span>s</span>C<span>o</span><span>n</span><span>s</span><span>u</span><span>l</span><span>t</span><span>o</span><span>r</span><span>a</span>
+                </h2>
             </div>
 
             <div class="col-lg-7 mb-4 mb-lg-0">
@@ -75,6 +74,39 @@
             color: #ffffff; /* Blanco */
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
             animation-delay: calc(0.1s * var(--i));
+        }
+
+        /* Ajustes específicos para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .hero-section .container {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            .hero-section h1 {
+                font-size: 1.75rem !important;
+            }
+            
+            .hero-section p.lead {
+                font-size: 1rem;
+            }
+            
+            .btn-lg {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            img[alt="Análisis de datos"] {
+                margin-top: 2rem;
+                max-width: 100%;
+            }
+        }
+
+        /* Para pantallas medianas */
+        @media (min-width: 769px) and (max-width: 992px) {
+            #animated-brand {
+                font-size: 2.5rem;
+            }
         }
     </style>
 
@@ -212,24 +244,22 @@
                 Contacta con nosotros para discutir tu próximo proyecto.
             </p>
             <form method="POST" action="{{ url_for('routes.contacto') }}" class="mt-4">
-                <div class="row">
+                <div class="row justify-content-center">
                     <div class="col-md-6 mb-3">
                         <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <input type="email" name="email" class="form-control" placeholder="Tu email" required>
                     </div>
-                    <div class="col-12 mb-3">
+                    <div class="col-md-6 mb-3">
                         <input type="text" name="asunto" class="form-control" placeholder="Asunto">
                     </div>
-                    <div class="col-12 mb-3">
+                    <div class="col-md-6 mb-3">
                         <textarea name="mensaje" class="form-control" rows="4" placeholder="Tu mensaje" required></textarea>
                     </div>
                     <div class="col-12">
-                        <a>
-                            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-                        </a>
-                        <a href="https://wa.me/5493544404054" class="btn btn-outline-success btn-lg" target="_blank">
+                        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                        <a href="https://wa.me/5493544404054" class="btn btn-outline-success ms-2" target="_blank">
                             <i class="fab fa-whatsapp me-2"></i>WhatsApp
                         </a>
                     </div>
