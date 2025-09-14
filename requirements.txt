@@ -40,4 +40,4 @@ psycopg2-binary>=2.9.10
 # Imágenes en la nube
 cloudinary>=1.44.1
 
-pip install requests>=2.31.0
+requests>=2.31.0
