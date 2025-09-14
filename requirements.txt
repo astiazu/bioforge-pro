@@ -35,6 +35,7 @@ chardet==5.1.0
 
 # Producción / Servidor
 gunicorn>=23.0.0
+psycopg2-binary>=2.9.10
 
 # Imágenes en la nube
 cloudinary>=1.44.1
