@@ -148,7 +148,7 @@
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h6 class="mb-1">{{ patient.username }}</h6>
-                                    <small class="text-muted">
+                                    <small class="text-secondary">
                                         {{ avail.date.strftime('%d/%m/%Y') }} • {{ avail.time.strftime('%H:%M') }}
                                     </small><br>
                                     <small>{{ avail.clinic.name }}</small>
@@ -183,7 +183,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="text-center text-muted py-3">
+                <div class="text-center text-secondary py-3">
                     <i class="fas fa-calendar-times fa-2x mb-2"></i>
                     <p>No tienes agenda programada.</p>
                 </div>

@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 from app.models import User, Note, Publication, NoteStatus, Clinic, Availability, Appointment, MedicalRecord, Schedule, UserRole, Subscriber, Assistant, Task, TaskStatus
 from app import db, mail
 from flask_mail import Message
-from app.utils import upload_to_cloudinary
+from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
 
 import re
 import chardet
@@ -35,6 +35,7 @@ def generar_slug_unico(base_slug):
         counter += 1
     return slug
 
+
 def enviar_notificacion_tarea(task):
     """
     Envía notificación de nueva tarea por email y Telegram.
@@ -47,7 +48,7 @@ def enviar_notificacion_tarea(task):
             body=f"""
         Hola {task.assistant.name},
         
-        El Dr./Dra. {current_user.username} te ha asignado una nueva tarea:
+        El Usuario. {current_user.username} te ha asignado una nueva tarea:
         
         📌 **Título:** {task.title}
         📝 **Descripción:** {task.description or 'No especificada'}
@@ -61,7 +62,7 @@ def enviar_notificacion_tarea(task):
             html=f"""
         <h2>📋 Nueva Tarea Asignada</h2>
         <p>Hola <strong>{task.assistant.name}</strong>,</p>
-        <p>El Dr./Dra. <strong>{current_user.username}</strong> te ha asignado una nueva tarea:</p>
+        <p>El Usuario. <strong>{current_user.username}</strong> te ha asignado una nueva tarea:</p>
         <ul>
             <li><strong>Título:</strong> {task.title}</li>
             <li><strong>Descripción:</strong> {task.description or 'No especificada'}</li>
@@ -469,6 +470,95 @@ def admin_reject_note(note_id):
     flash(f'❌ Nota "{note.title}" rechazada y marcada como privada', 'info')
     return redirect(url_for('routes.admin_panel'))
 
+@routes.route('/webhook-telegram', methods=['POST'])
+def webhook_telegram():
+    """
+    Webhook que recibe actualizaciones del bot de Telegram
+    """
+    try:
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({"status": "ignored"}), 200
+
+        message = data['message']
+        chat_id = message['chat']['id']
+        text = message.get('text', '').strip()
+        from_user = message['from']
+
+        # Solo procesamos comandos
+        if not text.startswith('/'):
+            respuesta = (
+                "Hola 👋\n\n"
+                "Soy el asistente virtual de DatosConsultora.\n\n"
+                "Usa:\n"
+                "🔹 /start - Para comenzar\n"
+                "🔹 /registrar_asistente [tu_nombre] - Para vincular tu cuenta"
+            )
+            enviar_mensaje_telegram(chat_id, respuesta)
+            return jsonify({"status": "ok"}), 200
+
+        command_parts = text.split()
+        command = command_parts[0]
+
+        if command == '/start':
+            respuesta = (
+                "✅ Bienvenido al sistema de notificaciones de DatosConsultora.\n\n"
+                "Si eres un asistente registrado en la plataforma, usa:\n"
+                "`/registrar_asistente tu_nombre_completo`\n\n"
+                "Ejemplo:\n"
+                "`/registrar_asistente Mabel Pérez`"
+            )
+            enviar_mensaje_telegram(chat_id, respuesta)
+
+        elif command == '/registrar_asistente':
+            if len(command_parts) < 2:
+                enviar_mensaje_telegram(chat_id, "❌ Usa: `/registrar_asistente tu_nombre`")
+                return jsonify({"status": "error"}), 200
+
+            nombre_solicitado = " ".join(command_parts[1:]).strip()
+            
+            # Buscar al asistente por nombre y médico actual
+            assistant = Assistant.query.filter(
+                Assistant.name.ilike(f"%{nombre_solicitado}%")
+            ).first()
+
+            if not assistant:
+                enviar_mensaje_telegram(
+                    chat_id,
+                    f"❌ No se encontró un asistente llamado '{nombre_solicitado}'. "
+                    "Verifica el nombre e inténtalo de nuevo."
+                )
+            else:
+                # Verificar que pertenezca a un médico activo
+                if not User.query.get(assistant.doctor_id).is_professional:
+                    enviar_mensaje_telegram(chat_id, "❌ El profesional asociado no es válido.")
+                else:
+                    # ✅ Vincular
+                    assistant.telegram_id = str(chat_id)
+                    db.session.commit()
+                    
+                    enviar_mensaje_telegram(
+                        chat_id,
+                        f"✅ ¡Éxito! {assistant.name}, has sido vinculado correctamente.\n\n"
+                        "Ahora recibirás notificaciones de tareas asignadas.\n\n"
+                        "Gracias por usar el sistema de DatosConsultora."
+                    )
+
+                    # Notificar al médico
+                    try:
+                        medico = User.query.get(assistant.doctor_id)
+                        if medico and medico.is_professional:
+                            msg = f"🟢 {assistant.name} ha vinculado su cuenta de Telegram."
+                            enviar_notificacion_telegram(msg)
+                    except:
+                        pass
+
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        print(f"Error en webhook Telegram: {e}")
+        return jsonify({"status": "error", "error": str(e)}), 500
+    
 @routes.route("/publications")
 def publications():
     # Filtros generales

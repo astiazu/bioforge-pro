@@ -330,7 +330,13 @@ class Assistant(db.Model):
     
     doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    # Actualizado para incluir telegram_id
+    telegram_id = db.Column(
+            db.String(50), 
+            nullable=True, 
+            index=True,
+            doc="ID de Telegram del asistente (para notificaciones)"
+        )
     # Relaciones
     tasks = db.relationship("Task", back_populates="assistant", cascade="all, delete-orphan")
     clinic = db.relationship("Clinic", back_populates="assistants")
