@@ -1,9 +1,9 @@
 # app/utils.py
 import os
+import requests
 import cloudinary
 import cloudinary.uploader
-from flask import current_app, requests
-
+from flask import current_app, request
 # subir imagenes a cloudinary
 def upload_to_cloudinary(file_path, folder="bioforge"):
     """
