@@ -32,7 +32,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <p class="text-primary">No tienes consultorios. <a href="{{ url_for('routes.nuevo_consultorio') }}">Crea uno</a>.</p>
+                <p class="text-primary">No tienes loaciones. <a href="{{ url_for('routes.nuevo_consultorio') }}">Crea uno</a>.</p>
             {% endif %}
         </div>
     </div>
@@ -82,7 +82,7 @@
     <!-- Turnos Programados -->
     <div class="card">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0">✅ Turnos Programados</h5>
+            <h5 class="mb-0">✅ Agenda Programada</h5>
         </div>
         <div class="card-body">
             {% if appointments %}
@@ -94,7 +94,7 @@
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Hora</th>
-                                    <th>Paciente</th>
+                                    <th>Usuario</th>
                                     <th>Ubicación</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
@@ -185,7 +185,7 @@
             {% else %}
                 <div class="text-center text-muted py-3">
                     <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                    <p>No tienes turnos programados.</p>
+                    <p>No tienes agenda programada.</p>
                 </div>
             {% endif %}
         </div>

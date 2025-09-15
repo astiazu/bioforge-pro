@@ -80,7 +80,7 @@
                         {% if prof.clinics and prof.clinics|length > 0 %}
                         <a href="{{ url_for('routes.calendario_turnos', doctor_id=prof.id, clinic_id=prof.clinics[0].id) }}" 
                            class="btn btn-success btn-sm">
-                            Pedir turno
+                            Agendar cita
                         </a>
                         {% else %}
                         <button class="btn btn-secondary btn-sm" disabled>Sin agenda</button>
