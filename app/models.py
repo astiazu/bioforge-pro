@@ -320,38 +320,30 @@ class Assistant(db.Model):
     whatsapp = db.Column(db.String(20), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
 
-    # Referencias con relaciones explícitas (sin backref en más de uno)
-    clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=False, index=True)
-    doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
-
+    # ✅ Ahora puede ser NULL para asistentes generales
+    clinic_id = db.Column(
+        db.Integer, 
+        db.ForeignKey("clinic.id"), 
+        nullable=True,  # ✅ Cambiado aquí
+        index=True
+    )
+    
+    doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relaciones bidireccionales explícitas (back_populates)
+    # Relaciones
     tasks = db.relationship("Task", back_populates="assistant", cascade="all, delete-orphan")
     clinic = db.relationship("Clinic", back_populates="assistants")
-    doctor = db.relationship("User", back_populates="assistants")  # Cambiado de backref a back_populates
+    doctor = db.relationship("User", back_populates="assistants")
 
-    # Restricción: un asistente no puede duplicarse en el mismo consultorio
+    # ✅ Restricción solo si tiene consultorio
     __table_args__ = (
         db.UniqueConstraint('clinic_id', 'name', name='uq_assistant_clinic_name'),
     )
 
     def __repr__(self):
-        return f"<Assistant {self.name} | Clínica: {self.clinic_id} | Médico: {self.doctor_id}>"
-
-    @property
-    def full_info(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "email": self.email,
-            "whatsapp": self.whatsapp,
-            "clinic_id": self.clinic_id,
-            "doctor_id": self.doctor_id,
-            "created_at": self.created_at.isoformat(),
-            "is_active": self.is_active
-        }
-
+        return f"<Assistant {self.name} | Clínica: {self.clinic_id or 'General'}>"
+    
 class Task(db.Model):
     __tablename__ = "tasks"
     
@@ -363,7 +355,13 @@ class Task(db.Model):
     
     doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     assistant_id = db.Column(db.Integer, db.ForeignKey("assistants.id"), nullable=False)
-    clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=False)  # Para filtrar fácil
+    
+    # ✅ Puede ser NULL si el asistente es general
+    clinic_id = db.Column(
+        db.Integer, 
+        db.ForeignKey("clinic.id"), 
+        nullable=True  # ✅ Coherente con Assistant
+    )
 
     # Relaciones
     doctor = db.relationship("User", foreign_keys=[doctor_id])

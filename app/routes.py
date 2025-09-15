@@ -1961,27 +1961,29 @@ def nuevo_asistente():
             return render_template('nuevo_asistente.html', clinics=clinics)
 
         try:
-            # Validar que si se selecciona un consultorio, pertenezca al profesional
+            # Validar que si se selecciona un consultorio, pertenezca al médico
             if clinic_id:
                 clinic = Clinic.query.filter_by(id=clinic_id, doctor_id=current_user.id).first()
                 if not clinic:
                     flash('Consultorio no válido', 'error')
                     return render_template('nuevo_asistente.html', clinics=clinics)
             
-            # Verificar duplicados (mismo nombre en el mismo consultorio)
-            existing = Assistant.query.filter_by(
-                name=name,
-                doctor_id=current_user.id
+            # Verificar duplicados: mismo nombre en el mismo consultorio o como general
+            existing = Assistant.query.filter(
+                Assistant.name == name,
+                Assistant.doctor_id == current_user.id
             )
             if clinic_id:
-                existing = existing.filter_by(clinic_id=clinic_id)
+                existing = existing.filter(Assistant.clinic_id == clinic_id)
             else:
-                existing = existing.filter_by(clinic_id=None)
+                existing = existing.filter(Assistant.clinic_id.is_(None))
                 
             if existing.first():
-                flash(f'Ya existe un asistente llamado "{name}" en esta ubicación', 'error')
+                lugar = f"en {clinic.name}" if clinic_id else "como asistente general"
+                flash(f'Ya existe un asistente llamado "{name}" {lugar}', 'error')
                 return render_template('nuevo_asistente.html', clinics=clinics)
 
+            # Crear nuevo asistente
             assistant = Assistant(
                 name=name,
                 email=email,
@@ -1991,6 +1993,8 @@ def nuevo_asistente():
             )
             db.session.add(assistant)
             db.session.commit()
+
+            # Mensaje de éxito con ubicación
             ubicacion = f"en {assistant.clinic.name}" if assistant.clinic else "como asistente general"
             flash(f'✅ Asistente agregado correctamente {ubicacion}', 'success')
             return redirect(url_for('routes.mis_asistentes'))

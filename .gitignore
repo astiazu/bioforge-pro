@@ -5,7 +5,7 @@ __pycache__/
 *.pyc
 
 # Base de datos
-instance/
+instagitnce/
 portfolio.db
 
 # Archivos temporales
