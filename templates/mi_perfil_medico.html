@@ -3,58 +3,112 @@
 
 {% block content %}
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>👤 Mi Perfil Profesional</h2>
-            <div>
-                <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary">
-                    📅 Mi Agenda
-                </a>
-                <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success">
-                    🏥 Nueva Ubicación
-                </a>
-                <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-info">
-                    👥 Mis Asistentes
-                </a>
-                <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-outline-warning">
-                    ✏️ Editar Perfil
-                </a>
-            </div>
+    <!-- Título y botones de acción -->
+    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <h2 class="text-primary mb-0">👤 Mi Perfil Profesional</h2>
+        
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-primary btn-sm px-3">
+                <i class="fas fa-calendar-alt me-1"></i> Mi Agenda
+            </a>
+            <a href="{{ url_for('routes.nuevo_consultorio') }}" class="btn btn-success btn-sm px-3">
+                <i class="fas fa-clinic-medical me-1"></i> Nueva Ubicación
+            </a>
+            <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-info btn-sm px-3">
+                <i class="fas fa-users me-1"></i> Mis Asistentes
+            </a>
+            <a href="{{ url_for('routes.editar_perfil_medico') }}" class="btn btn-warning btn-sm px-3 text-white">
+                <i class="fas fa-edit me-1"></i> Editar Perfil
+            </a>
         </div>
     </div>
 
-    <div class="row">
+    <!-- Información principal y citas -->
+    <div class="row g-4">
         <!-- Información principal -->
-        <div class="col-md-8">
-            <div class="card shadow-sm">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">{{ current_user.username }}</h5>
-                    <p><strong>Especialidad:</strong> {{ current_user.specialty }}</p>
-                    <p><strong>Años de experiencia:</strong> {{ current_user.years_experience }}</p>
-                    <p><strong>Servicios:</strong> {{ current_user.services }}</p>
-                    <p><strong>Bio:</strong> {{ current_user.bio }}</p>
-                    <p><strong>Email:</strong> {{ current_user.email }}</p>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h4 class="mb-0">{{ current_user.username }}</h4>
+                        {% if current_user.url_slug %}
+                            <a href="{{ url_for('routes.perfil_profesional', url_slug=current_user.url_slug) }}" 
+                               class="btn btn-outline-primary btn-sm" target="_blank">
+                                Ver perfil público
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <dl class="row">
+                        <dt class="col-sm-3">Especialidad</dt>
+                        <dd class="col-sm-9">{{ current_user.specialty or 'No especificada' }}</dd>
+
+                        <dt class="col-sm-3">Años de experiencia</dt>
+                        <dd class="col-sm-9">{{ current_user.years_experience or 'No especificado' }}</dd>
+
+                        <dt class="col-sm-3">Servicios</dt>
+                        <dd class="col-sm-9">{{ current_user.services or 'No especificado' }}</dd>
+
+                        <dt class="col-sm-3">Bio</dt>
+                        <dd class="col-sm-9">{{ current_user.bio or 'No disponible' }}</dd>
+
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">{{ current_user.email }}</dd>
+                    </dl>
+
+                    <!-- Botón para compartir perfil público -->
+                    {% if current_user.url_slug %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <strong>🔗 Compartir mi perfil:</strong>
+                            <input type="text" 
+                                   value="{{ request.host_url }}profesional/{{ current_user.url_slug }}"
+                                   id="profileUrl"
+                                   readonly
+                                   class="form-control form-control-sm flex-grow-1"
+                                   style="max-width: 300px; font-size: 0.8rem;">
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-secondary btn-sm" onclick="copiarEnlace()">
+                                <i class="fas fa-copy me-1"></i> Copiar enlace
+                            </button>
+                            <a href="https://wa.me/?text=Te%20comparto%20mi%20perfil:%20{{ request.host_url }}profesional/{{ current_user.url_slug }}" 
+                               class="btn btn-success btn-sm" target="_blank">
+                                <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                            </a>
+                            <a href="https://t.me/share/url?url={{ request.host_url }}profesional/{{ current_user.url_slug }}&text=Mi perfil profesional" 
+                               class="btn btn-primary btn-sm" target="_blank">
+                                <i class="fab fa-telegram me-1"></i> Telegram
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
         <!-- Citas recibidas -->
-        <div class="col-md-4">
-            <div class="card bg-light">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Citas Recibidas</h5>
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Citas Recibidas</h5>
                 </div>
                 <div class="card-body">
                     {% if turnos_recibidos %}
-                        <ul class="list-group">
+                        <ul class="list-group list-group-flush">
                             {% for t in turnos_recibidos %}
-                            <li class="list-group-item">
-                                {{ t.patient.username }} - {{ t.availability.date }}
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <small>{{ t.patient.username }}</small>
+                                <span class="badge bg-secondary small">
+                                    {{ t.availability.date.strftime('%d/%m') }}
+                                </span>
                             </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted">No tienes citas aún.</p>
+                        <p class="text-muted small text-center py-3">
+                            <i class="fas fa-inbox me-1"></i>No tienes citas aún.
+                        </p>
                     {% endif %}
                 </div>
             </div>
@@ -62,22 +116,18 @@
     </div>
 
     <!-- Sección: Asistentes y Tareas -->
-    <div class="row mt-5">
-        <div class="col-lg-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
+    <div class="row mt-5 g-4">
+        <div class="col-lg-6">
+            <div class="card border-left-primary shadow h-100 py-3 border-start border-4 border-primary">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Asistentes
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                Gestiona tu equipo
-                            </div>
-                            <p class="small text-muted mt-2">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-uppercase text-muted small mb-1">Asistentes</div>
+                            <div class="h5 mb-0 text-gray-800">Gestiona tu equipo</div>
+                            <p class="small text-muted mt-2 mb-0">
                                 Agrega asistentes y delega responsabilidades.
                             </p>
-                            <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-primary btn-sm mt-2">
+                            <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-primary btn-sm mt-3">
                                 👥 Ver Asistentes
                             </a>
                         </div>
@@ -89,27 +139,19 @@
             </div>
         </div>
 
-        <div class="col-lg-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+        <div class="col-lg-6">
+            <div class="card border-left-success shadow h-100 py-3 border-start border-4 border-success">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Tareas
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-uppercase text-muted small mb-1">Tareas Pendientes</div>
+                            <div class="h5 mb-0 text-gray-800">
+                                {{ pending_tasks_count }} de {{ total_tasks }}
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                    {% set pending_tasks = current_user.assigned_tasks | selectattr("status", "equalto", "pending") | list %}
-                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                        {{ pending_tasks_count }} pendientes
-                                    </div>
-                                    <p class="small text-muted mt-2">
-                                        De {{ total_tasks }} tareas asignadas
-                                    </p>
-                            </div>
-                            <p class="small text-muted mt-2">
+                            <p class="small text-muted mt-2 mb-0">
                                 Revisa el progreso de las tareas asignadas.
                             </p>
-                            <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-success btn-sm mt-2">
+                            <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-success btn-sm mt-3">
                                 📋 Ver Tareas
                             </a>
                         </div>
@@ -125,12 +167,40 @@
     <!-- Tienda Online (opcional) -->
     <div class="row mt-5">
         <div class="col-12">
-            <div class="alert alert-info">
-                <h6>🛒 Tienda Online</h6>
-                <p>Próximamente podrás crear tu propia tienda online desde aquí.</p>
-                <button class="btn btn-outline-secondary btn-sm">Solicitar acceso</button>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <h6 class="alert-heading"><i class="fas fa-store me-2"></i>Tienda Online</h6>
+                <p class="mb-0">Próximamente podrás crear tu propia tienda online desde aquí.</p>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2">Solicitar acceso</button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function copiarEnlace() {
+    const input = document.getElementById('profileUrl');
+    input.select();
+    document.execCommand('copy');
+    
+    // Feedback visual
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check me-1"></i> ¡Copiado!';
+    button.classList.remove('btn-secondary');
+    button.classList.add('btn-success');
+    
+    setTimeout(() => {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-secondary');
+    }, 2000);
+}
+</script>
+
+<style>
+.border-left-primary { border-left: 0.25rem solid #007bff !important; }
+.border-left-success { border-left: 0.25rem solid #28a745 !important; }
+.text-gray-800 { color: #5a5c69 !important; }
+</style>
 {% endblock %}
