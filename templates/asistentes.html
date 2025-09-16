@@ -117,6 +117,14 @@
                                     </a>
                                 </div>
                                 {% endif %}
+                                <!-- Mostrar estado de Telegram -->
+                                <span class="badge {% if assistant.telegram_id %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if assistant.telegram_id %}
+                                        📱 Telegram vinculado
+                                    {% else %}
+                                        🔴 Sin Telegram
+                                    {% endif %}
+                                </span>
                             </div>
                         </div>
                     </div>

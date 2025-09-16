@@ -483,7 +483,6 @@ def webhook_telegram():
         message = data['message']
         chat_id = message['chat']['id']
         text = message.get('text', '').strip()
-        from_user = message['from']
 
         # Solo procesamos comandos
         if not text.startswith('/'):
@@ -516,10 +515,21 @@ def webhook_telegram():
                 return jsonify({"status": "error"}), 200
 
             nombre_solicitado = " ".join(command_parts[1:]).strip()
-            
-            # Buscar al asistente por nombre y médico actual
-            assistant = Assistant.query.filter(
-                Assistant.name.ilike(f"%{nombre_solicitado}%")
+
+            # Verificar si ya está vinculado desde este chat
+            existing_assistant = Assistant.query.filter_by(telegram_id=str(chat_id)).first()
+            if existing_assistant:
+                enviar_mensaje_telegram(
+                    chat_id,
+                    f"🟢 Ya estás vinculado como *{existing_assistant.name}*.\n"
+                    "No es necesario registrarte nuevamente."
+                )
+                return jsonify({"status": "ok"}), 200
+
+            # Buscar al asistente por nombre (parcial) y asegurar que pertenezca a un médico activo
+            assistant = Assistant.query.join(User).filter(
+                Assistant.name.ilike(f"%{nombre_solicitado}%"),
+                User.is_professional == True
             ).first()
 
             if not assistant:
@@ -528,30 +538,54 @@ def webhook_telegram():
                     f"❌ No se encontró un asistente llamado '{nombre_solicitado}'. "
                     "Verifica el nombre e inténtalo de nuevo."
                 )
-            else:
-                # Verificar que pertenezca a un médico activo
-                if not User.query.get(assistant.doctor_id).is_professional:
-                    enviar_mensaje_telegram(chat_id, "❌ El profesional asociado no es válido.")
-                else:
-                    # ✅ Vincular
-                    assistant.telegram_id = str(chat_id)
-                    db.session.commit()
-                    
-                    enviar_mensaje_telegram(
-                        chat_id,
-                        f"✅ ¡Éxito! {assistant.name}, has sido vinculado correctamente.\n\n"
-                        "Ahora recibirás notificaciones de tareas asignadas.\n\n"
-                        "Gracias por usar el sistema de DatosConsultora."
-                    )
+                return jsonify({"status": "error"}), 200
 
-                    # Notificar al médico
-                    try:
-                        medico = User.query.get(assistant.doctor_id)
-                        if medico and medico.is_professional:
-                            msg = f"🟢 {assistant.name} ha vinculado su cuenta de Telegram."
-                            enviar_notificacion_telegram(msg)
-                    except:
-                        pass
+            # Evitar duplicados: si otro asistente ya tiene este chat_id
+            duplicate = Assistant.query.filter(
+                Assistant.telegram_id == str(chat_id),
+                Assistant.id != assistant.id
+            ).first()
+            if duplicate:
+                enviar_mensaje_telegram(
+                    chat_id,
+                    f"⚠️ Este dispositivo ya está vinculado a *{duplicate.name}*.\n"
+                    "Contacta al administrador si necesitas cambiarlo."
+                )
+                return jsonify({"status": "error"}), 200
+
+            # ✅ Vincular el asistente al chat_id
+            old_telegram_id = assistant.telegram_id
+            assistant.telegram_id = str(chat_id)
+            
+            try:
+                db.session.commit()
+                print(f"✅ Vinculado: {assistant.name} -> {assistant.telegram_id}")
+
+                # Confirmación clara al usuario
+                enviar_mensaje_telegram(
+                    chat_id,
+                    f"✅ ¡Éxito! {assistant.name}, has sido vinculado correctamente.\n\n"
+                    "Ahora recibirás notificaciones de tareas asignadas.\n\n"
+                    "Gracias por usar el sistema de DatosConsultora."
+                )
+
+                # Notificar al médico
+                try:
+                    medico = User.query.get(assistant.doctor_id)
+                    if medico and medico.is_professional:
+                        msg = f"🟢 {assistant.name} ha vinculado su cuenta de Telegram."
+                        enviar_notificacion_telegram(msg)
+                except Exception as e:
+                    print(f"Error al notificar al médico: {e}")
+
+            except Exception as e:
+                db.session.rollback()
+                print(f"❌ Error al guardar en DB: {e}")
+                enviar_mensaje_telegram(
+                    chat_id,
+                    "❌ Hubo un error al registrar tu cuenta. Intenta más tarde."
+                )
+                return jsonify({"status": "error"}), 500
 
         return jsonify({"status": "ok"}), 200
 
@@ -1197,10 +1231,22 @@ def profesionales():
 # Perfil público más completo
 @routes.route('/profesional/<string:url_slug>')
 def perfil_profesional(url_slug):
-    professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
-    clinics = Clinic.query.filter_by(doctor_id=professional.id, is_active=True).all()
+    professional = User.query.filter_by(
+        url_slug=url_slug, 
+        is_professional=True
+    ).first_or_404()
+
+    # ✅ Verificar si el usuario está logueado Y es el dueño del perfil
+    if current_user.is_authenticated:
+        if current_user.id == professional.id:
+            # 👉 Es el dueño: redirigir a su perfil privado
+            return redirect(url_for('routes.mi_perfil'))
+
+    clinics = Clinic.query.filter_by(
+        doctor_id=professional.id, 
+        is_active=True
+    ).all()
     
-    # ✅ Obtener notas del profesional: públicas, privadas y pendientes
     published_notes = Note.query.filter(
         Note.user_id == professional.id,
         Note.status.in_([NoteStatus.PUBLISHED, NoteStatus.PRIVATE, NoteStatus.PENDING])
@@ -1243,17 +1289,6 @@ def mi_perfil():
         bio_extended=BIO_EXTENDED,
         pending_tasks_count=pending_tasks_count,  # ✅ Pasamos el conteo
         total_tasks=len(all_tasks)
-    )
-
-@routes.route("/profesional/<string:url_slug>")
-def perfil_publico_profesional(url_slug):
-    doctor = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
-    clinics = Clinic.query.filter_by(doctor_id=doctor.id, is_active=True).all()
-    return render_template(
-        'public/perfil_profesional.html',
-        doctor=doctor,
-        clinics=clinics,
-        active_tab='profesionales'
     )
 
 @routes.route('/mi-perfil/editar', methods=['GET', 'POST'])
@@ -2017,15 +2052,19 @@ def mis_asistentes():
         clinic_id=None
     ).all()
 
-    total_assistants = len(general_assistants)
-    for assistants in assistants_by_clinic.values():
-        total_assistants += len(assistants)
+    # ✅ Lista completa de todos los asistentes (para badges de Telegram)
+    all_assistants = general_assistants + [
+        assistant for assistants in assistants_by_clinic.values() for assistant in assistants
+    ]
+
+    total_assistants = len(all_assistants)
 
     return render_template(
         'asistentes.html', 
         assistants_by_clinic=assistants_by_clinic,
         general_assistants=general_assistants,
         clinics=clinics,
+        all_assistants=all_assistants,  # ✅ Nuevo: para estado de Telegram
         no_assistants=(total_assistants == 0)
     )
 
