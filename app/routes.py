@@ -16,7 +16,8 @@ from app.models import User, Note, Publication, NoteStatus, Clinic, Availability
 from app import db, mail
 from flask_mail import Message
 from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
-
+import secrets
+import string
 import re
 import chardet
 
@@ -1415,30 +1416,52 @@ def nuevo_consultorio():
 @login_required
 def editar_consultorio(clinic_id):
     clinic = Clinic.query.get_or_404(clinic_id)
+    
     if clinic.doctor_id != current_user.id:
-        flash('No puedes editar este consultorio', 'danger')
-        return redirect(url_for('routes.mi_perfil', doctor_id=current_user.id))
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.mi_agenda'))
+    
     if request.method == 'POST':
-        clinic.name = request.form.get('name', '').strip()
-        clinic.address = request.form.get('address', '').strip()
-        clinic.phone = request.form.get('phone', '').strip()
-        clinic.specialty = request.form.get('specialty', '').strip()
-        db.session.commit()
-        flash('✅ Consultorio actualizado', 'success')
-        return redirect(url_for('routes.mi_perfil', doctor_id=current_user.id))
+        name = request.form.get('name', '').strip()
+        address = request.form.get('address', '').strip()
+        phone = request.form.get('phone', '').strip()
+        specialty = request.form.get('specialty', '').strip()
+        
+        if not name or not address:
+            flash("Nombre y dirección son obligatorios", "error")
+        else:
+            clinic.name = name
+            clinic.address = address
+            clinic.phone = phone
+            clinic.specialty = specialty
+            db.session.commit()
+            flash("✅ La ubicación fue actualizada correctamente", "success")
+            return redirect(url_for('routes.mi_agenda'))
+    
     return render_template('editar_consultorio.html', clinic=clinic)
 
 @routes.route('/consultorio/<int:clinic_id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_consultorio(clinic_id):
     clinic = Clinic.query.get_or_404(clinic_id)
+    
     if clinic.doctor_id != current_user.id:
-        flash('No puedes eliminar este consultorio', 'danger')
-        return redirect(url_for('routes.mi_perfil', doctor_id=current_user.id))
-    db.session.delete(clinic)
-    db.session.commit()
-    flash('🗑️ Consultorio eliminado', 'info')
-    return redirect(url_for('routes.mi_perfil', doctor_id=current_user.id))
+        return "Acceso denegado", 403
+    
+    try:
+        # Eliminar primero las agendas y disponibilidad
+        Schedule.query.filter_by(clinic_id=clinic_id).delete()
+        Availability.query.filter_by(clinic_id=clinic_id).delete()
+        
+        db.session.delete(clinic)
+        db.session.commit()
+        flash("🗑️ La ubicación fue eliminada correctamente", "info")
+    except Exception as e:
+        db.session.rollback()
+        flash("❌ Error al eliminar la ubicación", "danger")
+        print(f"Error: {e}")
+    
+    return redirect(url_for('routes.mi_agenda'))
 
 @routes.route("/turnos/<int:clinic_id>")
 def turnos_por_clinica(clinic_id):
@@ -1955,76 +1978,103 @@ def contacto():
     
     return redirect(url_for('routes.index'))
 
+def generar_contrasena(longitud=10):
+    alfabeto = string.ascii_letters + string.digits + "!@#$%"
+    return ''.join(secrets.choice(alfabeto) for _ in range(longitud))
+
 @routes.route('/subscribe', methods=['POST'])
 def subscribe():
-    email = request.form.get('email', '').strip()
+    email = request.form.get('email', '').strip().lower()
     
     if not email:
         flash('Por favor ingresa un email válido', 'error')
         return redirect(request.referrer or url_for('routes.index'))
-    
-    # Evitar duplicados
+
+    # Verificar si ya es suscriptor o usuario
     if Subscriber.query.filter_by(email=email).first():
-        flash('✅ Ya estás suscripto. ¡Gracias!', 'info')
+        flash('✅ Ya estás suscrito. ¡Revisa tu bandeja!', 'info')
+        return redirect(request.referrer or url_for('routes.index'))
+    
+    if User.query.filter_by(email=email).first():
+        flash('✅ Este email ya está registrado como usuario.', 'info')
         return redirect(request.referrer or url_for('routes.index'))
 
-    # Guardar suscriptor
-    subscriber = Subscriber(email=email)
-    db.session.add(subscriber)
-    
     try:
+        # Crear suscriptor
+        subscriber = Subscriber(email=email)
+        db.session.add(subscriber)
+
+        # Generar credenciales
+        username_base = email.split('@')[0]
+        username = username_base
+        counter = 1
+        while User.query.filter_by(username=username).first():
+            username = f"{username_base}{counter}"
+            counter += 1
+
+        password = generar_contrasena()
+
+        # Crear usuario
+        user = User(
+            username=username,
+            email=email,
+            is_professional=False,
+            is_admin=False
+        )
+        user.set_password(password)
+        db.session.add(user)
         db.session.commit()
-        
-        # ✅ Enviar correo de bienvenida
+
+        # Enviar correo de bienvenida con credenciales
         try:
             msg = Message(
-                subject="✅ ¡Bienvenido a nuestro newsletter!",
+                subject="✅ ¡Bienvenido! Tu cuenta ha sido creada",
                 recipients=[email],
                 body=f"""
-                Hola,
+            Hola,
 
-                ¡Gracias por suscribirte a nuestro newsletter!
+            Tu acceso al contenido exclusivo ha sido activado.
 
-                Pronto recibirás contenido exclusivo sobre:
-                - Análisis de datos
-                - Python
-                - Casos de éxito reales
-                - Cursos y talleres prácticos sobre IA
-                - Automatización
-                - Notas de Interés, etc ...
+            📌 Datos de acceso:
+            Usuario: {username}
+            Contraseña: {password}
 
-                Saludos,
-                José Luis Astiazu
-                """.strip(),
-                html=f"""
-                <h2>✅ ¡Bienvenido a nuestro newsletter!</h2>
-                <p>Hola,</p>
-                <p>¡Gracias por suscribirte a nuestro newsletter!</p>
-                <h4>Pronto recibirás contenido exclusivo sobre:</h4>
-                <ul>
-                    <li>Análisis de datos</li>
-                    <li>Python</li>
-                    <li>Casos de éxito reales</li>
-                    <li>Cursos y talleres prácticos sobre IA</li>
-                    <li>Automatización</li>
-                    <li>Notas de Interés, etc... </li>
-                </ul>
-                <p>Saludos,<br>
-                <strong>José Luis Astiazu</strong></p>
-                """
+            👉 Ingresa aquí: https://bioforge-pro.onrender.com/auth/login
+
+            Te recomendamos cambiar tu contraseña después del primer inicio de sesión.
+
+            Este mensaje fue generado automáticamente.
+                            """.strip(),
+                            html=f"""
+            <h2>✅ ¡Bienvenido!</h2>
+            <p>Tu acceso al contenido exclusivo ha sido activado.</p>
+
+            <h4>Datos de acceso:</h4>
+            <ul>
+                <li><strong>Usuario:</strong> {username}</li>
+                <li><strong>Contraseña:</strong> <code>{password}</code></li>
+            </ul>
+
+            <p><a href="https://bioforge-pro.onrender.com/auth/login" class="btn btn-primary">Iniciar sesión</a></p>
+
+            <p><small>Te recomendamos cambiar tu contraseña después del primer inicio de sesión.</small></p>
+
+            <hr>
+            <p><em>Este mensaje fue generado automáticamente.</em></p>
+                            """.strip()
             )
             mail.send(msg)
         except Exception as e:
             current_app.logger.error(f"Error al enviar email de bienvenida: {str(e)}")
-            # No falla si el email no se envía, pero se registra
+            # No falla si el email no se envía, pero se registra igual
 
-        flash('✅ ¡Gracias por suscribirte! Revisa tu email para confirmación.', 'success')
-        
+        flash('✅ ¡Gracias por suscribirte! Revisa tu email para tus credenciales.', 'success')
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al guardar suscriptor: {str(e)}")
-        flash('❌ Hubo un error al guardar tu suscripción. Intenta más tarde.', 'danger')
-    
+        flash('❌ Hubo un error. Intenta más tarde.', 'danger')
+
     return redirect(request.referrer or url_for('routes.index'))
 
 # Ruta: Ver asistentes
@@ -2456,6 +2506,43 @@ def editar_tarea(task_id):
         return redirect(url_for('routes.ver_tareas'))
 
     return render_template('editar_tarea.html', task=task)
+
+@routes.route('/profiles/private/cambiar-pass', methods=['GET', 'POST'])
+@login_required
+def cambiar_pass():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Validar contraseña actual
+        if not current_user.check_password(current_password):
+            flash('❌ La contraseña actual es incorrecta', 'error')
+            return render_template('cambiar_pass.html')
+
+        # Validar nueva contraseña
+        if len(new_password) < 6:
+            flash('❌ La nueva contraseña debe tener al menos 6 caracteres', 'error')
+            return render_template('cambiar_pass.html')
+
+        if new_password != confirm_password:
+            flash('❌ Las contraseñas no coinciden', 'error')
+            return render_template('cambiar_pass.html')
+
+        # Cambiar contraseña
+        current_user.set_password(new_password)
+        db.session.commit()
+        
+        # Opcional: cerrar sesión después del cambio
+        # from flask_login import logout_user
+        # logout_user()
+        # flash('✅ Contraseña cambiada. Inicia sesión con tu nueva contraseña.', 'success')
+        # return redirect(url_for('auth.login'))
+
+        flash('✅ Contraseña actualizada correctamente', 'success')
+        return redirect(url_for('routes.mi_perfil'))
+
+    return render_template('/profiles/private/cambiar_pass.html')
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):
