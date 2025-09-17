@@ -17,15 +17,13 @@ depends_on = None
 
 
 def upgrade():
-    # Primero: añadir la columna como nullable=True
+    # Añadir columna como nullable primero
     with op.batch_alter_table('tasks', schema=None) as batch_op:
         batch_op.add_column(sa.Column('created_at', sa.DateTime(), nullable=True))
 
-    # Segundo: llenar la columna con valores por defecto
-    op.execute("UPDATE tasks SET created_at = datetime('2025-09-01') WHERE created_at IS NULL")
+    # Asignar valor por defecto (compatible con PostgreSQL)
+    op.execute("UPDATE tasks SET created_at = '2025-09-01 08:00:00' WHERE created_at IS NULL")
 
-    # Tercero: cambiar a NOT NULL
+    # Ahora sí hacerla NOT NULL
     with op.batch_alter_table('tasks', schema=None) as batch_op:
         batch_op.alter_column('created_at', existing_type=sa.DateTime(), nullable=False)
-        
-    # ### end Alembic commands ###
