@@ -16,6 +16,7 @@ from app.models import User, Note, Publication, NoteStatus, Clinic, Availability
 from app import db, mail
 from flask_mail import Message
 from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
+from datetime import date, timedelta
 import secrets
 import string
 import re
@@ -2314,83 +2315,81 @@ def eliminar_asistente(assistant_id):
     return redirect(url_for('routes.mis_asistentes'))
 
 # Ruta: Nueva tarea
-@routes.route('/tarea/nueva', methods=['POST'])
+@routes.route('/tarea/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_tarea():
     if not current_user.is_professional:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # ✅ Primero: obtener los datos del formulario
-    assistant_id = request.form.get('assistant_id')
-    title = request.form.get('title', '').strip()
-    description = request.form.get('description', '').strip()
-    due_date_str = request.form.get('due_date')
+    # Obtener todos los asistentes del profesional (para el formulario)
+    assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
 
-    # Validar que se haya enviado assistant_id
-    if not assistant_id:
-        flash('Debe seleccionar un asistente', 'error')
-        return redirect(url_for('routes.mis_asistentes'))
-
-    # ✅ Ahora sí puedes usarlo para consultar
-    assistant = Assistant.query.filter_by(
-        id=assistant_id,
-        doctor_id=current_user.id
-    ).first()
-
-    if not assistant:
-        flash('Asistente no encontrado o no autorizado', 'danger')
-        return redirect(url_for('routes.mis_asistentes'))
-    
     if request.method == 'POST':
+        assistant_id = request.form.get('assistant_id', type=int)
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         due_date_str = request.form.get('due_date')
-        assistant_id = request.form.get('assistant_id', type=int)
 
-        if not title or not assistant_id:
-            flash('Completa todos los campos requeridos', 'error')
+        if not assistant_id:
+            flash('Debe seleccionar un asistente', 'error')
+            return redirect(url_for('routes.mis_asistentes'))
+
+        assistant = Assistant.query.filter_by(
+            id=assistant_id,
+            doctor_id=current_user.id
+        ).first()
+
+        if not assistant:
+            flash('Asistente no encontrado o no autorizado', 'danger')
+            return redirect(url_for('routes.mis_asistentes'))
+
+        if not title:
+            flash('El título es obligatorio', 'error')
+            return render_template('nueva_tarea.html', assistants=assistants)
+
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                flash('Fecha inválida', 'error')
+                return render_template('nueva_tarea.html', assistants=assistants)
+
+        task = Task(
+            title=title,
+            description=description,
+            due_date=due_date,
+            doctor_id=current_user.id,
+            assistant_id=assistant_id,
+            status=TaskStatus.PENDING.value
+        )
+        db.session.add(task)
+        db.session.commit()
+
+        mensaje = (
+            f"📋 *Nueva Tarea Asignada*\n\n"
+            f"*Asistente:* {assistant.name}\n"
+            f"*Título:* {task.title}\n"
+            f"*Descripción:* {task.description or 'No especificada'}\n"
+            f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
+            f"*Profesional:* {current_user.username}"
+        )
+        enviar_notificacion_telegram(mensaje)
+
+        exito_email = enviar_notificacion_tarea(task)
+        if exito_email:
+            flash('✅ Tarea creada y notificada por email', 'success')
         else:
-            due_date = None
-            if due_date_str:
-                try:
-                    due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-                except ValueError:
-                    flash('Fecha inválida', 'error')
-                    return render_template('nueva_tarea.html', assistant=assistant)
+            flash('✅ Tarea creada, pero no se pudo enviar el email', 'warning')
 
-            task = Task(
-                title=title,
-                description=description,
-                due_date=due_date,
-                doctor_id=current_user.id,
-                assistant_id=assistant_id,
-                status=TaskStatus.PENDING.value
-            )
-            db.session.add(task)
-            db.session.commit()
+        if 'crear_otra' in request.form:
+            return redirect(url_for('routes.nueva_tarea'))
 
-            # Enviar notificación por Telegram
-            mensaje = (
-                f"📋 *Nueva Tarea Asignada*\n\n"
-                f"*Asistente:* {assistant.name}\n"
-                f"*Título:* {task.title}\n"
-                f"*Descripción:* {task.description or 'No especificada'}\n"
-                f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
-                f"*Profesional:* {current_user.username}"
-            )
-            enviar_notificacion_telegram(mensaje)
+        return redirect(url_for('routes.ver_tareas'))
 
-            # ✅ Enviar notificaciones
-            exito_email = enviar_notificacion_tarea(task)
-            if exito_email:
-                flash('✅ Tarea creada y notificada por email', 'success')
-            else:
-                flash('✅ Tarea creada, pero no se pudo enviar el email', 'warning')
-
-            return redirect(url_for('routes.ver_tareas'))
-
-    return render_template('nueva_tarea.html', assistant=assistant)
+    # Método GET: mostrar formulario con todos los asistentes
+    return render_template('nueva_tarea.html', assistants=assistants)
 
 # Ruta: Ver tareas
 @routes.route('/tareas')
@@ -2400,70 +2399,74 @@ def ver_tareas():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
+    # Obtener todas las tareas del profesional
     tasks = Task.query.join(Assistant).filter(
         Assistant.doctor_id == current_user.id
-    ).order_by(Task.due_date.asc(), Task.status).all()
+    ).all()
 
     status_labels = {
         'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
-        'in_progress': {'text': 'En progreso', 'class': 'bg-info'},
+        'in_progress': {'text': 'En progreso', 'class': 'bg-info text-white'},
         'completed': {'text': 'Completada', 'class': 'bg-success'},
         'cancelled': {'text': 'Cancelada', 'class': 'bg-danger'}
     }
 
-    return render_template('tareas.html', tasks=tasks, status_labels=status_labels)
+    # Datos para gráficos
+    assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
+    assistants_distribution = []
+    for a in assistants:
+        count = Task.query.filter_by(assistant_id=a.id).count()
+        if count > 0:
+            assistants_distribution.append({
+                'name': a.name,
+                'task_count': count
+            })
 
-@routes.route('/consultorio/<int:clinic_id>/tarea/nueva', methods=['GET', 'POST'])
-@login_required
-def nueva_tarea_en_consultorio(clinic_id):
-    clinic = Clinic.query.get_or_404(clinic_id)
-    if clinic.doctor_id != current_user.id:
-        flash('Acceso denegado', 'danger')
-        return redirect(url_for('routes.mi_perfil'))
+    # ✅ Generar las últimas 30 fechas
+    today = date.today()
+    last_30_days = [
+        (today - timedelta(days=i)).strftime('%d/%m') 
+        for i in range(29, -1, -1)
+    ]
 
-    assistants = Assistant.query.filter_by(clinic_id=clinic_id).all()
-    if not assistants:
-        flash('Primero agrega un asistente a este consultorio', 'info')
-        return redirect(url_for('routes.nuevo_asistente_en_consultorio', clinic_id=clinic_id))
+    # ✅ Preparar datos reales por fecha y estado
+    task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
 
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description', '').strip()
-        due_date_str = request.form.get('due_date')
-        assistant_id = request.form.get('assistant_id', type=int)
+    for task in tasks:
+        # Usamos la fecha de creación
+        day_key = task.created_at.date()
+        
+        # Solo incluir si está en los últimos 30 días
+        if day_key >= today - timedelta(days=29):
+            day_str = day_key.strftime('%d/%m')
+            
+            if task.status == 'pending':
+                task_data[day_str]['Pendientes'] += 1
+            elif task.status == 'in_progress':
+                task_data[day_str]['En progreso'] += 1
+            elif task.status == 'completed':
+                task_data[day_str]['Completadas'] += 1
 
-        if not title or not assistant_id:
-            flash('Completa todos los campos requeridos', 'error')
-        else:
-            due_date = None
-            if due_date_str:
-                try:
-                    due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-                except ValueError:
-                    flash('Fecha inválida', 'error')
-                    return render_template('nueva_tarea.html', assistants=assistants, clinic=clinic)
+    # ✅ Convertir a lista ordenada por fecha
+    data_evolucion = []
+    for fecha in last_30_days:
+        data_evolucion.append({
+            'name': fecha,
+            'Pendientes': task_data[fecha]['Pendientes'],
+            'En progreso': task_data[fecha]['En progreso'],
+            'Completadas': task_data[fecha]['Completadas']
+        })
 
-            task = Task(
-                title=title,
-                description=description,
-                due_date=due_date,
-                doctor_id=current_user.id,
-                assistant_id=assistant_id,
-                clinic_id=clinic_id,
-                status=TaskStatus.PENDING.value
-            )
-            db.session.add(task)
-            db.session.commit()
-
-            exito_email = enviar_notificacion_tarea(task)
-            if exito_email:
-                flash('✅ Tarea creada y notificada por email', 'success')
-            else:
-                flash('✅ Tarea creada, pero no se pudo enviar el email', 'warning')
-
-            return redirect(url_for('routes.tareas_por_consultorio', clinic_id=clinic_id))
-
-    return render_template('nueva_tarea.html', assistants=assistants, clinic=clinic)
+    return render_template(
+        'tareas.html', 
+        tasks=tasks, 
+        status_labels=status_labels,
+        assistants_count=len(assistants),
+        assistants_distribution=assistants_distribution,
+        today=today,
+        last_30_days=last_30_days,
+        data_evolucion=data_evolucion  # ✅ Pasamos los datos reales
+    )
 
 @routes.route('/tarea/<int:task_id>/editar', methods=['GET', 'POST'])
 @login_required

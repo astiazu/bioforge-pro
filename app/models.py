@@ -363,11 +363,8 @@ class Task(db.Model):
     assistant_id = db.Column(db.Integer, db.ForeignKey("assistants.id"), nullable=False)
     
     # ✅ Puede ser NULL si el asistente es general
-    clinic_id = db.Column(
-        db.Integer, 
-        db.ForeignKey("clinic.id"), 
-        nullable=True  # ✅ Coherente con Assistant
-    )
+    clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # Relaciones
     doctor = db.relationship("User", foreign_keys=[doctor_id])

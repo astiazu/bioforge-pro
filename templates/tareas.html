@@ -1,51 +1,270 @@
 <!-- templates/tareas.html -->
- {% extends "base.html" %}
-{% block title %}Tareas{% endblock %}
+{% extends "base.html" %}
+{% block title %}📊 Panel de Tareas{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid px-3 px-md-4 mt-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📋 Mis Tareas</h2>
-        <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Nueva Tarea
+        <h2 class="text-primary"><i class="fas fa-tasks me-2"></i> Gestión de Tareas</h2>
+        <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary btn-lg px-4">
+            <i class="fas fa-plus-circle me-2"></i> Nueva Tarea
         </a>
     </div>
 
-    {% if tasks %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead class="table-light">
-                <tr>
-                    <th>Título</th>
-                    <th>Asistente</th>
-                    <th>Fecha Límite</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for t in tasks %}
-                <tr>
-                    <td>{{ t.title }}</td>
-                    <td>{{ t.assistant.name }}</td>
-                    <td>{{ t.due_date.strftime('%d/%m/%Y') if t.due_date else '-' }}</td>
-                    <td>
-                        <span class="badge {{ status_labels[t.status].class }}">
-                            {{ status_labels[t.status].text }}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{{ url_for('routes.editar_tarea', task_id=t.id) }}" class="btn btn-sm btn-warning">Editar</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- KPIs principales -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-start border-4 border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Total</p>
+                            <h4 class="mb-0">{{ tasks|length }}</h4>
+                        </div>
+                        <i class="fas fa-tasks fa-2x text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-start border-4 border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Pendientes</p>
+                            <h4 class="mb-0">{{ tasks|selectattr('status','equalto','pending')|list|length }}</h4>
+                        </div>
+                        <i class="fas fa-clock fa-2x text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Completadas</p>
+                            <h4 class="mb-0">{{ tasks|selectattr('status','equalto','completed')|list|length }}</h4>
+                        </div>
+                        <i class="fas fa-check-circle fa-2x text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-start border-4 border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted small mb-1">Asistentes</p>
+                            <h4 class="mb-0">{{ assistants_count }}</h4>
+                        </div>
+                        <i class="fas fa-users fa-2x text-info opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% else %}
-    <div class="alert alert-light text-center">
-        <p>No tienes tareas asignadas.</p>
-        <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary">Crear una</a>
+
+    <!-- Gráficos -->
+    <div class="row g-4 mb-5">
+        <!-- Evolución de tareas por estado -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Evolución de Tareas</h6>
+                    <small class="text-muted">Últimos 30 días</small>
+                </div>
+                <div class="card-body" style="height: 300px;">
+                    <div id="chart-evolucion"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución por asistente -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="fas fa-user-tag me-2 text-success"></i>Tareas por Asistente</h6>
+                </div>
+                <div class="card-body" style="height: 300px;">
+                    <div id="chart-asistentes"></div>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
+
+    <!-- Tabla de tareas -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h6 class="mb-0">📋 Lista de Tareas</h6>
+        </div>
+        <div class="card-body p-0">
+            {% if tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Título</th>
+                            <th>Asistente</th>
+                            <th>Fecha Límite</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in tasks %}
+                        <tr>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    {% if t.status == 'completed' %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                    {% elif t.status == 'in_progress' %}
+                                        <i class="fas fa-spinner fa-spin text-info me-2"></i>
+                                    {% else %}
+                                        <i class="far fa-circle text-secondary me-2"></i>
+                                    {% endif %}
+                                    <span class="fw-medium">{{ t.title }}</span>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                                    {{ t.assistant.name }}
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                {% if t.due_date %}
+                                    <span class="d-flex align-items-center">
+                                        <i class="fas fa-calendar-alt me-2 text-muted"></i>
+                                        {{ t.due_date.strftime('%d/%m/%Y') }}
+                                        {% if t.due_date < today and t.status != 'completed' %}
+                                            <span class="ms-2 badge bg-danger bg-opacity-10 text-danger small">Atrasada</span>
+                                        {% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Sin fecha</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge {{ status_labels[t.status].class }} px-3 py-2">
+                                    {{ status_labels[t.status].text }}
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('routes.editar_tarea', task_id=t.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-tasks fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                <h5>No tienes tareas asignadas</h5>
+                <p class="text-muted mb-4">Crea tu primera tarea para comenzar a organizar tu equipo.</p>
+                <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Crear Primera Tarea
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/recharts@2.7.3/umd/Recharts.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<script type="text/javascript">
+    // Datos para evolución (desde el backend)
+    const dataEvolucion = {{ data_evolucion | tojson }};
+    const dataAsistentes = {{ assistants_distribution | tojson }};
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+    // Renderizar gráfico de evolución
+    ReactDOM.render(
+        <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={dataEvolucion}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={ { fontSize: 12 } } />
+                <YAxis tick={ { fontSize: 12 } } />
+                <Tooltip formatter={(value, name) => [value, name]} />
+                <Legend />
+                <Line type="monotone" dataKey="Pendientes" stroke="#f39c12" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="En progreso" stroke="#3498db" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="Completadas" stroke="#2ecc71" strokeWidth={2} dot={false} />
+            </LineChart>
+        </ResponsiveContainer>,
+        document.getElementById('chart-evolucion')
+    );
+
+    // Renderizar gráfico circular
+    ReactDOM.render(
+        <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+                <Pie
+                    data={dataAsistentes}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                >
+                    {dataAsistentes.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [value, 'Tareas']} />
+            </PieChart>
+        </ResponsiveContainer>,
+        document.getElementById('chart-asistentes')
+    );
+</script>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+    .card-header {
+        border-top-left-radius: 0.5rem !important;
+        border-top-right-radius: 0.5rem !important;
+    }
+    .opacity-25 {
+        opacity: 0.25 !important;
+    }
+    .bg-opacity-10 {
+        background-color: rgba(0,0,0,0.1) !important;
+    }
+    .border-start {
+        border-left: 4px solid #dee2e6 !important;
+    }
+    .border-primary {
+        border-color: #0d6efd !important;
+    }
+    .border-warning {
+        border-color: #ffc107 !important;
+    }
+    .border-success {
+        border-color: #198754 !important;
+    }
+    .border-info {
+        border-color: #0dcaf0 !important;
+    }
+</style>
 {% endblock %}
