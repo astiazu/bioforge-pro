@@ -3,6 +3,7 @@ import os
 import requests
 import cloudinary
 import cloudinary.uploader
+import urllib.parse
 from flask import current_app, request
 
 # subir imagenes a cloudinary
@@ -44,3 +45,27 @@ def enviar_mensaje_telegram(chat_id, text):
         requests.post(url, data=payload, timeout=10)
     except Exception as e:
         print(f"❌ Error al enviar mensaje a Telegram: {e}")
+
+def crear_mensaje_whatsapp(assistant, task, action="asignada"):
+    """Genera un mensaje predefinido para WhatsApp"""
+    nombre = assistant.name.split()[0]  # Solo el primer nombre
+    status_map = {
+        'pending': 'Pendiente',
+        'in_progress': 'En progreso',
+        'completed': 'Completada',
+        'cancelled': 'Cancelada'
+    }
+    estado = status_map.get(task.status, 'Actualizada')
+
+    mensaje = f"""
+        Hola {nombre}, tienes una actualización en tu tarea:
+
+        📌 *{task.title}*
+        {task.description or 'Sin descripción'}
+
+        📅 Fecha límite: {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'No especificada'}
+        ✅ Estado: {estado}
+
+        Este mensaje fue generado automáticamente desde tu sistema de gestión.
+            """.strip()
+    return urllib.parse.quote(mensaje)

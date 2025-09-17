@@ -70,6 +70,30 @@
         </div>
     </div>
 
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- Mostrar botón de WhatsApp si existe en sesión -->
+    {% if session.get('whatsapp_url') %}
+    <div class="alert alert-success text-center mb-4">
+        <p><strong>📲 ¡Tarea actualizada! Envía el mensaje por WhatsApp:</strong></p>
+        <a 
+            href="{{ session.get('whatsapp_url') }}" 
+            target="_blank" 
+            class="btn btn-success btn-lg"
+        >
+            <i class="fab fa-whatsapp me-2"></i> Abrir WhatsApp
+        </a>
+    </div>
+    {% endif %}
+
     <!-- Gráficos -->
     <div class="row g-4 mb-5">
         <!-- Evolución de tareas por estado -->
@@ -181,16 +205,30 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/recharts@2.7.3/umd/Recharts.min.js"></script>
+<!-- Scripts corregidos -->
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/recharts@2.0.0-beta.10/dist/recharts.min.js"></script>
 
 <script type="text/javascript">
-    // Datos para evolución (desde el backend)
+    // Verificar carga de librerías
+    console.log("React:", typeof React);
+    console.log("ReactDOM:", typeof ReactDOM);
+    console.log("Recharts:", typeof Recharts);
+
+    if (!Recharts) {
+        console.error("❌ Recharts no se cargó correctamente");
+        alert("Error: Recharts no se cargó. Verifica tu conexión o el CDN.");
+    }
+
+    const { 
+        LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+        ResponsiveContainer, PieChart, Pie, Cell 
+    } = Recharts;
+
     const dataEvolucion = {{ data_evolucion | tojson }};
     const dataAsistentes = {{ assistants_distribution | tojson }};
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -200,9 +238,9 @@
         <ResponsiveContainer width="100%" height="100%">
             <LineChart data={dataEvolucion}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={ { fontSize: 12 } } />
-                <YAxis tick={ { fontSize: 12 } } />
-                <Tooltip formatter={(value, name) => [value, name]} />
+                <XAxis dataKey="name" tick={ { 'fontSize': 12 } } />
+                <YAxis tick={ { 'fontSize': 12 } } />
+                <Tooltip />
                 <Legend />
                 <Line type="monotone" dataKey="Pendientes" stroke="#f39c12" strokeWidth={2} dot={false} />
                 <Line type="monotone" dataKey="En progreso" stroke="#3498db" strokeWidth={2} dot={false} />
@@ -230,13 +268,15 @@
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [value, 'Tareas']} />
+                <Tooltip />
             </PieChart>
         </ResponsiveContainer>,
         document.getElementById('chart-asistentes')
     );
 </script>
+{% endblock %}
 
+{% block styles %}
 <style>
     .card {
         border-radius: 0.5rem;

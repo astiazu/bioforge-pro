@@ -17,6 +17,7 @@ from app import db, mail
 from flask_mail import Message
 from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
 from datetime import date, timedelta
+import urllib.parse
 import secrets
 import string
 import re
@@ -246,34 +247,34 @@ def enviar_notificacion_profesional(appointment):
             subject=f"📅 Nueva visita: {appointment.availability.date.strftime('%d/%m/%Y')} a las {appointment.availability.time.strftime('%H:%M')}",
             recipients=[appointment.availability.clinic.doctor.email],
             body=f"""
-Hola {appointment.availability.clinic.doctor.username},
+        Hola {appointment.availability.clinic.doctor.username},
 
-Has recibido una nueva reserva de visita:
+        Has recibido una nueva reserva de visita:
 
-Visita/Paciente: {appointment.patient.username}
-Email: {appointment.patient.email}
-Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
-Hora: {appointment.availability.time.strftime('%H:%M')}
-Ubicación: {appointment.availability.clinic.name}
-Dirección: {appointment.availability.clinic.address}
+        Visita/Paciente: {appointment.patient.username}
+        Email: {appointment.patient.email}
+        Fecha: {appointment.availability.date.strftime('%d/%m/%Y')}
+        Hora: {appointment.availability.time.strftime('%H:%M')}
+        Ubicación: {appointment.availability.clinic.name}
+        Dirección: {appointment.availability.clinic.address}
 
-¡Gestiona tus turnos desde tu perfil profesional!
+        ¡Gestiona tus turnos desde tu perfil profesional!
 
-Saludos,
-Equipo de FuerzaBruta
-            """.strip(),
-            html=f"""
-<h2>📅 Nuevo turno reservado</h2>
-<p><strong>Visita/Paciente:</strong> {appointment.patient.username}</p>
-<p><strong>Email:</strong> {appointment.patient.email}</p>
-<hr>
-<p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
-<p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
-<p><strong>Ubicación:</strong> {appointment.availability.clinic.name}</p>
-<p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
-<p><em>Este mensaje fue generado automáticamente por el sistema.</em></p>
-            """
-        )
+        Saludos,
+        Equipo de FuerzaBruta
+                    """.strip(),
+                    html=f"""
+        <h2>📅 Nuevo turno reservado</h2>
+        <p><strong>Visita/Paciente:</strong> {appointment.patient.username}</p>
+        <p><strong>Email:</strong> {appointment.patient.email}</p>
+        <hr>
+        <p><strong>Fecha:</strong> {appointment.availability.date.strftime('%d/%m/%Y')}</p>
+        <p><strong>Hora:</strong> {appointment.availability.time.strftime('%H:%M')}</p>
+        <p><strong>Ubicación:</strong> {appointment.availability.clinic.name}</p>
+        <p><strong>Dirección:</strong> {appointment.availability.clinic.address}</p>
+        <p><em>Este mensaje fue generado automáticamente por el sistema.</em></p>
+                    """
+                )
         mail.send(msg)
         return True
     except Exception as e:
@@ -2322,7 +2323,6 @@ def nueva_tarea():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # Obtener todos los asistentes del profesional (para el formulario)
     assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
 
     if request.method == 'POST':
@@ -2367,28 +2367,44 @@ def nueva_tarea():
         db.session.add(task)
         db.session.commit()
 
-        mensaje = (
-            f"📋 *Nueva Tarea Asignada*\n\n"
-            f"*Asistente:* {assistant.name}\n"
-            f"*Título:* {task.title}\n"
-            f"*Descripción:* {task.description or 'No especificada'}\n"
-            f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
-            f"*Profesional:* {current_user.username}"
-        )
-        enviar_notificacion_telegram(mensaje)
+        # ✅ Notificar
+        enviado_telegram = False
+        abrir_whatsapp = False
 
-        exito_email = enviar_notificacion_tarea(task)
-        if exito_email:
-            flash('✅ Tarea creada y notificada por email', 'success')
-        else:
-            flash('✅ Tarea creada, pero no se pudo enviar el email', 'warning')
+        if assistant.telegram_id:
+            mensaje = (
+                f"📋 *Nueva Tarea Asignada*\n\n"
+                f"*Asistente:* {assistant.name}\n"
+                f"*Título:* {task.title}\n"
+                f"*Descripción:* {task.description or 'No especificada'}\n"
+                f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
+                f"*Estado:* Pendiente\n"
+                f"*Profesional:* {current_user.username}"
+            )
+            try:
+                enviar_notificacion_telegram(mensaje)
+                flash('✅ Tarea creada y notificada por Telegram', 'success')
+                enviado_telegram = True
+            except:
+                pass
 
-        if 'crear_otra' in request.form:
-            return redirect(url_for('routes.nueva_tarea'))
+        # Si no tiene Telegram pero tiene WhatsApp, preparamos el enlace
+        if not enviado_telegram and assistant.whatsapp:
+            from app.utils import crear_mensaje_whatsapp
+            mensaje_url = crear_mensaje_whatsapp(assistant, task)
+            whatsapp_url = f"https://wa.me/{assistant.whatsapp}?text={mensaje_url}"
+            
+            # ✅ Devolvemos JavaScript para abrir WhatsApp automáticamente
+            return f"""
+            <script>
+                alert('Tarea creada. Abriendo WhatsApp...');
+                window.open('{whatsapp_url}', '_blank');
+                window.location.href = '{url_for('routes.ver_tareas')}';
+            </script>
+            """
 
         return redirect(url_for('routes.ver_tareas'))
 
-    # Método GET: mostrar formulario con todos los asistentes
     return render_template('nueva_tarea.html', assistants=assistants)
 
 # Ruta: Ver tareas
@@ -2401,7 +2417,7 @@ def ver_tareas():
 
     # Obtener todas las tareas del profesional
     tasks = Task.query.join(Assistant).filter(
-        Assistant.doctor_id == current_user.id
+    Assistant.doctor_id == current_user.id
     ).all()
 
     status_labels = {
@@ -2422,7 +2438,7 @@ def ver_tareas():
                 'task_count': count
             })
 
-    # ✅ Generar las últimas 30 fechas
+    # ✅ Generar las últimas 30 fechas (orden cronológico)
     today = date.today()
     last_30_days = [
         (today - timedelta(days=i)).strftime('%d/%m') 
@@ -2433,7 +2449,9 @@ def ver_tareas():
     task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
 
     for task in tasks:
-        # Usamos la fecha de creación
+        # Asegurar que created_at exista y sea válida
+        if not task.created_at:
+            continue  # Saltar si no tiene fecha
         day_key = task.created_at.date()
         
         # Solo incluir si está en los últimos 30 días
@@ -2465,7 +2483,7 @@ def ver_tareas():
         assistants_distribution=assistants_distribution,
         today=today,
         last_30_days=last_30_days,
-        data_evolucion=data_evolucion  # ✅ Pasamos los datos reales
+        data_evolucion=data_evolucion
     )
 
 @routes.route('/tarea/<int:task_id>/editar', methods=['GET', 'POST'])
@@ -2473,6 +2491,7 @@ def ver_tareas():
 def editar_tarea(task_id):
     task = Task.query.get_or_404(task_id)
     assistant = Assistant.query.filter_by(id=task.assistant_id, doctor_id=current_user.id).first()
+    
     if not assistant:
         flash('No puedes editar esta tarea', 'danger')
         return redirect(url_for('routes.ver_tareas'))
@@ -2495,17 +2514,57 @@ def editar_tarea(task_id):
 
         db.session.commit()
 
-        # Enviar notificación por Telegram
-        mensaje = (
-            f"📋 *Nueva Tarea Asignada*\n\n"
+        # ✅ Mensaje para Telegram
+        mensaje_telegram = (
+            f"📋 *Tarea Actualizada*\n\n"
             f"*Asistente:* {assistant.name}\n"
             f"*Título:* {task.title}\n"
             f"*Descripción:* {task.description or 'No especificada'}\n"
             f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
+            f"*Estado:* {task.status.replace('_', ' ').title()}\n"
             f"*Profesional:* {current_user.username}"
         )
-        enviar_notificacion_telegram(mensaje)        
-        flash('✅ Tarea actualizada', 'success')
+
+        # 1. Intentar enviar por Telegram si tiene ID
+        enviado_telegram = False
+        if assistant.telegram_id:
+            try:
+                enviar_notificacion_telegram(mensaje_telegram)
+                flash('✅ Tarea actualizada y notificada por Telegram', 'success')
+                return redirect(url_for('routes.ver_tareas'))
+            except Exception as e:
+                print(f"Error al enviar a Telegram: {e}")
+                enviado_telegram = False
+
+        # 2. Si no tiene Telegram, preparar enlace de WhatsApp
+        if not enviado_telegram and assistant.whatsapp:
+            try:
+                # Limpiar número (solo dígitos y +)
+                whatsapp_clean = ''.join(c for c in assistant.whatsapp if c.isdigit())
+                if not whatsapp_clean.startswith('54'):  # Ajusta según tu país
+                    whatsapp_clean = '54' + whatsapp_clean
+
+                mensaje_whatsapp = (
+                    f"Hola {assistant.name}, tienes una actualización en tu tarea:\n\n"
+                    f"📌 *{task.title}*\n"
+                    f"{task.description or 'Sin descripción'}\n"
+                    f"📅 Fecha límite: {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'No especificada'}\n"
+                    f"✅ Estado: {task.status.replace('_', ' ').title()}\n\n"
+                    f"Este mensaje fue generado automáticamente."
+                )
+                url_encoded = urllib.parse.quote(mensaje_whatsapp)
+                whatsapp_url = f"https://wa.me/{whatsapp_clean}?text={url_encoded}"
+
+                # ✅ Guardar en sesión para mostrar botón
+                session['whatsapp_url'] = whatsapp_url
+                flash('✅ Tarea actualizada. Haz clic en el botón para enviar por WhatsApp.', 'success')
+                return redirect(url_for('routes.ver_tareas'))
+
+            except Exception as e:
+                print(f"Error al generar WhatsApp: {e}")
+
+        # Caso sin notificación
+        flash('✅ Tarea actualizada, pero no se pudo notificar (sin contacto)', 'info')
         return redirect(url_for('routes.ver_tareas'))
 
     return render_template('editar_tarea.html', task=task)
