@@ -2514,35 +2514,34 @@ def editar_tarea(task_id):
 
         db.session.commit()
 
-        # ✅ Mensaje para Telegram
-        mensaje_telegram = (
-            f"📋 *Tarea Actualizada*\n\n"
-            f"*Asistente:* {assistant.name}\n"
-            f"*Título:* {task.title}\n"
-            f"*Descripción:* {task.description or 'No especificada'}\n"
-            f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
-            f"*Estado:* {task.status.replace('_', ' ').title()}\n"
-            f"*Profesional:* {current_user.username}"
-        )
-
         # 1. Intentar enviar por Telegram si tiene ID
-        enviado_telegram = False
+        # enviado_telegram = False
         if assistant.telegram_id:
             try:
+                # ✅ Mensaje para Telegram
+                mensaje_telegram = (
+                    f"📋 *Tarea Actualizada*\n\n"
+                    f"*Asistente:* {assistant.name}\n"
+                    f"*Título:* {task.title}\n"
+                    f"*Descripción:* {task.description or 'No especificada'}\n"
+                    f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
+                    f"*Estado:* {task.status.replace('_', ' ').title()}\n"
+                    f"*Profesional:* {current_user.username}"
+                )
                 enviar_notificacion_telegram(mensaje_telegram)
                 flash('✅ Tarea actualizada y notificada por Telegram', 'success')
                 return redirect(url_for('routes.ver_tareas'))
             except Exception as e:
                 print(f"Error al enviar a Telegram: {e}")
-                enviado_telegram = False
+                #enviado_telegram = False
 
         # 2. Si no tiene Telegram, preparar enlace de WhatsApp
-        if not enviado_telegram and assistant.whatsapp:
+        if assistant.whatsapp:
             try:
-                # Limpiar número (solo dígitos y +)
-                whatsapp_clean = ''.join(c for c in assistant.whatsapp if c.isdigit())
-                if not whatsapp_clean.startswith('54'):  # Ajusta según tu país
-                    whatsapp_clean = '54' + whatsapp_clean
+                # Limpiar número
+                clean_number = ''.join(c for c in assistant.whatsapp if c.isdigit())
+                if not clean_number.startswith('54'):  # Ajusta a tu país
+                    clean_number = '54' + clean_number
 
                 mensaje_whatsapp = (
                     f"Hola {assistant.name}, tienes una actualización en tu tarea:\n\n"
@@ -2553,7 +2552,7 @@ def editar_tarea(task_id):
                     f"Este mensaje fue generado automáticamente."
                 )
                 url_encoded = urllib.parse.quote(mensaje_whatsapp)
-                whatsapp_url = f"https://wa.me/{whatsapp_clean}?text={url_encoded}"
+                whatsapp_url = f"https://wa.me/{clean_number}?text={url_encoded}"
 
                 # ✅ Guardar en sesión para mostrar botón
                 session['whatsapp_url'] = whatsapp_url
@@ -2605,6 +2604,15 @@ def cambiar_pass():
         return redirect(url_for('routes.mi_perfil'))
 
     return render_template('/profiles/private/cambiar_pass.html')
+
+# Ruta para limpiar la sesión de WhatsApp después de mostrar el botón
+@routes.route('/_cleanup_whatsapp', methods=['POST'])
+@login_required
+def limpiar_whatsapp_session():
+    """Limpia temporalmente la sesión de WhatsApp después de mostrar el botón"""
+    if 'whatsapp_url' in session:
+        session.pop('whatsapp_url', None)
+    return '', 204  # No Content
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):

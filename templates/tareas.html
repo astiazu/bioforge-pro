@@ -82,16 +82,32 @@
 
     <!-- Mostrar botón de WhatsApp si existe en sesión -->
     {% if session.get('whatsapp_url') %}
-    <div class="alert alert-success text-center mb-4">
+    <div id="whatsapp-alert" class="alert alert-success text-center mb-4">
         <p><strong>📲 ¡Tarea actualizada! Envía el mensaje por WhatsApp:</strong></p>
         <a 
             href="{{ session.get('whatsapp_url') }}" 
             target="_blank" 
             class="btn btn-success btn-lg"
+            onclick="confirmarEnvio(event)"
         >
             <i class="fab fa-whatsapp me-2"></i> Abrir WhatsApp
         </a>
     </div>
+
+    <script>
+    function confirmarEnvio(e) {
+        fetch('{{ url_for("routes.limpiar_whatsapp_session") }}', { method: 'POST' })
+            .finally(() => {
+                const alert = document.getElementById('whatsapp-alert');
+                alert.classList.remove('alert-success');
+                alert.classList.add('alert-info');
+                alert.innerHTML = '<p><strong>✅ Mensaje abierto. Gracias por comunicarte.</strong></p>';
+                
+                // Desaparece a los 3 segundos
+                setTimeout(() => alert.remove(), 3000);
+            });
+    }
+    </script>
     {% endif %}
 
     <!-- Gráficos -->
@@ -103,7 +119,7 @@
                     <h6 class="mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>Evolución de Tareas</h6>
                     <small class="text-muted">Últimos 30 días</small>
                 </div>
-                <div class="card-body" style="height: 300px;">
+                <div class="card-body" style="height: 350px;">
                     <div id="chart-evolucion"></div>
                 </div>
             </div>
@@ -115,7 +131,7 @@
                 <div class="card-header bg-light">
                     <h6 class="mb-0"><i class="fas fa-user-tag me-2 text-success"></i>Tareas por Asistente</h6>
                 </div>
-                <div class="card-body" style="height: 300px;">
+                <div class="card-body" style="height: 350px;">
                     <div id="chart-asistentes"></div>
                 </div>
             </div>
@@ -208,103 +224,99 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Scripts corregidos -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/recharts@2.0.0-beta.10/dist/recharts.min.js"></script>
-
-<script type="text/javascript">
-    // Verificar carga de librerías
-    console.log("React:", typeof React);
-    console.log("ReactDOM:", typeof ReactDOM);
-    console.log("Recharts:", typeof Recharts);
-
-    if (!Recharts) {
-        console.error("❌ Recharts no se cargó correctamente");
-        alert("Error: Recharts no se cargó. Verifica tu conexión o el CDN.");
-    }
-
-    const { 
-        LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-        ResponsiveContainer, PieChart, Pie, Cell 
-    } = Recharts;
-
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
     const dataEvolucion = {{ data_evolucion | tojson }};
     const dataAsistentes = {{ assistants_distribution | tojson }};
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-    // Renderizar gráfico de evolución
-    ReactDOM.render(
-        <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={dataEvolucion}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={ { 'fontSize': 12 } } />
-                <YAxis tick={ { 'fontSize': 12 } } />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="Pendientes" stroke="#f39c12" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="En progreso" stroke="#3498db" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="Completadas" stroke="#2ecc71" strokeWidth={2} dot={false} />
-            </LineChart>
-        </ResponsiveContainer>,
-        document.getElementById('chart-evolucion')
-    );
+    // === Evolución de tareas ===
+    const tracePend = {
+        x: dataEvolucion.map(d => d.name),
+        y: dataEvolucion.map(d => d["Pendientes"]),
+        mode: "lines+markers",
+        name: "Pendientes",
+        line: { color: "orange", width: 2 }
+    };
+    const traceProg = {
+        x: dataEvolucion.map(d => d.name),
+        y: dataEvolucion.map(d => d["En progreso"]),
+        mode: "lines+markers",
+        name: "En progreso",
+        line: { color: "blue", width: 2 }
+    };
+    const traceComp = {
+        x: dataEvolucion.map(d => d.name),
+        y: dataEvolucion.map(d => d["Completadas"]),
+        mode: "lines+markers",
+        name: "Completadas",
+        line: { color: "green", width: 2 }
+    };
 
-    // Renderizar gráfico circular
-    ReactDOM.render(
-        <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-                <Pie
-                    data={dataAsistentes}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                >
-                    {dataAsistentes.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                </Pie>
-                <Tooltip />
-            </PieChart>
-        </ResponsiveContainer>,
-        document.getElementById('chart-asistentes')
-    );
+    const layoutEvolucion = {
+        margin: { t: 30 },
+        xaxis: {
+            rangeslider: { visible: true },
+            rangeselector: {
+                buttons: [
+                    { count: 7, label: "7d", step: "day", stepmode: "backward" },
+                    { count: 14, label: "14d", step: "day", stepmode: "backward" },
+                    { count: 30, label: "30d", step: "day", stepmode: "backward" },
+                    { step: "all", label: "Todo" }
+                ]
+            }
+        },
+        yaxis: { title: "Cantidad" },
+        legend: { orientation: "h", y: -0.3 },
+        hovermode: "x unified"
+    };
+
+    Plotly.newPlot("chart-evolucion", [tracePend, traceProg, traceComp], layoutEvolucion, {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToAdd: ["drawline", "drawrect", "eraseshape"],
+        toImageButtonOptions: { format: "png", filename: "evolucion_tareas", scale: 2 }
+    });
+
+    // === Distribución asistentes ===
+    const tracePie = {
+        labels: dataAsistentes.map(d => d.name),
+        values: dataAsistentes.map(d => d.task_count),
+        type: "pie",
+        hole: 0.5,
+        textinfo: "label+percent",
+        insidetextorientation: "radial"
+    };
+
+    const layoutPie = {
+        margin: { t: 30 },
+        annotations: [
+            { font: { size: 14 }, showarrow: false, text: "Tareas", x: 0.5, y: 0.5 }
+        ],
+        legend: { orientation: "h", y: -0.2 }
+    };
+
+    Plotly.newPlot("chart-asistentes", [tracePie], layoutPie, {
+        responsive: true,
+        displaylogo: false,
+        modeBarButtonsToAdd: ["drawcircle", "eraseshape"],
+        toImageButtonOptions: { format: "png", filename: "distribucion_asistentes", scale: 2 }
+    });
 </script>
 {% endblock %}
 
 {% block styles %}
 <style>
-    .card {
-        border-radius: 0.5rem;
-    }
+    .card { border-radius: 0.5rem; }
     .card-header {
         border-top-left-radius: 0.5rem !important;
         border-top-right-radius: 0.5rem !important;
     }
-    .opacity-25 {
-        opacity: 0.25 !important;
-    }
-    .bg-opacity-10 {
-        background-color: rgba(0,0,0,0.1) !important;
-    }
-    .border-start {
-        border-left: 4px solid #dee2e6 !important;
-    }
-    .border-primary {
-        border-color: #0d6efd !important;
-    }
-    .border-warning {
-        border-color: #ffc107 !important;
-    }
-    .border-success {
-        border-color: #198754 !important;
-    }
-    .border-info {
-        border-color: #0dcaf0 !important;
-    }
+    .opacity-25 { opacity: 0.25 !important; }
+    .bg-opacity-10 { background-color: rgba(0,0,0,0.1) !important; }
+    .border-start { border-left: 4px solid #dee2e6 !important; }
+    .border-primary { border-color: #0d6efd !important; }
+    .border-warning { border-color: #ffc107 !important; }
+    .border-success { border-color: #198754 !important; }
+    .border-info { border-color: #0dcaf0 !important; }
 </style>
 {% endblock %}
