@@ -17,6 +17,7 @@
                 <h5 class="mb-0">Asistentes Generales</h5>
             </div>
             <div class="card-body">
+
                 <div class="row">
                     {% for assistant in general_assistants %}
                     <div class="col-md-6 col-lg-4 mb-3">
@@ -47,17 +48,63 @@
                                         </button>
                                     </form>
                                 </div>
-
                                 <!-- Enlace para enviar WhatsApp -->
                                 {% if assistant.whatsapp %}
                                 <div class="mt-2">
-                                    <a href="https://wa.me/{{ assistant.whatsapp|replace('+','') }}?text=Hola%20{{ assistant.name }},%20tienes%20una%20nueva%20tarea%20asignada.%20Por%20favor%20ingresa%20al%20sistema%20para%20ver%20los%20detalles." 
-                                       target="_blank" 
-                                       class="btn btn-success btn-sm w-100">
+                                    <a href="https://wa.me/{{ assistant.whatsapp|replace('+', '') }}?text=Hola%20{{ assistant.name }},%20tienes%20una%20nueva%20tarea%20asignada.%20Por%20favor%20ingresa%20al%20sistema%20para%20ver%20los%20detalles."
+                                    target="_blank"
+                                    class="btn btn-success btn-sm w-100">
                                         <i class="fab fa-whatsapp me-1"></i> WhatsApp
                                     </a>
                                 </div>
                                 {% endif %}
+
+                                <!-- Mostrar estado de Telegram -->
+                                <span class="badge {% if assistant.telegram_id %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if assistant.telegram_id %}
+                                        📱 Telegram vinculado
+                                    {% else %}
+                                        🔴 Sin Telegram
+                                    {% endif %}
+                                </span>
+                                <!-- Dentro del div.card-body, después del botón de WhatsApp -->
+                                <div class="mt-3 pt-3 border-top">
+                                    <!-- Botón para desplegar tareas -->
+                                    <button class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#tareas-{{ assistant.id }}"
+                                            aria-expanded="false"
+                                            aria-controls="tareas-{{ assistant.id }}">
+                                        <i class="fas fa-tasks me-1"></i>
+                                        Ver tareas ({{ tasks_by_assistant.get(assistant.id, []) | length }})
+                                    </button>
+
+                                    <!-- Contenedor de tareas (colapsable) -->
+                                    <div class="collapse" id="tareas-{{ assistant.id }}">
+                                        {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
+                                        {% if tareas %}
+                                        <ul class="list-unstyled small mb-0">
+                                            {% for task in tareas | sort(attribute='due_date') %}
+                                            <li class="mb-1
+                                                {% if task.status == 'completed' %}text-success
+                                                {% elif task.status == 'cancelled' %}text-danger
+                                                {% else %}{% if task.due_date and task.due_date < today %}text-warning{% endif %}
+                                                {% endif %}">
+                                                <i class="fas fa-circle text-xs me-1"></i>
+                                                {{ task.title[:30] }}{% if task.title|length > 30 %}...{% endif %}
+                                                <span class="badge bg-secondary ms-1">{{ task.status.replace('_', ' ').title() }}</span>
+                                                {% if task.due_date %}
+                                                    <small class="text-muted ms-1">({{ task.due_date.strftime('%d/%m') }})</small>
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        <small class="text-muted">No tiene tareas asignadas</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -106,7 +153,44 @@
                                         </button>
                                     </form>
                                 </div>
+                                <!-- Dentro del div.card-body, después del botón de WhatsApp -->
+                                <div class="mt-3 pt-3 border-top">
+                                    <!-- Botón para desplegar tareas -->
+                                    <button class="btn btn-sm btn-outline-primary w-100 mb-2"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#tareas-{{ assistant.id }}"
+                                            aria-expanded="false"
+                                            aria-controls="tareas-{{ assistant.id }}">
+                                        <i class="fas fa-tasks me-1"></i>
+                                        Ver tareas ({{ tasks_by_assistant.get(assistant.id, []) | length }})
+                                    </button>
 
+                                    <!-- Contenedor de tareas (colapsable) -->
+                                    <div class="collapse" id="tareas-{{ assistant.id }}">
+                                        {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
+                                        {% if tareas %}
+                                        <ul class="list-unstyled small mb-0">
+                                            {% for task in tareas | sort(attribute='due_date') %}
+                                            <li class="mb-1
+                                                {% if task.status == 'completed' %}text-success
+                                                {% elif task.status == 'cancelled' %}text-danger
+                                                {% else %}{% if task.due_date and task.due_date < today %}text-warning{% endif %}
+                                                {% endif %}">
+                                                <i class="fas fa-circle text-xs me-1"></i>
+                                                {{ task.title[:30] }}{% if task.title|length > 30 %}...{% endif %}
+                                                <span class="badge bg-secondary ms-1">{{ task.status.replace('_', ' ').title() }}</span>
+                                                {% if task.due_date %}
+                                                    <small class="text-muted ms-1">({{ task.due_date.strftime('%d/%m') }})</small>
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        <small class="text-muted">No tiene tareas asignadas</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
                                 <!-- Enlace para enviar WhatsApp -->
                                 {% if assistant.whatsapp %}
                                 <div class="mt-2">

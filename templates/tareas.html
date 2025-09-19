@@ -137,7 +137,55 @@
             </div>
         </div>
     </div>
+    
+    <!-- Filtros -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <!-- Asistente -->
+                <div class="col-md-4">
+                    <label for="assistant" class="form-label">Filtrar por asistente</label>
+                    <select id="assistant" name="assistant" class="form-select">
+                        <option value="">Todos</option>
+                        {% for a in assistants %}
+                            <option value="{{ a.id }}" {% if request.args.get('assistant') == a.id|string %}selected{% endif %}>
+                                {{ a.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
+                <!-- Estado -->
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Filtrar por estado</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pendiente</option>
+                        <option value="in_progress" {% if request.args.get('status') == 'in_progress' %}selected{% endif %}>En progreso</option>
+                        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completada</option>
+                        <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+
+                <!-- Fecha -->
+                <div class="col-md-4">
+                    <label for="date" class="form-label">Filtrar por fecha límite</label>
+                    <input type="date" id="date" name="date" class="form-control"
+                        value="{{ request.args.get('date', '') }}">
+                </div>
+
+                <!-- Botón -->
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-2"></i>Aplicar filtros
+                    </button>
+                    <a href="{{ url_for('routes.ver_tareas') }}" class="btn btn-secondary">
+                        Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
     <!-- Tabla de tareas -->
     <div class="card shadow-sm">
         <div class="card-header bg-white border-bottom">

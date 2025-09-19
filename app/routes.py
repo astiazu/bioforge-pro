@@ -17,6 +17,8 @@ from app import db, mail
 from flask_mail import Message
 from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
 from datetime import date, timedelta
+from app.forms.task_form import TaskForm
+from sqlalchemy import func
 import urllib.parse
 import secrets
 import string
@@ -1838,7 +1840,6 @@ def nueva_agenda():
     }
     return render_template('nueva_agenda.html', clinics=clinics, days=days)
 
-
 @routes.route('/agenda/eliminar/<int:schedule_id>', methods=['POST'])
 @login_required
 def eliminar_agenda(schedule_id):
@@ -2111,13 +2112,30 @@ def mis_asistentes():
 
     total_assistants = len(all_assistants)
 
+    # ✅ Obtener todas las tareas del profesional
+    tasks = Task.query.join(Assistant).filter(
+        Assistant.doctor_id == current_user.id
+    ).all()
+
+    # ✅ Opcional: agrupar tareas por asistente para mejor rendimiento
+    tasks_by_assistant = {}
+    for task in tasks:
+        if task.assistant_id not in tasks_by_assistant:
+            tasks_by_assistant[task.assistant_id] = []
+        tasks_by_assistant[task.assistant_id].append(task)
+
+    # ✅ Define today aquí
+    today = date.today()
+
     return render_template(
         'asistentes.html', 
         assistants_by_clinic=assistants_by_clinic,
         general_assistants=general_assistants,
         clinics=clinics,
-        all_assistants=all_assistants,  # ✅ Nuevo: para estado de Telegram
-        no_assistants=(total_assistants == 0)
+        all_assistants=all_assistants,
+        tasks_by_assistant=tasks_by_assistant,  # ✅ Pasamos las tareas por asistente
+        no_assistants=(total_assistants == 0),
+        today=today  # ✅ Pasamos la variable al template
     )
 
 # Ruta: Nuevo asistente
@@ -2324,52 +2342,26 @@ def nueva_tarea():
         return redirect(url_for('routes.index'))
 
     assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
+    form = TaskForm()
 
-    if request.method == 'POST':
-        assistant_id = request.form.get('assistant_id', type=int)
-        title = request.form.get('title', '').strip()
-        description = request.form.get('description', '').strip()
-        due_date_str = request.form.get('due_date')
+    # Rellenar el select dinámicamente
+    form.assistant_id.choices = [(a.id, a.name) for a in assistants]
 
-        if not assistant_id:
-            flash('Debe seleccionar un asistente', 'error')
-            return redirect(url_for('routes.mis_asistentes'))
-
-        assistant = Assistant.query.filter_by(
-            id=assistant_id,
-            doctor_id=current_user.id
-        ).first()
-
-        if not assistant:
-            flash('Asistente no encontrado o no autorizado', 'danger')
-            return redirect(url_for('routes.mis_asistentes'))
-
-        if not title:
-            flash('El título es obligatorio', 'error')
-            return render_template('nueva_tarea.html', assistants=assistants)
-
-        due_date = None
-        if due_date_str:
-            try:
-                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                flash('Fecha inválida', 'error')
-                return render_template('nueva_tarea.html', assistants=assistants)
-
+    if form.validate_on_submit():
         task = Task(
-            title=title,
-            description=description,
-            due_date=due_date,
+            title=form.title.data,
+            description=form.description.data,
+            due_date=form.due_date.data,
             doctor_id=current_user.id,
-            assistant_id=assistant_id,
-            status=TaskStatus.PENDING.value
+            assistant_id=form.assistant_id.data,
+            status=form.status.data
         )
         db.session.add(task)
         db.session.commit()
 
-        # ✅ Notificar
+        # 🔔 Notificaciones (Telegram / WhatsApp)
+        assistant = Assistant.query.get(form.assistant_id.data)
         enviado_telegram = False
-        abrir_whatsapp = False
 
         if assistant.telegram_id:
             mensaje = (
@@ -2388,13 +2380,10 @@ def nueva_tarea():
             except:
                 pass
 
-        # Si no tiene Telegram pero tiene WhatsApp, preparamos el enlace
         if not enviado_telegram and assistant.whatsapp:
             from app.utils import crear_mensaje_whatsapp
             mensaje_url = crear_mensaje_whatsapp(assistant, task)
             whatsapp_url = f"https://wa.me/{assistant.whatsapp}?text={mensaje_url}"
-            
-            # ✅ Devolvemos JavaScript para abrir WhatsApp automáticamente
             return f"""
             <script>
                 alert('Tarea creada. Abriendo WhatsApp...');
@@ -2405,7 +2394,7 @@ def nueva_tarea():
 
         return redirect(url_for('routes.ver_tareas'))
 
-    return render_template('nueva_tarea.html', assistants=assistants)
+    return render_template('nueva_tarea.html', form=form, assistants=assistants)
 
 # Ruta: Ver tareas
 @routes.route('/tareas')
@@ -2415,11 +2404,33 @@ def ver_tareas():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # Obtener todas las tareas del profesional
-    tasks = Task.query.join(Assistant).filter(
-    Assistant.doctor_id == current_user.id
-    ).all()
+    # === Filtros desde GET ===
+    assistant_filter = request.args.get("assistant", type=int)
+    status_filter = request.args.get("status")
+    date_filter = request.args.get("date")
 
+    # Base query
+    query = Task.query.join(Assistant).filter(
+        Assistant.doctor_id == current_user.id
+    )
+
+    if assistant_filter:
+        query = query.filter(Task.assistant_id == assistant_filter)
+
+    if status_filter:
+        query = query.filter(Task.status == status_filter)
+
+    if date_filter:
+        try:
+            date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(Task.due_date == date_obj)
+        except ValueError:
+            pass
+
+    # Ejecutar query con filtros
+    tasks = query.all()
+
+    # === Labels para la tabla ===
     status_labels = {
         'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
         'in_progress': {'text': 'En progreso', 'class': 'bg-info text-white'},
@@ -2438,26 +2449,20 @@ def ver_tareas():
                 'task_count': count
             })
 
-    # ✅ Generar las últimas 30 fechas (orden cronológico)
+    # Últimos 30 días
     today = date.today()
     last_30_days = [
-        (today - timedelta(days=i)).strftime('%d/%m') 
+        (today - timedelta(days=i)).strftime('%d/%m')
         for i in range(29, -1, -1)
     ]
 
-    # ✅ Preparar datos reales por fecha y estado
     task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
-
     for task in tasks:
-        # Asegurar que created_at exista y sea válida
         if not task.created_at:
-            continue  # Saltar si no tiene fecha
+            continue
         day_key = task.created_at.date()
-        
-        # Solo incluir si está en los últimos 30 días
         if day_key >= today - timedelta(days=29):
             day_str = day_key.strftime('%d/%m')
-            
             if task.status == 'pending':
                 task_data[day_str]['Pendientes'] += 1
             elif task.status == 'in_progress':
@@ -2465,7 +2470,6 @@ def ver_tareas():
             elif task.status == 'completed':
                 task_data[day_str]['Completadas'] += 1
 
-    # ✅ Convertir a lista ordenada por fecha
     data_evolucion = []
     for fecha in last_30_days:
         data_evolucion.append({
@@ -2476,9 +2480,10 @@ def ver_tareas():
         })
 
     return render_template(
-        'tareas.html', 
-        tasks=tasks, 
+        'tareas.html',
+        tasks=tasks,
         status_labels=status_labels,
+        assistants=assistants,   # 🔹 Importante: para el select de filtros
         assistants_count=len(assistants),
         assistants_distribution=assistants_distribution,
         today=today,
@@ -2491,34 +2496,25 @@ def ver_tareas():
 def editar_tarea(task_id):
     task = Task.query.get_or_404(task_id)
     assistant = Assistant.query.filter_by(id=task.assistant_id, doctor_id=current_user.id).first()
-    
+
     if not assistant:
         flash('No puedes editar esta tarea', 'danger')
         return redirect(url_for('routes.ver_tareas'))
 
-    if request.method == 'POST':
-        task.title = request.form.get('title', '').strip()
-        task.description = request.form.get('description', '').strip()
-        due_date_str = request.form.get('due_date')
-        status = request.form.get('status')
+    form = TaskForm(obj=task)  # precargar con los datos actuales
+    form.assistant_id.choices = [(assistant.id, assistant.name)]  # bloqueamos solo su asistente
 
-        if due_date_str:
-            try:
-                task.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                flash('Fecha inválida', 'error')
-                return render_template('editar_tarea.html', task=task)
-
-        if status in ['pending', 'in_progress', 'completed', 'cancelled']:
-            task.status = status
+    if form.validate_on_submit():
+        task.title = form.title.data
+        task.description = form.description.data
+        task.due_date = form.due_date.data
+        task.status = form.status.data
 
         db.session.commit()
 
-        # 1. Intentar enviar por Telegram si tiene ID
-        # enviado_telegram = False
+        # 🔔 Notificación como en tu código original
         if assistant.telegram_id:
             try:
-                # ✅ Mensaje para Telegram
                 mensaje_telegram = (
                     f"📋 *Tarea Actualizada*\n\n"
                     f"*Asistente:* {assistant.name}\n"
@@ -2533,14 +2529,11 @@ def editar_tarea(task_id):
                 return redirect(url_for('routes.ver_tareas'))
             except Exception as e:
                 print(f"Error al enviar a Telegram: {e}")
-                #enviado_telegram = False
 
-        # 2. Si no tiene Telegram, preparar enlace de WhatsApp
         if assistant.whatsapp:
             try:
-                # Limpiar número
                 clean_number = ''.join(c for c in assistant.whatsapp if c.isdigit())
-                if not clean_number.startswith('54'):  # Ajusta a tu país
+                if not clean_number.startswith('54'):
                     clean_number = '54' + clean_number
 
                 mensaje_whatsapp = (
@@ -2554,19 +2547,16 @@ def editar_tarea(task_id):
                 url_encoded = urllib.parse.quote(mensaje_whatsapp)
                 whatsapp_url = f"https://wa.me/{clean_number}?text={url_encoded}"
 
-                # ✅ Guardar en sesión para mostrar botón
                 session['whatsapp_url'] = whatsapp_url
                 flash('✅ Tarea actualizada. Haz clic en el botón para enviar por WhatsApp.', 'success')
                 return redirect(url_for('routes.ver_tareas'))
-
             except Exception as e:
                 print(f"Error al generar WhatsApp: {e}")
 
-        # Caso sin notificación
         flash('✅ Tarea actualizada, pero no se pudo notificar (sin contacto)', 'info')
         return redirect(url_for('routes.ver_tareas'))
 
-    return render_template('editar_tarea.html', task=task)
+    return render_template('editar_tarea.html', form=form, task=task)
 
 @routes.route('/profiles/private/cambiar-pass', methods=['GET', 'POST'])
 @login_required
