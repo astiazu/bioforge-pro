@@ -205,7 +205,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for t in tasks %}
+                        {% set tasks_ordenadas = tasks | sort_by_due_date %}
+                        {% for t in tasks_ordenadas %}
                         <tr>
                             <td class="align-middle">
                                 <div class="d-flex align-items-center">

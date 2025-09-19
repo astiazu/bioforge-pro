@@ -85,7 +85,7 @@
                                         {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
                                         {% if tareas %}
                                         <ul class="list-unstyled small mb-0">
-                                            {% for task in tareas | sort(attribute='due_date') %}
+                                            {% for task in tareas | sort_by_due_date %}
                                             <li class="mb-1
                                                 {% if task.status == 'completed' %}text-success
                                                 {% elif task.status == 'cancelled' %}text-danger
@@ -171,7 +171,7 @@
                                         {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
                                         {% if tareas %}
                                         <ul class="list-unstyled small mb-0">
-                                            {% for task in tareas | sort(attribute='due_date') %}
+                                            {% for task in tareas | sort_by_due_date %}
                                             <li class="mb-1
                                                 {% if task.status == 'completed' %}text-success
                                                 {% elif task.status == 'cancelled' %}text-danger

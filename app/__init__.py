@@ -86,5 +86,16 @@ def create_app():
         @login_manager.user_loader
         def load_user(user_id):
             return User.query.get(int(user_id))
+        
+        # ✅ Filtro personalizado para ordenar tareas por fecha de vencimiento y evito errores con fechas None
+        from datetime import datetime, date
+
+        @app.template_filter('sort_by_due_date')
+        def sort_by_due_date(tasks):
+            def sort_key(task):
+                return task.due_date if task.due_date is not None else datetime.max.date()
+            return sorted(tasks, key=sort_key)
     
     return app
+
+
