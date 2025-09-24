@@ -1,3 +1,4 @@
+# routes.py - Última actualización: 2025-09-24 - Eliminado import magic global
 # app/routes.py
 # IMPORTS - ESTÁNDAR
 # ================================
@@ -23,7 +24,6 @@ import urllib.parse
 import pandas as pd
 import plotly.express as px
 import requests
-
 from flask import (
     render_template, request, redirect, url_for, flash, jsonify,
     session, Blueprint, current_app, abort, send_from_directory, Response
@@ -52,6 +52,7 @@ from app.utils import (
     send_invite_email, verify_invite_token, generate_unique_invite_code,
     send_company_invite, can_manage_tasks
 )
+print("✅ routes.py cargado sin import magic en el nivel superior")
 # ================================
 # BLUEPRINT
 # ================================
@@ -217,6 +218,7 @@ def validate_mime_type(file):
     Valida el tipo MIME del archivo usando python-magic.
     Si libmagic no está disponible (ej: en Render), hace fallback a validación por extensión.
     """
+    print("✅ routes.py cargado sin import magic en el nivel superior")
     try:
         import magic
         mime = magic.from_buffer(file.read(2048), mime=True)
