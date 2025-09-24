@@ -3,7 +3,7 @@ services:
     name: bioforge
     env: python
     region: oregon
-    buildCommand: "apt-get update && apt-get install -y libmagic1 && pip install -r requirements.txt"
+    buildCommand: "pip install -r requirements.txt"
     startCommand: "flask db upgrade && gunicorn 'app:create_app()'"
     envVars:
       - key: SECRET_KEY

@@ -106,7 +106,6 @@ def validate_csv_structure(df):
             raise ValueError("Encabezados inválidos o vacíos en el CSV.")
     return True
 
-
 def sanitize_date_column(series, default_date="2999-12-31"):
     """
     Convierte una serie a datetime, rellenando valores inválidos o vacíos con una fecha por defecto.
@@ -213,6 +212,20 @@ def enviar_notificacion_tarea(task):
 
     return email_ok or telegram_ok
 
+def validate_mime_type(file):
+    """
+    Valida el tipo MIME del archivo usando python-magic.
+    Si libmagic no está disponible (ej: en Render), hace fallback a validación por extensión.
+    """
+    try:
+        import magic
+        mime = magic.from_buffer(file.read(2048), mime=True)
+        file.seek(0)
+        return mime in ALLOWED_MIME_TYPES
+    except Exception as e:
+        print(f"⚠️  Advertencia: libmagic no disponible ({e}). Validando solo por extensión.")
+        return True  # fallback: confiamos en la extensión .csv
+    
 # ================================
 # RUTAS - ANÁLISIS DE DATOS (CSV + GRÁFICOS)
 # ================================
@@ -232,15 +245,9 @@ def upload_csv():
             flash('❌ El archivo supera el tamaño máximo permitido (5 MB).', 'danger')
             return redirect(request.url)
 
-        try:
-            mime = magic.from_buffer(file.read(2048), mime=True)
-            file.seek(0)
-        except Exception as e:
-            flash(f'❌ Error al verificar el tipo de archivo: {str(e)}', 'danger')
-            return redirect(request.url)
-
-        if mime not in ALLOWED_MIME_TYPES:
-            flash(f'❌ Tipo de archivo no permitido: {mime}. Solo se aceptan CSV válidos.', 'danger')
+        # Validar MIME type (con fallback en Render)
+        if not validate_mime_type(file):
+            flash('❌ Tipo de archivo no permitido. Solo se aceptan CSV válidos.', 'danger')
             return redirect(request.url)
 
         if not file.filename.lower().endswith('.csv'):
