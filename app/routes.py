@@ -23,7 +23,7 @@ import urllib.parse
 import pandas as pd
 import plotly.express as px
 import requests
-import magic
+
 from flask import (
     render_template, request, redirect, url_for, flash, jsonify,
     session, Blueprint, current_app, abort, send_from_directory, Response
