@@ -30,16 +30,24 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="clinic_id" class="form-label">Consultorio/Ubicación</label>
+                            <label for="assistant_type" class="form-label">Tipo de Asistente *</label>
+                            <select class="form-select" id="assistant_type" name="assistant_type" required onchange="toggleEmailField(this)">
+                                <option value="general" {% if assistant.type == 'general' %}selected{% endif %}>Senior (Asistente General)</option>
+                                <option value="common" {% if assistant.type == 'common' %}selected{% endif %}>Junior (Asistente Común)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="clinic_id" class="form-label">Locación/Ubicación</label>
                             <select class="form-select" id="clinic_id" name="clinic_id">
-                                <option value="">Asistente General (sin ubicación específica)</option>
+                                <option value="">Asistente General o Senior (sin ubicación específica)</option>
                                 {% for clinic in clinics %}
                                 <option value="{{ clinic.id }}" {% if assistant.clinic_id == clinic.id %}selected{% endif %}>
                                     {{ clinic.name }} - {{ clinic.address }}
                                 </option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">Deja vacío para mantenerlo como asistente general</small>
+                            
                         </div>
 
                         <div class="d-flex justify-content-between">

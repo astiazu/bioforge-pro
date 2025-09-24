@@ -1,0 +1,15 @@
+<!-- templates/upload_csv.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Subir archivo CSV para análisis</h2>
+    <form method="POST" action="{{ url_for('routes.upload_csv') }}" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="file" class="form-label">Selecciona un archivo CSV (máx. 5 MB)</label>
+            <input class="form-control" type="file" id="file" name="file" accept=".csv" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Subir y previsualizar</button>
+    </form>
+</div>
+{% endblock %}

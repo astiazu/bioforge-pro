@@ -1,14 +1,17 @@
-<!-- templates/nuevo_asistente.html -->
 {% extends "base.html" %}
 {% block title %}Nuevo Asistente{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-6">
+
+            <!-- Tarjeta principal -->
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Nuevo Asistente</h3>
                 </div>
+
                 <div class="card-body">
                     <form method="POST">
                         <div class="mb-3">
@@ -28,17 +31,35 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="clinic_id" class="form-label">Consultorio/Ubicación</label>
+                            <label for="assistant_type" class="form-label">Tipo de Asistente *</label>
+                            <select class="form-select" id="assistant_type" name="assistant_type" required onchange="toggleEmailField(this)">
+                                <option value="">Selecciona un tipo...</option>
+                                <option value="general">Senior (Asistente General)</option>
+                                <option value="common">Junior (Asistente Común)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="clinic_id" class="form-label">Locación / Ubicación</label>
                             <select class="form-select" id="clinic_id" name="clinic_id">
-                                <option value="">Asistente General (sin ubicación específica)</option>
+                                <option value="">Sin ubicación específica</option>
                                 {% for clinic in clinics %}
                                 <option value="{{ clinic.id }}">{{ clinic.name }} - {{ clinic.address }}</option>
                                 {% endfor %}
                             </select>
-                            <small class="text-muted">Deja vacío para crear un asistente general</small>
+                            <small class="text-muted">Opcional: asigna a una Ubicación específica</small>
                         </div>
-
-                        <div class="d-flex justify-content-between">
+                        <script>
+                        function toggleEmailField(select) {
+                            const emailField = document.getElementById('email');
+                            if (select.value === 'general') {
+                                emailField.setAttribute('required', 'required');
+                            } else {
+                                emailField.removeAttribute('required');
+                            }
+                        }
+                        </script>
+                        <div class="d-flex justify-content-between mt-4">
                             <a href="{{ url_for('routes.mis_asistentes') }}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Volver
                             </a>
@@ -49,6 +70,29 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Mostrar resultado después de crear (si hay invite_share) -->
+            {% if invite_share %}
+            <div class="mt-4 alert alert-success">
+                <h5><i class="fas fa-paper-plane text-success"></i> ¡Invitación lista!</h5>
+                <p><strong>Código:</strong> <code>{{ invite_share.code }}</code></p>
+                
+                {% if invite_share %}
+                <!-- Mostrar botón de WhatsApp o copiar código -->
+                <div class="alert alert-success">
+                    <p><strong>Código generado:</strong> {{ invite_share.code }}</p>
+                    {% if invite_share.whatsapp_available %}
+                    <a href="{{ invite_share.whatsapp_link }}" class="btn btn-success">Enviar por WhatsApp</a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-warning mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> No se detectó número de WhatsApp.
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>

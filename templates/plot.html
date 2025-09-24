@@ -1,0 +1,12 @@
+<!-- # templates/plot.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Gráfico Generado</h2>
+    <div>
+        {{ graph_html|safe }}
+    </div>
+    <a href="{{ url_for('routes.upload_csv') }}" class="btn btn-secondary mt-3">Subir otro CSV</a>
+</div>
+{% endblock %}

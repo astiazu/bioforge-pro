@@ -1,6 +1,7 @@
 // static/js/data-analysis.js
 document.addEventListener('DOMContentLoaded', function () {
     const csvFile = document.getElementById('csvFile');
+    const uploadForm = document.getElementById('uploadForm'); // ✅ Nuevo
     const uploadBtn = document.getElementById('uploadBtn');
     const uploadStatus = document.getElementById('uploadStatus');
     const dataPreview = document.getElementById('dataPreview');
@@ -13,60 +14,96 @@ document.addEventListener('DOMContentLoaded', function () {
     const chartType = document.getElementById('chartType');
     const generateChartBtn = document.getElementById('generateChart');
     const dataChart = document.getElementById('dataChart').getContext('2d');
+    const resetBtn = document.getElementById('resetBtn'); // ✅ Nuevo
 
-    let fileId = null;  // ✅ Almacenar el ID del archivo
+    let fileId = null;
     let chartInstance = null;
 
-    // Subir CSV
-    uploadBtn.addEventListener('click', async () => {
+    // ✅ Manejar submit del formulario
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const file = csvFile.files[0];
         if (!file) return showStatus('error', 'Selecciona un archivo CSV');
+
+        // ✅ Validar tamaño (opcional)
+        if (file.size > 10 * 1024 * 1024) {
+            showStatus('error', 'El archivo es demasiado grande (máx. 10MB)');
+            return;
+        }
 
         const formData = new FormData();
         formData.append('file', file);
 
         try {
-            showStatus('info', 'Procesando...');
-            const response = await fetch('/upload-csv', {
+            showStatus('info', '⬆️ Subiendo y procesando archivo...');
+            const response = await fetch('/upload_csv', {
                 method: 'POST',
                 body: formData
             });
 
             const result = await response.json();
             if (response.ok) {
-                // ✅ Guardar el file_id
                 fileId = result.file_id;
                 console.log("✅ file_id recibido:", fileId);
 
-                showStatus('success', '¡CSV cargado!');
+                // ✅ Resetear estado anterior
+                if (chartInstance) {
+                    chartInstance.destroy();
+                    chartInstance = null;
+                }
+                chartDisplay.style.display = 'none';
+
+                showStatus('success', '✅ ¡CSV cargado correctamente!');
                 renderDataPreview(result);
                 setupColumnSelectors(result.columns);
                 dataPreview.style.display = 'block';
                 chartConfig.style.display = 'block';
             } else {
-                showStatus('error', result.error || 'Error al procesar CSV');
+                showStatus('error', `❌ Error del servidor: ${result.error || 'Desconocido'}`);
             }
         } catch (error) {
-            showStatus('error', 'Error de conexión');
-            console.error(error);
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                showStatus('error', '⚠️ Servidor no disponible. ¿Está corriendo tu app local?');
+            } else {
+                showStatus('error', `❌ Error: ${error.message}`);
+            }
+            console.error("Error en subida de CSV:", error);
         }
     });
 
-    // Mostrar vista previa
+    // ✅ Botón de limpiar
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            csvFile.value = '';
+            fileId = null;
+            if (chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+            dataPreview.style.display = 'none';
+            chartConfig.style.display = 'none';
+            chartDisplay.style.display = 'none';
+            uploadStatus.innerHTML = '';
+            dataTableBody.innerHTML = '';
+            dataTableHead.innerHTML = '';
+            xColumn.innerHTML = '<option value="">Seleccionar columna...</option>';
+            yColumn.innerHTML = '<option value="">Seleccionar columna...</option>';
+            showStatus('info', '🧹 Todo limpio. Sube un nuevo archivo.');
+        });
+    }
+
     function renderDataPreview(info) {
         document.getElementById('dataRows').textContent = info.shape[0];
         document.getElementById('dataCols').textContent = info.shape[1];
         document.getElementById('dataMissing').textContent = Object.values(info.missing_values).reduce((a, b) => a + b, 0);
         document.getElementById('dataTypes').textContent = new Set(Object.values(info.dtypes)).size;
 
-        // Tabla
         dataTableHead.innerHTML = '<tr>' + info.columns.map(col => `<th>${col}</th>`).join('') + '</tr>';
         dataTableBody.innerHTML = info.preview.map(row => {
-            return '<tr>' + info.columns.map(col => `<td>${row[col]}</td>`).join('') + '</tr>';
+            return '<tr>' + info.columns.map(col => `<td>${row[col] !== undefined ? row[col] : ''}</td>`).join('') + '</tr>';
         }).join('');
     }
 
-    // Llenar selectores de columnas
     function setupColumnSelectors(columns) {
         [xColumn, yColumn].forEach(select => {
             select.innerHTML = '<option value="">Seleccionar columna...</option>';
@@ -79,13 +116,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Generar gráfico
     generateChartBtn.addEventListener('click', async () => {
         const x = xColumn.value;
         const y = yColumn.value;
         const type = chartType.value;
-
-        console.log("Generando gráfico:", { x, y, type });
 
         if (!x || !y) {
             alert('Selecciona ambas columnas');
@@ -98,11 +132,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
+            showStatus('info', '📊 Generando gráfico...');
             const response = await fetch('/analyze-data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    file_id: fileId,  // ✅ Enviar el file_id
+                    file_id: fileId,
                     x_column: x,
                     y_column: y,
                     chart_type: type
@@ -110,8 +145,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const result = await response.json();
-            console.log("Datos recibidos:", result);
-
             if (response.ok) {
                 if (chartInstance) chartInstance.destroy();
                 chartInstance = new Chart(dataChart, {
@@ -123,17 +156,35 @@ document.addEventListener('DOMContentLoaded', function () {
                             title: {
                                 display: true,
                                 text: result.title
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: x
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: y
+                                }
                             }
                         }
                     }
                 });
                 chartDisplay.style.display = 'block';
+                showStatus('success', '✅ Gráfico generado');
             } else {
-                alert('Error: ' + result.error);
+                showStatus('error', `❌ Error: ${result.error}`);
             }
         } catch (error) {
+            showStatus('error', `❌ Error al generar gráfico: ${error.message}`);
             console.error('Error:', error);
-            alert('Error al generar gráfico');
         }
     });
 
@@ -146,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
         uploadStatus.innerHTML = `<small class="${classes[type]}">${message}</small>`;
     }
 
-    // === Descargar gráfico como PNG ===
+    // Descargar gráfico
     const downloadBtn = document.getElementById('downloadChart');
     if (downloadBtn) {
         downloadBtn.addEventListener('click', () => {
@@ -154,14 +205,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('No hay gráfico para descargar');
                 return;
             }
-
-            // Obtener URL del gráfico (imagen PNG)
             const url = dataChart.canvas.toDataURL('image/png');
-
-            // Crear enlace temporal para descargar
             const a = document.createElement('a');
             a.href = url;
-            a.download = `grafico-${Date.now()}.png`;
+            a.download = `grafico-${new Date().toISOString().slice(0,10)}.png`;
             a.click();
         });
     }

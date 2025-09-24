@@ -64,8 +64,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'data_analysis' %}active{% endif %}"
-                           href="{{ url_for('routes.data_analysis') }}">
+                        <a class="nav-link {% if active_tab == 'upload_csv' %}active{% endif %}"
+                           href="{{ url_for('routes.upload_csv') }}">
                             Análisis de Datos
                         </a>
                     </li>
@@ -77,13 +77,27 @@
                         <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" 
                            data-bs-toggle="dropdown" aria-expanded="false">
                             {{ current_user.username }}
+                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
+                                {% if active_assistant %}
+                                <span class="badge bg-warning text-dark ms-3">
+                                    <i class="fas fa-briefcase me-1"></i>
+                                    Modo: Asistente en {{ active_assistant.doctor.username }}
+                                </span>
+                                {% endif %}
+                            {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <!-- Perfil del usuario -->
+                            <!-- Mi Perfil / Perfil del Equipo -->
                             <li>
+                                {% if session.get('active_role') == 'asistente' %}
+                                <a class="dropdown-item" href="{{ url_for('routes.perfil_equipo') }}">
+                                    <i class="fas fa-building me-2"></i>Perfil del Equipo
+                                </a>
+                                {% else %}
                                 <a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}">
                                     <i class="fas fa-user-circle me-2"></i>Mi Perfil
                                 </a>
+                                {% endif %}
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('routes.notes') }}">
@@ -95,6 +109,26 @@
                                     <i class="fa-regular fa-calendar me-2"></i> Mi Agenda
                                 </a>
                             </li>
+                            <!-- Botón condicional: Equipos -->
+                            {% if current_user.is_authenticated and current_user.assistant_accounts %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.mis_equipos') }}">
+                                    <!-- <i class="fa-regular fa-people-group me-2"></i> Mis Equipos -->
+                                    <i class="fa fa-users me-2"></i> Mis Equipos
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}"><i class="fas fa-user-circle me-2"></i>Mi Perfil</a></li>
+                            <!-- Botón condicional: Perfil de Asistente -->
+                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.perfil_asistente') }}">
+                                    <i class="fas fa-briefcase me-2"></i>Perfil de Asistente
+                                </a>
+                            </li>
+                            {% endif %}
+
                             <!-- Cambiar contraseña -->
                             <li>
                                 <a class="dropdown-item" href="{{ url_for('routes.cambiar_pass') }}">
@@ -111,7 +145,11 @@
                                     </a>
                                 </li>
                             {% endif %}
-
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </li>
                             <!-- Cerrar sesión -->
                             <li><hr class="dropdown-divider"></li>
                             <li>

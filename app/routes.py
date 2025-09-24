@@ -1,36 +1,124 @@
 # app/routes.py
+# IMPORTS - ESTÁNDAR
+# ================================
 import os
-import uuid
-import pandas as pd
-import requests
-import json
-import time
-from uuid import uuid4
-from datetime import datetime, timedelta
-from collections import defaultdict
-from flask import (render_template, request, redirect, url_for, flash, jsonify, session, Blueprint, current_app, abort, send_from_directory)
-from functools import wraps
-from flask_login import current_user, login_required
-from werkzeug.utils import secure_filename
-from app.models import User, Note, Publication, NoteStatus, Clinic, Availability, Appointment, MedicalRecord, Schedule, UserRole, Subscriber, Assistant, Task, TaskStatus
-from app import db, mail
-from flask_mail import Message
-from app.utils import upload_to_cloudinary, enviar_mensaje_telegram
-from datetime import date, timedelta
-from app.forms.task_form import TaskForm
-from sqlalchemy import func
-import urllib.parse
-import secrets
-import string
 import re
+import uuid
+import time
+import json
+import csv
+import string
+import secrets
+from datetime import datetime, timedelta, date
+from collections import defaultdict
+from io import StringIO
+from math import ceil
 import chardet
+from functools import wraps
+import urllib.parse
 
-# Carpeta para archivos temporales
+# ================================
+# IMPORTS - TERCEROS
+# ================================
+import pandas as pd
+import plotly.express as px
+import requests
+import magic
+from flask import (
+    render_template, request, redirect, url_for, flash, jsonify,
+    session, Blueprint, current_app, abort, send_from_directory, Response
+)
+from flask_login import current_user, login_required, login_user
+from flask_mail import Message
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+
+# ================================
+# IMPORTS - LOCALES (TU APP)
+# ================================
+from flask import current_app
+from app import db, mail
+from app.models import (
+    User, Note, Publication, NoteStatus, Clinic, Availability,
+    Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
+    Assistant, Task, TaskStatus, CompanyInvite
+)
+from app.forms import RegistrationForm
+from app.forms.task_form import TaskForm
+from app.utils import (
+    upload_to_cloudinary, enviar_mensaje_telegram, generate_invite_token,
+    send_invite_email, verify_invite_token, generate_unique_invite_code,
+    send_company_invite, can_manage_tasks
+)
+# ================================
+# BLUEPRINT
+# ================================
+routes = Blueprint('routes', __name__)
+
+# ================================
+# CONFIGURACIÓN
+# ================================
 UPLOAD_FOLDER = 'temp_csv'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+ALLOWED_MIME_TYPES = {
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/csv',
+    'text/plain'  # ← permite archivos guardados como texto plano
+}
+# ================================
+# FUNCIONES UTILITARIAS
+# ================================
+
+def escape_markdown(text):
+    """Escapa caracteres especiales de Markdown en Telegram."""
+    if not text:
+        return ""
+    escape_chars = '_*[]()~`>#+-=|{}.!'
+    for char in escape_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
+
+
+def sanitize_column_name(name):
+    """Sanitiza nombres de columnas para evitar errores o XSS."""
+    if not isinstance(name, str):
+        name = str(name)
+    name = re.sub(r'[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-_]', '_', name.strip())
+    name = re.sub(r'\s+', ' ', name)
+    return name if name else "columna_desconocida"
+
+
+def validate_csv_structure(df):
+    """Valida que el DataFrame tenga estructura mínima válida."""
+    if df.empty:
+        raise ValueError("El archivo está vacío.")
+    if len(df.columns) < 2:
+        raise ValueError("Se requieren al menos 2 columnas para generar gráficos.")
+    if df.isnull().all().all():
+        raise ValueError("Todos los datos son nulos.")
+    for col in df.columns:
+        if not isinstance(col, str) or len(col.strip()) == 0:
+            raise ValueError("Encabezados inválidos o vacíos en el CSV.")
+    return True
+
+
+def sanitize_date_column(series, default_date="2999-12-31"):
+    """
+    Convierte una serie a datetime, rellenando valores inválidos o vacíos con una fecha por defecto.
+    """
+    series = pd.to_datetime(series, errors='coerce')
+    series = series.fillna(pd.Timestamp(default_date))
+    return series
+
+
 def generar_slug_unico(base_slug):
-    from app.models import User  # ✅ Importación segura
+    """Genera un slug único para usuarios."""
+    from app.models import User
     slug = re.sub(r'[^a-z0-9-]+', '-', base_slug.lower())
     slug = re.sub(r'-+', '-', slug).strip('-')
     original_slug = slug
@@ -46,7 +134,7 @@ def enviar_notificacion_tarea(task):
     Envía notificación de nueva tarea por email y Telegram.
     """
     try:
-        # Notificación por email (existente)
+        # Notificación por email
         msg = Message(
             subject=f"📋 Nueva Tarea Asignada: {task.title}",
             recipients=[task.assistant.email],
@@ -87,26 +175,24 @@ def enviar_notificacion_tarea(task):
     # Notificación por Telegram
     telegram_ok = False
     try:
-        # Obtener configuración desde variables de entorno
         TELEGRAM_BOT_TOKEN = current_app.config.get('TELEGRAM_BOT_TOKEN')
         TELEGRAM_CHAT_ID = current_app.config.get('TELEGRAM_CHAT_ID')
         
         if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
             print("⚠️ Token o Chat ID de Telegram no configurados")
-            return email_ok  # Aún así devuelve el estado del email
+            return email_ok
 
-        # Preparar mensaje
         mensaje = (
             f"📋 *Nueva Tarea Asignada*\n\n"
-            f"*Asistente:* {task.assistant.name}\n"
-            f"*Título:* {task.title}\n"
-            f"*Descripción:* {task.description or 'No especificada'}\n"
+            f"*Asistente:* {escape_markdown(task.assistant.name)}\n"
+            f"*Título:* {escape_markdown(task.title)}\n"
+            f"*Descripción:* {escape_markdown(task.description or 'No especificada')}\n"
             f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
-            f"*Profesional:* {current_user.username}\n\n"
+            f"*Profesional:* {escape_markdown(current_user.username)}\n\n"
             f"Accede al sistema para más detalles."
         )
 
-        # Enviar mensaje
+        # ✅ URL CORREGIDA: sin espacios después de "bot"
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             'chat_id': TELEGRAM_CHAT_ID,
@@ -125,8 +211,176 @@ def enviar_notificacion_tarea(task):
     except Exception as e:
         print(f"❌ Error al enviar notificación por Telegram: {str(e)}")
 
-    # Devuelve True si al menos una notificación fue exitosa
     return email_ok or telegram_ok
+
+# ================================
+# RUTAS - ANÁLISIS DE DATOS (CSV + GRÁFICOS)
+# ================================
+@routes.route('/upload_csv', methods=['GET', 'POST'])
+@login_required
+def upload_csv():
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if not file or not file.filename:
+            flash('❌ No se seleccionó ningún archivo.', 'danger')
+            return redirect(request.url)
+
+        file.seek(0, os.SEEK_END)
+        size = file.tell()
+        file.seek(0)
+        if size > MAX_FILE_SIZE:
+            flash('❌ El archivo supera el tamaño máximo permitido (5 MB).', 'danger')
+            return redirect(request.url)
+
+        try:
+            mime = magic.from_buffer(file.read(2048), mime=True)
+            file.seek(0)
+        except Exception as e:
+            flash(f'❌ Error al verificar el tipo de archivo: {str(e)}', 'danger')
+            return redirect(request.url)
+
+        if mime not in ALLOWED_MIME_TYPES:
+            flash(f'❌ Tipo de archivo no permitido: {mime}. Solo se aceptan CSV válidos.', 'danger')
+            return redirect(request.url)
+
+        if not file.filename.lower().endswith('.csv'):
+            flash('❌ El archivo debe tener extensión .csv.', 'danger')
+            return redirect(request.url)
+
+        encodings = ['utf-8', 'utf-8-sig', 'latin1', 'iso-8859-1']
+        df = None
+        last_error = None
+
+        for enc in encodings:
+            try:
+                stream = StringIO(file.stream.read().decode(enc))
+                file.stream.seek(0)
+                df = pd.read_csv(stream)
+                break
+            except UnicodeDecodeError as e:
+                last_error = e
+                continue
+
+        if df is None:
+            flash(f'❌ No se pudo decodificar el archivo. Último error: {last_error}', 'danger')
+            return redirect(request.url)
+
+        try:
+            validate_csv_structure(df)
+        except Exception as e:
+            flash(f'❌ Estructura inválida: {str(e)}', 'danger')
+            return redirect(request.url)
+
+        df.columns = [sanitize_column_name(col) for col in df.columns]
+
+        date_columns_to_sanitize = {
+            'Fecha_Limite': '2999-12-31',
+            'Creada': '2000-01-01'
+        }
+
+        for col_name, default in date_columns_to_sanitize.items():
+            if col_name in df.columns:
+                original_series = pd.to_datetime(df[col_name], errors='coerce')
+                invalid_count = original_series.isna().sum()
+                df[col_name] = sanitize_date_column(df[col_name], default)
+                if invalid_count > 0:
+                    flash(f'⚠️ Se corrigieron {invalid_count} fechas vacías/inválidas en "{col_name}" → asignadas a {default}.', 'warning')
+
+        session['csv_data'] = df.to_dict()
+        session['csv_columns'] = df.columns.tolist()
+
+        return redirect(url_for('routes.select_columns'))
+
+    return render_template('upload_csv.html')
+
+@routes.route('/select_columns', methods=['GET', 'POST'])
+@login_required
+def select_columns():
+    if 'csv_columns' not in session or 'csv_data' not in session:
+        flash('❌ No hay datos cargados. Subí un CSV primero.', 'danger')
+        return redirect(url_for('routes.upload_csv'))
+
+    columns = session['csv_columns']
+    df = pd.DataFrame(session['csv_data'])
+
+    # === PREPARAR DATOS PARA LA VISTA PREVIA ===
+    # Mostrar primeras 10 filas, reemplazar NaN por "—"
+    preview_df = df.head(10).fillna('—')
+    csv_preview = preview_df.to_dict('records')
+
+    # === DETECTAR COLUMNAS NUMÉRICAS ===
+    numeric_columns = df.select_dtypes(include='number').columns.tolist()
+
+    if request.method == 'POST':
+        x_column = request.form.get('x_column')
+        y_column = request.form.get('y_column')
+        chart_type = request.form.get('chart_type', 'bar')
+
+        if not x_column or not y_column:
+            flash('❌ Debes seleccionar columnas para los ejes X e Y.', 'danger')
+            return render_template(
+                'select_columns.html',
+                columns=columns,
+                csv_preview=csv_preview,
+                numeric_columns=numeric_columns
+            )
+
+        if x_column not in df.columns or y_column not in df.columns:
+            flash(f'❌ Columnas no encontradas: X="{x_column}", Y="{y_column}".', 'danger')
+            return render_template(
+                'select_columns.html',
+                columns=columns,
+                csv_preview=csv_preview,
+                numeric_columns=numeric_columns
+            )
+
+        # Validar que Y sea numérica (obligatorio para gráficos)
+        if y_column not in numeric_columns:
+            flash(f'❌ La columna Y "{y_column}" debe ser numérica (ej: ID, cantidad, horas).', 'danger')
+            return render_template(
+                'select_columns.html',
+                columns=columns,
+                csv_preview=csv_preview,
+                numeric_columns=numeric_columns
+            )
+
+        # === GENERAR GRÁFICO ===
+        try:
+            title = f'{y_column} vs {x_column}'
+            if chart_type == 'line':
+                fig = px.line(df, x=x_column, y=y_column, title=title)
+            elif chart_type == 'bar':
+                fig = px.bar(df, x=x_column, y=y_column, title=title)
+            else:  # scatter
+                fig = px.scatter(df, x=x_column, y=y_column, title=title)
+
+            graph_html = fig.to_html(full_html=False)
+            return render_template('plot.html', graph_html=graph_html)
+
+        except Exception as e:
+            flash(f'❌ Error al generar el gráfico: {str(e)}', 'danger')
+            return render_template(
+                'select_columns.html',
+                columns=columns,
+                csv_preview=csv_preview,
+                numeric_columns=numeric_columns
+            )
+
+    # === MÉTODO GET: mostrar formulario + vista previa ===
+    return render_template(
+        'select_columns.html',
+        columns=columns,
+        csv_preview=csv_preview,
+        numeric_columns=numeric_columns
+    )
+
+@routes.route('/clear_csv')
+@login_required
+def clear_csv():
+    session.pop('csv_data', None)
+    session.pop('csv_columns', None)
+    flash('✅ Datos del CSV eliminados.', 'info')
+    return redirect(url_for('routes.upload_csv'))
 
 def enviar_notificacion_telegram(mensaje):
     """
@@ -196,8 +450,6 @@ def enviar_confirmacion_turno(appointment):
     except Exception as e:
         print(f"❌ Error al enviar email: {str(e)}")
         return False
-
-routes = Blueprint("routes", __name__)
 
 def enviar_notificacion_turno_reservado(appointment):
     """
@@ -1105,51 +1357,7 @@ def request_publish_note(note_id):
 
 @routes.route("/data-analysis")
 def data_analysis():
-    return render_template("data_analysis.html", bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED, active_tab="data_analysis")
-
-@routes.route("/upload-csv", methods=["POST"])
-def upload_csv():
-    try:
-        if "file" not in request.files:
-            return jsonify({"error": "No file selected"}), 400
-        file = request.files["file"]
-        if file.filename == "":
-            return jsonify({"error": "No file selected"}), 400
-        if not file.filename.lower().endswith(".csv"):
-            return jsonify({"error": "Please upload a CSV file"}), 400
-
-        # Generar ID único para el archivo
-        file_id = str(uuid.uuid4())
-        file_path = os.path.join(UPLOAD_FOLDER, f"{file_id}.csv")
-
-        # Detectar codificación
-        raw = file.stream.read(10000)
-        encoding = chardet.detect(raw)["encoding"] or "utf-8"
-        file.stream.seek(0)
-
-        # Guardar archivo
-        file.save(file_path)
-
-        # Leer CSV
-        df = pd.read_csv(file_path, encoding=encoding)
-        if df.empty or len(df.columns) == 0:
-            os.remove(file_path)
-            return jsonify({"error": "CSV inválido o vacío"}), 400
-
-        # Devolver file_id para usar en análisis
-        info = {
-            "file_id": file_id,
-            "columns": df.columns.tolist(),
-            "shape": df.shape,
-            "dtypes": df.dtypes.astype(str).to_dict(),
-            "preview": df.head(10).to_dict("records"),
-            "missing_values": df.isnull().sum().to_dict(),
-        }
-        return jsonify(info)
-
-    except Exception as e:
-        current_app.logger.error(f"Error processing CSV: {str(e)}")
-        return jsonify({"error": f"Error procesando el archivo: {str(e)}"}), 500
+    return render_template("/upload_csv.html", bio_short=BIO_SHORT, bio_extended=BIO_EXTENDED, active_tab="data_analysis")
 
 @routes.route("/analyze-data", methods=["POST"])
 def analyze_data():
@@ -1378,59 +1586,133 @@ def editar_perfil_medico():
 
     return render_template('editar_perfil_medico.html', user=current_user)
 
+@routes.route('/perfil-equipo')
+@login_required
+def perfil_equipo():
+    # Si está en modo asistente, mostrar el perfil del equipo donde trabaja
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if not assistant_id:
+            flash("Rol no válido", "warning")
+            return redirect(url_for('routes.seleccionar_perfil'))
+
+        assistant = Assistant.query.get(assistant_id)
+        if not assistant or assistant.user_id != current_user.id:
+            flash("Asistente no válido", "danger")
+            return redirect(url_for('routes.index'))
+
+        doctor = assistant.doctor
+        clinic = assistant.clinic
+
+        return render_template(
+            'perfil_equipo.html',
+            team_name=doctor.username,
+            clinic=clinic,
+            role="Asistente General",
+            start_date=assistant.created_at,
+            total_tasks=Task.query.filter_by(assistant_id=assistant.id).count(),
+            pending_tasks=Task.query.filter_by(assistant_id=assistant.id).filter(
+                Task.status.in_(['pending', 'in_progress'])
+            ).count()
+        )
+
+    # Si es dueño, mostrar su perfil normal
+    return redirect(url_for('routes.mi_perfil'))
+
 @routes.route('/consultorio/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_consultorio():
-    if not current_user.is_professional:
+    # === Determinar doctor_id según rol activo ===
+    doctor_id = None
+    active_assistant = None
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+
+        if active_assistant and active_assistant.doctor_id:
+            doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+
+    if not doctor_id:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
-    
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         address = request.form.get('address', '').strip()
         phone = request.form.get('phone', '').strip()
         specialty = request.form.get('specialty', '').strip()
-        
+
         if not name or not address:
             flash('Nombre y dirección son obligatorios', 'error')
-            return redirect(url_for('routes.nuevo_consultorio'))
-        
-        clinic = Clinic(
-            name=name,
-            address=address,
-            phone=phone,
-            specialty=specialty,
-            doctor_id=current_user.id,
-            is_active=True
-        )
-        db.session.add(clinic)
-        db.session.flush()  # Para obtener clinic.id
+            return render_template('nuevo_consultorio.html')
 
-        # ✅ Generar disponibilidad para agendas existentes
-        for schedule in Schedule.query.filter_by(doctor_id=current_user.id).all():
-            generar_disponibilidad_automatica(schedule, semanas=52)
-        
-        db.session.commit()
-        flash('✅ Consultorio creado y disponibilidad actualizada', 'success')
-        return redirect(url_for('routes.mi_agenda'))
-    
+        try:
+            clinic = Clinic(
+                name=name,
+                address=address,
+                phone=phone,
+                specialty=specialty,
+                doctor_id=doctor_id,  # ✅ Usa el doctor_id del equipo
+                is_active=True
+            )
+            db.session.add(clinic)
+            db.session.flush()  # Para obtener clinic.id
+
+            # ✅ Generar disponibilidad para todas las agendas del doctor
+            for schedule in Schedule.query.filter_by(doctor_id=doctor_id).all():
+                generar_disponibilidad_automatica(schedule, semanas=52)
+
+            db.session.commit()
+            flash('✅ Consultorio creado y disponibilidad actualizada', 'success')
+            return redirect(url_for('routes.dashboard'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creando consultorio: {str(e)}", exc_info=True)
+            flash('❌ Error al crear el consultorio', 'danger')
+
     return render_template('nuevo_consultorio.html')
 
 @routes.route('/consultorio/<int:clinic_id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_consultorio(clinic_id):
     clinic = Clinic.query.get_or_404(clinic_id)
-    
-    if clinic.doctor_id != current_user.id:
+
+    # === Verificar acceso al equipo ===
+    allowed = False
+    doctor_id = None
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+            if active_assistant and active_assistant.type == 'general' and clinic.doctor_id == active_assistant.doctor_id:
+                allowed = True
+                doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional and clinic.doctor_id == current_user.id:
+        allowed = True
+        doctor_id = current_user.id
+
+    if not allowed:
         flash("Acceso denegado", "danger")
         return redirect(url_for('routes.mi_agenda'))
-    
+
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         address = request.form.get('address', '').strip()
         phone = request.form.get('phone', '').strip()
         specialty = request.form.get('specialty', '').strip()
-        
+
         if not name or not address:
             flash("Nombre y dirección son obligatorios", "error")
         else:
@@ -1441,17 +1723,33 @@ def editar_consultorio(clinic_id):
             db.session.commit()
             flash("✅ La ubicación fue actualizada correctamente", "success")
             return redirect(url_for('routes.mi_agenda'))
-    
+
     return render_template('editar_consultorio.html', clinic=clinic)
 
 @routes.route('/consultorio/<int:clinic_id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_consultorio(clinic_id):
     clinic = Clinic.query.get_or_404(clinic_id)
-    
-    if clinic.doctor_id != current_user.id:
-        return "Acceso denegado", 403
-    
+
+    # === Verificar acceso al equipo ===
+    allowed = False
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+            if active_assistant and active_assistant.type == 'general' and clinic.doctor_id == active_assistant.doctor_id:
+                allowed = True
+    elif current_user.is_professional and clinic.doctor_id == current_user.id:
+        allowed = True
+
+    if not allowed:
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.mi_agenda'))
+
     try:
         # Eliminar primero las agendas y disponibilidad
         Schedule.query.filter_by(clinic_id=clinic_id).delete()
@@ -1462,9 +1760,9 @@ def eliminar_consultorio(clinic_id):
         flash("🗑️ La ubicación fue eliminada correctamente", "info")
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error eliminando consultorio: {str(e)}", exc_info=True)
         flash("❌ Error al eliminar la ubicación", "danger")
-        print(f"Error: {e}")
-    
+
     return redirect(url_for('routes.mi_agenda'))
 
 @routes.route("/turnos/<int:clinic_id>")
@@ -1718,14 +2016,32 @@ def nueva_nota(patient_id):
 @routes.route('/mi-agenda')
 @login_required
 def mi_agenda():
-    if not current_user.is_professional:
+    # === Determinar doctor_id según rol activo ===
+    doctor_id = None
+    active_assistant = None
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+
+        if active_assistant and active_assistant.doctor_id:
+            doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+
+    if not doctor_id:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
-    schedules = Schedule.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    # Obtener datos del equipo actual (MaicaiPeques o tu clínica)
+    clinics = Clinic.query.filter_by(doctor_id=doctor_id, is_active=True).all()
+    schedules = Schedule.query.filter_by(doctor_id=doctor_id, is_active=True).all()
 
-    # ✅ Consulta optimizada con joins explícitos
+    # Consulta optimizada con joins explícitos
     try:
         appointments = db.session.query(
             Appointment,
@@ -1735,12 +2051,12 @@ def mi_agenda():
          .join(Availability)\
          .join(Clinic)\
          .join(User, User.id == Appointment.patient_id)\
-         .filter(Clinic.doctor_id == current_user.id)\
+         .filter(Clinic.doctor_id == doctor_id)\
          .order_by(Availability.date, Availability.time)\
          .all()
 
     except Exception as e:
-        print(f"Error al obtener turnos: {e}")
+        current_app.logger.error(f"Error al obtener turnos: {e}")
         flash('Hubo un problema al cargar los turnos.', 'warning')
         appointments = []
 
@@ -2084,10 +2400,33 @@ def subscribe():
 @routes.route('/asistentes')
 @login_required
 def mis_asistentes():
+
+    doctor_id = None
+    active_assistant = None
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+        if active_assistant:
+            doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+
+    if not doctor_id:
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.index'))
+
     if not current_user.is_professional:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
     
+    # 🔁 Forzar recarga de datos desde la DB
+    db.session.expire_all()
+
     # Obtener todos los consultorios del médico
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
     
@@ -2099,109 +2438,187 @@ def mis_asistentes():
             doctor_id=current_user.id
         ).all()
     
-    # Asistentes generales (sin consultorio asignado)
-    general_assistants = Assistant.query.filter_by(
-        doctor_id=current_user.id,
-        clinic_id=None
-    ).all()
+    # ✅ Consulta directa y simple
+    general_assistants = Assistant.query.filter(
+        Assistant.doctor_id == current_user.id,
+        Assistant.type == 'general'
+    ).filter(Assistant.clinic_id.is_(None)).all()
 
-    # ✅ Lista completa de todos los asistentes (para badges de Telegram)
+    # 🔥 DEBUG: imprime en consola
+    print(f"\n🔍 DEBUG - Doctor ID: {current_user.id}")
+    print(f"📋 Asistentes generales encontrados: {len(general_assistants)}")
+    for a in general_assistants:
+        print(f"  - {a.name} (ID: {a.id}, user_id: {a.user_id})")
+
+    # Lista completa para conteos
     all_assistants = general_assistants + [
         assistant for assistants in assistants_by_clinic.values() for assistant in assistants
     ]
 
     total_assistants = len(all_assistants)
 
-    # ✅ Obtener todas las tareas del profesional
+    # Obtener tareas
     tasks = Task.query.join(Assistant).filter(
         Assistant.doctor_id == current_user.id
     ).all()
 
-    # ✅ Opcional: agrupar tareas por asistente para mejor rendimiento
     tasks_by_assistant = {}
     for task in tasks:
         if task.assistant_id not in tasks_by_assistant:
             tasks_by_assistant[task.assistant_id] = []
         tasks_by_assistant[task.assistant_id].append(task)
 
-    # ✅ Define today aquí
     today = date.today()
 
+    # Crear mapa de invitaciones activas
+    active_invite_map = {}
+    for invite in current_user.sent_invites:
+        if not invite.is_used and invite.email:
+            active_invite_map[invite.email] = invite
+    # Fuerza recarga de datos
+    db.session.expire_all()
+
     return render_template(
-        'asistentes.html', 
-        assistants_by_clinic=assistants_by_clinic,
+        'asistentes.html',
         general_assistants=general_assistants,
+        assistants_by_clinic=assistants_by_clinic,
         clinics=clinics,
         all_assistants=all_assistants,
-        tasks_by_assistant=tasks_by_assistant,  # ✅ Pasamos las tareas por asistente
+        tasks_by_assistant=tasks_by_assistant,
         no_assistants=(total_assistants == 0),
-        today=today  # ✅ Pasamos la variable al template
+        today=today,
+        active_invite_map=active_invite_map
     )
 
-# Ruta: Nuevo asistente
 @routes.route('/asistente/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_asistente():
-    if not current_user.is_professional:
+    # === Determinar doctor_id según rol activo ===
+    doctor_id = None
+    active_assistant = None
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+
+        if active_assistant and active_assistant.doctor_id:
+            doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+
+    if not doctor_id:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # Obtener todos los consultorios del profesional
-    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    clinics = Clinic.query.filter_by(doctor_id=doctor_id, is_active=True).all()
+    share_data = None
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         whatsapp = request.form.get('whatsapp', '').strip()
-        clinic_id = request.form.get('clinic_id')  # Puede ser None
+        clinic_id = request.form.get('clinic_id')
+        assistant_type = request.form.get('assistant_type')  # 'general' o 'common'
 
-        if not name:
-            flash('El nombre es obligatorio', 'error')
+        if not name or not assistant_type:
+            flash('Nombre y tipo son obligatorios', 'error')
+            return render_template('nuevo_asistente.html', clinics=clinics)
+
+        # Validar email solo para generales
+        if assistant_type == 'general' and not email:
+            flash('Los asistentes senior requieren email', 'error')
             return render_template('nuevo_asistente.html', clinics=clinics)
 
         try:
-            # Validar que si se selecciona un consultorio, pertenezca al médico
-            if clinic_id:
-                clinic = Clinic.query.filter_by(id=clinic_id, doctor_id=current_user.id).first()
-                if not clinic:
-                    flash('Consultorio no válido', 'error')
+            with db.session.begin_nested():
+                # Convertir clinic_id
+                clinic_id_value = int(clinic_id) if clinic_id else None
+
+                # Verificar duplicados
+                existing = Assistant.query.filter(
+                    Assistant.name == name,
+                    Assistant.doctor_id == doctor_id
+                )
+                if clinic_id_value:
+                    existing = existing.filter(Assistant.clinic_id == clinic_id_value)
+                else:
+                    existing = existing.filter(Assistant.clinic_id.is_(None))
+
+                if existing.first():
+                    lugar = f"en {Clinic.query.get(clinic_id_value).name}" if clinic_id_value else "sin ubicación"
+                    flash(f'Ya existe un asistente llamado "{name}" {lugar}', 'error')
                     return render_template('nuevo_asistente.html', clinics=clinics)
-            
-            # Verificar duplicados: mismo nombre en el mismo consultorio o como general
-            existing = Assistant.query.filter(
-                Assistant.name == name,
-                Assistant.doctor_id == current_user.id
-            )
-            if clinic_id:
-                existing = existing.filter(Assistant.clinic_id == clinic_id)
-            else:
-                existing = existing.filter(Assistant.clinic_id.is_(None))
-                
-            if existing.first():
-                lugar = f"en {clinic.name}" if clinic_id else "como asistente general"
-                flash(f'Ya existe un asistente llamado "{name}" {lugar}', 'error')
-                return render_template('nuevo_asistente.html', clinics=clinics)
 
-            # Crear nuevo asistente
-            assistant = Assistant(
-                name=name,
-                email=email,
-                whatsapp=whatsapp,
-                doctor_id=current_user.id,
-                clinic_id=int(clinic_id) if clinic_id else None
-            )
-            db.session.add(assistant)
+                # Crear el Assistant con type explícito
+                assistant = Assistant(
+                    name=name,
+                    email=email or None,
+                    whatsapp=whatsapp or None,
+                    doctor_id=doctor_id,
+                    clinic_id=clinic_id_value,
+                    type=assistant_type  # ✅ Ahora viene del formulario
+                )
+                db.session.add(assistant)
+                db.session.flush()
+
+                # Si es general: generar User e invitación
+                if assistant_type == 'general':
+                    user = User.query.filter_by(email=email).first()
+
+                    if user:
+                        flash(f'✅ Usuario existente reutilizado: {email}', 'info')
+                    else:
+                        username_base = email.split('@')[0]
+                        username = username_base
+                        counter = 1
+                        while User.query.filter_by(username=username).first():
+                            username = f"{username_base}{counter}"
+                            counter += 1
+
+                        new_user = User(
+                            username=username,
+                            email=email,
+                            is_professional=False,
+                            role_name="senior_assistant"
+                        )
+                        new_user.set_password(os.getenv('DEFAULT_USER_PASSWORD', 'temporal123'))
+                        db.session.add(new_user)
+                        db.session.flush()
+                        user = new_user
+
+                    assistant.user_id = user.id
+
+                    invite_code = generate_unique_invite_code()
+                    invite = CompanyInvite(
+                        doctor_id=doctor_id,
+                        invite_code=invite_code,
+                        email=email,
+                        name=name,
+                        clinic_id=clinic_id_value,
+                        assistant_type='general',
+                        expires_at=datetime.utcnow() + timedelta(days=7)
+                    )
+                    db.session.add(invite)
+                    share_data = send_company_invite(invite, User.query.get(doctor_id))
+
             db.session.commit()
+            ubicacion = f"en {assistant.clinic.name}" if assistant.clinic else "sin ubicación específica"
+            flash(f'✅ Asistente {assistant.type.title()} agregado correctamente {ubicacion}', 'success')
 
-            # Mensaje de éxito con ubicación
-            ubicacion = f"en {assistant.clinic.name}" if assistant.clinic else "como asistente general"
-            flash(f'✅ Asistente agregado correctamente {ubicacion}', 'success')
-            return redirect(url_for('routes.mis_asistentes'))
+            return render_template(
+                'nuevo_asistente.html',
+                clinics=clinics,
+                invite_share=share_data
+            )
 
         except Exception as e:
             db.session.rollback()
-            flash('❌ Error al crear el asistente', 'danger')
-            print(f"Error: {e}")
+            current_app.logger.error(f"Error creando asistente: {str(e)}", exc_info=True)
+            flash('❌ Error al crear el asistente.', 'danger')
 
     return render_template('nuevo_asistente.html', clinics=clinics)
 
@@ -2251,10 +2668,8 @@ def nuevo_asistente_en_consultorio(clinic_id):
 @routes.route('/asistente/<int:assistant_id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_asistente(assistant_id):
-    """Editar un asistente existente"""
     assistant = Assistant.query.get_or_404(assistant_id)
     
-    # Verificar que el asistente pertenece al profesional actual
     if assistant.doctor_id != current_user.id:
         flash('No puedes editar este asistente', 'danger')
         return redirect(url_for('routes.mis_asistentes'))
@@ -2263,20 +2678,19 @@ def editar_asistente(assistant_id):
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         whatsapp = request.form.get('whatsapp', '').strip()
-        clinic_id = request.form.get('clinic_id')  # Puede ser None
+        clinic_id = request.form.get('clinic_id')
+        assistant_type = request.form.get('assistant_type')  # Nuevo tipo
 
-        if not name:
-            flash('El nombre es obligatorio', 'error')
+        if not name or not assistant_type:
+            flash('Nombre y tipo son obligatorios', 'error')
         else:
             try:
-                # Validar que si hay consultorio, pertenezca al médico
                 if clinic_id:
                     clinic = Clinic.query.filter_by(id=clinic_id, doctor_id=current_user.id).first()
                     if not clinic:
                         flash('Consultorio no válido', 'error')
-                        return render_template('editar_asistente.html', assistant=assistant)
+                        return render_template('editar_asistente.html', assistant=assistant, clinics=Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all())
                 
-                # Verificar duplicados (mismo nombre en mismo consultorio)
                 existing = Assistant.query.filter(
                     Assistant.name == name,
                     Assistant.doctor_id == current_user.id,
@@ -2290,11 +2704,30 @@ def editar_asistente(assistant_id):
                 if existing.first():
                     flash(f'Ya existe un asistente llamado "{name}" en esta ubicación', 'error')
                 else:
+                    # Actualizar todos los campos
                     assistant.name = name
                     assistant.email = email
                     assistant.whatsapp = whatsapp
                     assistant.clinic_id = int(clinic_id) if clinic_id else None
-                    
+                    assistant.type = assistant_type  # ✅ Actualiza el tipo
+
+                    # Si ahora es general y tiene email, asegurar User
+                    if assistant_type == 'general' and email and not assistant.user_id:
+                        user = User.query.filter_by(email=email).first()
+                        if not user:
+                            username_base = email.split('@')[0]
+                            username = username_base
+                            counter = 1
+                            while User.query.filter_by(username=username).first():
+                                username = f"{username_base}{counter}"
+                                counter += 1
+                            new_user = User(username=username, email=email, role_name="senior_assistant")
+                            new_user.set_password(os.getenv('DEFAULT_USER_PASSWORD', 'temporal123'))
+                            db.session.add(new_user)
+                            db.session.flush()
+                            user = new_user
+                        assistant.user_id = user.id
+
                     db.session.commit()
                     flash('✅ Asistente actualizado correctamente', 'success')
                     return redirect(url_for('routes.mis_asistentes'))
@@ -2304,63 +2737,156 @@ def editar_asistente(assistant_id):
                 flash('❌ Error al actualizar el asistente', 'danger')
                 print(f"Error: {e}")
 
-    # Obtener todos los consultorios del médico para el select
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
     return render_template('editar_asistente.html', assistant=assistant, clinics=clinics)
 
 @routes.route('/asistente/<int:assistant_id>/eliminar', methods=['POST'])
 @login_required
 def eliminar_asistente(assistant_id):
-    """Eliminar un asistente"""
+    """Eliminar un asistente y todas sus tareas (en cascada)"""
     assistant = Assistant.query.get_or_404(assistant_id)
     
-    # Verificar que el asistente pertenece al profesional actual
+    # Verificar que pertenece al profesional actual
     if assistant.doctor_id != current_user.id:
         flash('No puedes eliminar este asistente', 'danger')
         return redirect(url_for('routes.mis_asistentes'))
     
     try:
-        # Eliminar todas las tareas asociadas (si usas cascade=all, delete-orphan esto no es necesario)
-        Task.query.filter_by(assistant_id=assistant_id).delete()
-        
+        # Si el assistant tiene un User vinculado, desvincular
+        if assistant.user_id:
+            user = User.query.get(assistant.user_id)
+            if user:
+                # ✅ Ahora verificamos si este Assistant está en la lista
+                if assistant in user.assistant_accounts:
+                    # No se elimina de la lista aquí, SQLAlchemy lo hace al borrar el Assistant
+                    pass  # La relación se elimina automáticamente al borrar el Assistant
+
+        # Eliminar el Assistant → las tareas se borran por cascade
         db.session.delete(assistant)
         db.session.commit()
+        
         flash('🗑️ Asistente eliminado correctamente', 'info')
+        current_app.logger.info(f"Asistente eliminado: ID={assistant.id}, Nombre='{assistant.name}', Doctor={current_user.id}")
+        
     except Exception as e:
         db.session.rollback()
-        flash('❌ Error al eliminar el asistente', 'danger')
-        print(f"Error: {e}")
-    
+        current_app.logger.error(f"Error al eliminar asistente {assistant_id}: {str(e)}", exc_info=True)
+        flash('❌ Error al eliminar el asistente. Revisa los logs.', 'danger')
+
     return redirect(url_for('routes.mis_asistentes'))
 
-# Ruta: Nueva tarea
+@routes.route('/perfil-asistente')
+@login_required
+def perfil_asistente():
+    if not current_user.is_general_assistant:
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.index'))
+
+    active_assistant_id = session.get('active_assistant_id')
+    if not active_assistant_id:
+        flash("No tienes un rol de asistente activo", "warning")
+        return redirect(url_for('routes.seleccionar_perfil'))
+
+    assistant = Assistant.query.get(active_assistant_id)
+    if not assistant or assistant.user_id != current_user.id:
+        flash("Asistente no válido", "danger")
+        return redirect(url_for('routes.index'))
+
+    # Tareas asignadas a mí
+    tareas_recibidas = Task.query.filter_by(assistant_id=assistant.id).all()
+
+    # Tareas que he asignado
+    tareas_asignadas = Task.query.join(Assistant).filter(
+        Task.created_by == current_user.id,
+        Assistant.doctor_id == assistant.doctor_id
+    ).all()
+
+    return render_template(
+        'perfil_asistente.html',
+        assistant=assistant,
+        tareas_recibidas=tareas_recibidas,
+        tareas_asignadas=tareas_asignadas
+    )
+
 @routes.route('/tarea/nueva', methods=['GET', 'POST'])
 @login_required
 def nueva_tarea():
-    if not current_user.is_professional:
+    # === Determinar rol activo ===
+    active_assistant = None
+    doctor_id = None
+
+    if current_user.assistant_accounts:
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+
+    # Detectar si es asistente general activo
+    is_asistente_general = False
+    if active_assistant and active_assistant.type == 'general':
+        is_asistente_general = True
+        doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+    else:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
+    # === Obtener asistentes disponibles ===
+    if is_asistente_general:
+        # Como asistente general: puedo asignar a otros (opcionalmente incluirme)
+        assistants = Assistant.query.filter(
+            Assistant.doctor_id == doctor_id,
+            Assistant.is_active == True
+        ).all()
+        
+        # Opcional: permitir auto-asignación
+        # Si NO quieres auto-asignarte: 
+        # assistants = [a for a in assistants if a.id != active_assistant.id]
+    else:
+        # Como dueño: todos los asistentes de mi equipo
+        assistants = Assistant.query.filter_by(doctor_id=doctor_id).all()
+
+    if not assistants:
+        flash('No hay asistentes disponibles para asignar tareas', 'warning')
+        return redirect(url_for('routes.ver_tareas'))
+
     form = TaskForm()
 
     # Rellenar el select dinámicamente
-    form.assistant_id.choices = [(a.id, a.name) for a in assistants]
+    form.assistant_id.choices = [
+        (a.id, f"{a.name} ({'Senior' if a.type == 'general' else 'Común'})") 
+        for a in assistants
+    ]
 
     if form.validate_on_submit():
+        # Verificar que el asistente destino pertenece al mismo doctor
+        target_assistant = Assistant.query.get(form.assistant_id.data)
+        if not target_assistant or target_assistant.doctor_id != doctor_id:
+            flash('Asistente no válido', 'error')
+            return render_template(
+                'nueva_tarea.html', 
+                form=form, 
+                assistants=assistants,
+                active_assistant=active_assistant
+            )
+
         task = Task(
             title=form.title.data,
             description=form.description.data,
             due_date=form.due_date.data,
-            doctor_id=current_user.id,
             assistant_id=form.assistant_id.data,
-            status=form.status.data
+            status=form.status.data,
+            created_by=current_user.id,
+            doctor_id=doctor_id
         )
         db.session.add(task)
         db.session.commit()
 
         # 🔔 Notificaciones (Telegram / WhatsApp)
-        assistant = Assistant.query.get(form.assistant_id.data)
+        assistant = target_assistant
         enviado_telegram = False
 
         if assistant.telegram_id:
@@ -2371,134 +2897,50 @@ def nueva_tarea():
                 f"*Descripción:* {task.description or 'No especificada'}\n"
                 f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
                 f"*Estado:* Pendiente\n"
-                f"*Profesional:* {current_user.username}"
+                f"*Asignado por:* {current_user.username}"
             )
             try:
                 enviar_notificacion_telegram(mensaje)
                 flash('✅ Tarea creada y notificada por Telegram', 'success')
                 enviado_telegram = True
-            except:
+            except Exception as e:
+                current_app.logger.error(f"Error al enviar Telegram: {e}")
                 pass
 
         if not enviado_telegram and assistant.whatsapp:
             from app.utils import crear_mensaje_whatsapp
             mensaje_url = crear_mensaje_whatsapp(assistant, task)
+            # ✅ CORREGIDO: sin espacios extra en wa.me
             whatsapp_url = f"https://wa.me/{assistant.whatsapp}?text={mensaje_url}"
-            return f"""
-            <script>
-                alert('Tarea creada. Abriendo WhatsApp...');
-                window.open('{whatsapp_url}', '_blank');
-                window.location.href = '{url_for('routes.ver_tareas')}';
-            </script>
-            """
+            
+            # Guardar en sesión para mostrar en ver_tareas
+            session['whatsapp_url'] = whatsapp_url
+            flash('✅ Tarea creada. Haz clic en el botón para enviar por WhatsApp.', 'success')
+            return redirect(url_for('routes.ver_tareas'))
 
+        flash('✅ Tarea creada correctamente', 'success')
         return redirect(url_for('routes.ver_tareas'))
 
-    return render_template('nueva_tarea.html', form=form, assistants=assistants)
+    return render_template(
+        'nueva_tarea.html', 
+        form=form, 
+        assistants=assistants,
+        active_assistant=active_assistant  # ✅ Pasamos al template
+    )
 
-# Ruta: Ver tareas
-@routes.route('/tareas')
+@routes.route('/ver-tareas')
 @login_required
 def ver_tareas():
-    if not current_user.is_professional:
-        flash('Acceso denegado', 'danger')
-        return redirect(url_for('routes.index'))
-
-    # === Filtros desde GET ===
-    assistant_filter = request.args.get("assistant", type=int)
-    status_filter = request.args.get("status")
-    date_filter = request.args.get("date")
-
-    # Base query
-    query = Task.query.join(Assistant).filter(
-        Assistant.doctor_id == current_user.id
-    )
-
-    if assistant_filter:
-        query = query.filter(Task.assistant_id == assistant_filter)
-
-    if status_filter:
-        query = query.filter(Task.status == status_filter)
-
-    if date_filter:
-        try:
-            date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
-            query = query.filter(Task.due_date == date_obj)
-        except ValueError:
-            pass
-
-    # Ejecutar query con filtros
-    tasks = query.all()
-
-    # === Labels para la tabla ===
-    status_labels = {
-        'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
-        'in_progress': {'text': 'En progreso', 'class': 'bg-info text-white'},
-        'completed': {'text': 'Completada', 'class': 'bg-success'},
-        'cancelled': {'text': 'Cancelada', 'class': 'bg-danger'}
-    }
-
-    # Datos para gráficos
-    assistants = Assistant.query.filter_by(doctor_id=current_user.id).all()
-    assistants_distribution = []
-    for a in assistants:
-        count = Task.query.filter_by(assistant_id=a.id).count()
-        if count > 0:
-            assistants_distribution.append({
-                'name': a.name,
-                'task_count': count
-            })
-
-    # Últimos 30 días
-    today = date.today()
-    last_30_days = [
-        (today - timedelta(days=i)).strftime('%d/%m')
-        for i in range(29, -1, -1)
-    ]
-
-    task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
-    for task in tasks:
-        if not task.created_at:
-            continue
-        day_key = task.created_at.date()
-        if day_key >= today - timedelta(days=29):
-            day_str = day_key.strftime('%d/%m')
-            if task.status == 'pending':
-                task_data[day_str]['Pendientes'] += 1
-            elif task.status == 'in_progress':
-                task_data[day_str]['En progreso'] += 1
-            elif task.status == 'completed':
-                task_data[day_str]['Completadas'] += 1
-
-    data_evolucion = []
-    for fecha in last_30_days:
-        data_evolucion.append({
-            'name': fecha,
-            'Pendientes': task_data[fecha]['Pendientes'],
-            'En progreso': task_data[fecha]['En progreso'],
-            'Completadas': task_data[fecha]['Completadas']
-        })
-
-    return render_template(
-        'tareas.html',
-        tasks=tasks,
-        status_labels=status_labels,
-        assistants=assistants,   # 🔹 Importante: para el select de filtros
-        assistants_count=len(assistants),
-        assistants_distribution=assistants_distribution,
-        today=today,
-        last_30_days=last_30_days,
-        data_evolucion=data_evolucion
-    )
+    return redirect(url_for('routes.dashboard'))
 
 @routes.route('/tarea/<int:task_id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_tarea(task_id):
     task = Task.query.get_or_404(task_id)
     assistant = Assistant.query.filter_by(id=task.assistant_id, doctor_id=current_user.id).first()
-
-    if not assistant:
-        flash('No puedes editar esta tarea', 'danger')
+    
+    if not assistant or not can_manage_tasks(current_user, assistant.doctor_id):
+        flash('No tienes permiso para editar esta tarea', 'danger')
         return redirect(url_for('routes.ver_tareas'))
 
     form = TaskForm(obj=task)  # precargar con los datos actuales
@@ -2558,6 +3000,23 @@ def editar_tarea(task_id):
 
     return render_template('editar_tarea.html', form=form, task=task)
 
+@routes.route('/tarea/<int:task_id>/cambiar-estado', methods=['POST'])
+@login_required
+def cambiar_estado_tarea(task_id):
+    task = Task.query.get_or_404(task_id)
+    assistant = Assistant.query.filter_by(id=task.assistant_id).first()
+    if not assistant or assistant.doctor_id != current_user.id:
+        flash('No tienes permiso para modificar esta tarea', 'danger')
+        return redirect(url_for('routes.dashboard'))
+    nuevo_estado = request.form.get('nuevo_estado')
+    if nuevo_estado in ['pending', 'in_progress', 'completed', 'cancelled']:
+        task.status = nuevo_estado
+        db.session.commit()
+        flash(f'✅ Estado actualizado a "{nuevo_estado}"', 'success')
+    else:
+        flash('Estado no válido', 'error')
+    return redirect(url_for('routes.dashboard'))
+
 @routes.route('/profiles/private/cambiar-pass', methods=['GET', 'POST'])
 @login_required
 def cambiar_pass():
@@ -2595,6 +3054,29 @@ def cambiar_pass():
 
     return render_template('/profiles/private/cambiar_pass.html')
 
+@routes.route('/invitacion/<token>', methods=['GET', 'POST'])
+def accept_invite(token):
+    email = verify_invite_token(token)
+    if not email:
+        flash("Enlace de invitación inválido o expirado", "danger")
+        return redirect(url_for('routes.index'))
+
+    # Buscar el usuario creado previamente (inactivo)
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("Usuario no encontrado para esta invitación", "danger")
+        return redirect(url_for('routes.index'))
+
+    # Form para setear contraseña
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash("Tu cuenta ha sido activada. Ahora podes iniciar sesión.", "success")
+        return redirect(url_for('auth.login'))  # ajustar nombre de ruta login
+
+    return render_template('accept_invite.html', form=form, email=email)
+
 # Ruta para limpiar la sesión de WhatsApp después de mostrar el botón
 @routes.route('/_cleanup_whatsapp', methods=['POST'])
 @login_required
@@ -2603,6 +3085,553 @@ def limpiar_whatsapp_session():
     if 'whatsapp_url' in session:
         session.pop('whatsapp_url', None)
     return '', 204  # No Content
+
+# Ruta alternativa para crear asistentes con códigos
+@routes.route('/asistente/nuevo-con-codigo', methods=['GET', 'POST'])
+@login_required
+def nuevo_asistente_con_codigo():
+    if not current_user.is_professional:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.index'))
+
+    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        whatsapp = request.form.get('whatsapp', '').strip()
+        clinic_id = request.form.get('clinic_id')
+        is_general = not clinic_id
+
+        if not name:
+            flash('El nombre es obligatorio', 'error')
+            return render_template('nuevo_asistente_codigo.html', clinics=clinics)
+
+        # Para asistentes generales, email es obligatorio
+        if is_general and not email:
+            flash('Para asistentes generales el email es obligatorio', 'error')
+            return render_template('nuevo_asistente_codigo.html', clinics=clinics)
+
+        # Validar si ya existe el User
+        existing_user = User.query.filter_by(email=email).first() if email else None
+
+        try:
+            if is_general:
+                # ✅ ASISTENTE GENERAL: Usar o crear User, pero siempre crear Assistant nuevo
+                if existing_user:
+                    # ✅ Reutilizar User existente
+                    flash(f'✅ Usuario existente reutilizado: {email}', 'info')
+                else:
+                    # Crear nuevo User
+                    username_base = email.split('@')[0]
+                    username = username_base
+                    counter = 1
+                    while User.query.filter_by(username=username).first():
+                        username = f"{username_base}{counter}"
+                        counter += 1
+
+                    new_user = User(
+                        username=username,
+                        email=email,
+                        is_professional=False,
+                        role="senior_assistant"
+                    )
+                    # Contraseña temporal (la establecerá al registrarse)
+                    new_user.set_password(os.getenv('DEFAULT_USER_PASSWORD', 'temporal123'))
+                    db.session.add(new_user)
+                    db.session.flush()
+                    existing_user = new_user
+
+                # ✅ Generar código de invitación
+                invite_code = generate_unique_invite_code()
+                invite = CompanyInvite(
+                    doctor_id=current_user.id,
+                    invite_code=invite_code,
+                    email=email,
+                    name=name,
+                    clinic_id=int(clinic_id) if clinic_id else None,
+                    assistant_type='general',
+                    expires_at=datetime.utcnow() + timedelta(days=7)
+                )
+                db.session.add(invite)
+                db.session.commit()
+
+                # ✅ Enviar email
+                try:
+                    send_company_invite(invite, current_user)
+                    flash(f'📩 Invitación enviada a {email}. Código: {invite_code}', 'success')
+                except Exception as e:
+                    flash(f'🔑 Código generado: {invite_code} (fallo envío email)', 'warning')
+
+            else:
+                # ✅ ASISTENTE COMÚN: creación directa
+                assistant = Assistant(
+                    name=name,
+                    email=email or None,
+                    whatsapp=whatsapp or None,
+                    doctor_id=current_user.id,
+                    clinic_id=int(clinic_id) if clinic_id else None,
+                    type='common'
+                )
+                db.session.add(assistant)
+                db.session.commit()
+                flash(f'✅ Asistente común creado: {name}', 'success')
+
+            return redirect(url_for('routes.mis_asistentes'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error en nuevo_asistente_con_codigo: {e}")
+            flash('❌ Error al procesar la solicitud', 'danger')
+            return render_template('nuevo_asistente_codigo.html', clinics=clinics)
+
+    return render_template('nuevo_asistente_codigo.html', clinics=clinics)
+
+@routes.route('/registro/<invite_code>', methods=['GET', 'POST'])
+def registro_con_codigo(invite_code):
+    invite = CompanyInvite.query.filter_by(invite_code=invite_code).first()
+    
+    if not invite or not invite.is_valid():
+        flash('Código inválido o expirado', 'error')
+        return redirect(url_for('routes.index'))
+
+    user = User.query.filter_by(email=invite.email).first()
+
+    if not user and request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if not username or not password:
+            flash('Completa todos los campos', 'error')
+            return render_template('registro_con_codigo.html', invite=invite)
+
+        if User.query.filter_by(username=username).first():
+            flash('Nombre de usuario ya existe', 'error')
+            return render_template('registro_con_codigo.html', invite=invite)
+
+        try:
+            user = User(
+                username=username,
+                email=invite.email,
+                is_professional=False,
+                role="senior_assistant"
+            )
+            user.set_password(password)
+            db.session.add(user)
+            db.session.flush()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creando usuario: {e}")
+            flash('❌ Error al crear el usuario', 'danger')
+            return render_template('registro_con_codigo.html', invite=invite)
+
+    elif user and request.method == 'POST':
+        pass  # Reutilizaremos el User
+
+    try:
+        # Convertir clinic_id a int o None
+        clinic_id_value = invite.clinic_id
+        if clinic_id_value == '' or clinic_id_value is None:
+            clinic_id_value = None
+        else:
+            clinic_id_value = int(clinic_id_value)
+
+        # Evitar duplicados
+        existing = Assistant.query.filter_by(
+            user_id=user.id,
+            doctor_id=invite.doctor_id
+        ).first()
+        if existing:
+            flash(f'Ya eres asistente de este equipo', 'warning')
+            return redirect(url_for('routes.ver_tareas'))
+
+        # Crear nuevo Assistant
+        assistant = Assistant(
+            name=invite.name,
+            email=invite.email,
+            doctor_id=invite.doctor_id,
+            clinic_id=clinic_id_value,
+            type='general',
+            user_id=user.id
+        )
+        db.session.add(assistant)
+        db.session.flush()
+
+        # Marcar invitación como usada
+        invite.is_used = True
+        invite.used_at = datetime.utcnow()
+
+        db.session.commit()
+
+        login_user(user)
+        
+        # Guardar rol activo
+        session['active_role'] = 'asistente'
+        session['active_assistant_id'] = assistant.id
+        
+        flash('✅ ¡Bienvenido al equipo!', 'success')
+        return redirect(url_for('routes.ver_tareas'))
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error en registro con código: {str(e)}", exc_info=True)
+        flash('❌ Ocurrió un error. Intenta más tarde.', 'danger')
+
+    return render_template('registro_con_codigo.html', invite=invite)
+
+@routes.route('/invitaciones')
+@login_required
+def mis_invitaciones():
+    if not current_user.is_professional:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.index'))
+
+    invitaciones = CompanyInvite.query.filter_by(doctor_id=current_user.id)\
+                                      .order_by(CompanyInvite.created_at.desc()).all()
+    return render_template('mis_invitaciones.html', invitaciones=invitaciones)
+
+@routes.route('/invitacion/<int:invite_id>/reenviar', methods=['POST'])
+@login_required
+def reenviar_invitacion(invite_id):
+    invite = CompanyInvite.query.get_or_404(invite_id)
+    
+    if invite.doctor_id != current_user.id or invite.is_used:
+        flash('No se puede reenviar esta invitación', 'error')
+        return redirect(url_for('routes.mis_invitaciones'))
+    
+    try:
+        invite.expires_at = datetime.utcnow() + timedelta(days=7)
+        db.session.commit()
+        send_company_invite(invite, current_user)
+        flash(f'Invitación reenviada a {invite.email}', 'success')
+    except Exception as e:
+        flash('Error al reenviar invitación', 'danger')
+    
+    return redirect(url_for('routes.mis_invitaciones'))
+
+@routes.route('/registro-exitoso/<invite_code>')
+@login_required
+def registro_exitoso(invite_code):
+    invite = CompanyInvite.query.filter_by(invite_code=invite_code, is_used=True).first()
+    if not invite or invite.used_at is None:
+        return redirect(url_for('routes.index'))
+    return render_template('registro_exitoso.html', invite=invite)
+
+@routes.route('/mis-equipos')
+@login_required
+def mis_equipos():
+    # ✅ Verificar que tenga al menos un Assistant
+    if not current_user.assistant_accounts:
+        flash("Acceso denegado: no eres asistente en ningún equipo", "danger")
+        return redirect(url_for('routes.index'))
+
+    # Obtener todos los Assistant vinculados al User
+    teams = Assistant.query.filter_by(user_id=current_user.id).all()
+
+    if not teams:
+        flash("No estás vinculado a ningún equipo", "info")
+        return render_template(
+            'mis_equipos.html',
+            teams=[],
+            tasks_by_assistant={},
+            teams_count=0,
+            pending_tasks=0,
+            today=datetime.utcnow().date()
+        )
+
+    # Obtener todas las tareas de todos sus roles como asistente
+    team_ids = [a.id for a in teams]
+    all_tasks = Task.query.filter(Task.assistant_id.in_(team_ids)).all()
+
+    # Agrupar tareas por assistant_id
+    tasks_by_assistant = {}
+    for task in all_tasks:
+        if task.assistant_id not in tasks_by_assistant:
+            tasks_by_assistant[task.assistant_id] = []
+        tasks_by_assistant[task.assistant_id].append(task)
+
+    # Calcular KPIs
+    teams_count = len(teams)
+    today = datetime.utcnow().date()
+    pending_tasks = sum(
+        1 for task in all_tasks
+        if task.status in ['pending', 'in_progress']
+        and (not task.due_date or task.due_date >= today)
+    )
+
+    return render_template(
+        'mis_equipos.html',
+        teams=teams,
+        tasks_by_assistant=tasks_by_assistant,
+        teams_count=teams_count,
+        pending_tasks=pending_tasks,
+        today=today
+    )
+
+# Nuevas rutas para dashboard General por roles independientes
+@routes.route('/dashboard')
+@login_required
+def dashboard():
+    # === Determinar doctor_id según rol activo ===
+    doctor_id = None
+    active_assistant = None
+    can_manage_team = False
+
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id
+            ).first()
+
+        if active_assistant and active_assistant.doctor_id:
+            doctor_id = active_assistant.doctor_id
+            can_manage_team = True
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+        can_manage_team = True
+
+    if not doctor_id:
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.index'))
+
+    # === Filtros desde GET ===
+    assistant_filter = request.args.get("assistant", type=int)
+    status_filter = request.args.get("status")
+    date_filter = request.args.get("date")
+
+    # === Base query: tareas del equipo ===
+    query = Task.query.join(Assistant).filter(Assistant.doctor_id == doctor_id)
+
+    # Aplicar filtros
+    if assistant_filter:
+        query = query.filter(Task.assistant_id == assistant_filter)
+
+    if status_filter:
+        query = query.filter(Task.status == status_filter)
+
+    if date_filter:
+        try:
+            date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(Task.due_date == date_obj)
+        except ValueError:
+            pass
+
+    # Filtro por "solo atrasadas"
+    solo_atrasadas = request.args.get("solo_atrasadas")
+    today = date.today()
+    if solo_atrasadas:
+        query = query.filter(
+            Task.due_date < today,
+            Task.status.notin_(['completed', 'cancelled'])
+        )
+
+    # obtener las tareas (antes de paginar)
+    tasks = query.all()
+
+    # === Agrupar tareas por asistente ===
+    tasks_by_assistant = {}
+    for task in tasks:
+        if task.assistant_id not in tasks_by_assistant:
+            tasks_by_assistant[task.assistant_id] = []
+        tasks_by_assistant[task.assistant_id].append(task)
+
+    # === Labels para estados ===
+    status_labels = {
+        'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
+        'in_progress': {'text': 'En progreso', 'class': 'bg-info text-white'},
+        'completed': {'text': 'Completada', 'class': 'bg-success'},
+        'cancelled': {'text': 'Cancelada', 'class': 'bg-danger'}
+    }
+
+    # === KPIs ===
+    pending_tasks = sum(1 for t in tasks if t.status in ['pending', 'in_progress'])
+    completed_tasks = sum(1 for t in tasks if t.status == 'completed')
+    total_assistants = Assistant.query.filter_by(doctor_id=doctor_id).count()
+
+    # === Datos para gráficos ===
+    today = date.today()
+    last_30_days = [
+        (today - timedelta(days=i)).strftime('%d/%m')
+        for i in range(29, -1, -1)
+    ]
+
+    task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
+    for task in tasks:
+        if not task.created_at:
+            continue
+        day_key = task.created_at.date()
+        if day_key >= today - timedelta(days=29):
+            day_str = day_key.strftime('%d/%m')
+            if task.status == 'pending':
+                task_data[day_str]['Pendientes'] += 1
+            elif task.status == 'in_progress':
+                task_data[day_str]['En progreso'] += 1
+            elif task.status == 'completed':
+                task_data[day_str]['Completadas'] += 1
+
+    data_evolucion = []
+    for fecha in last_30_days:
+        data_evolucion.append({
+            'name': fecha,
+            'Pendientes': task_data[fecha]['Pendientes'],
+            'En progreso': task_data[fecha]['En progreso'],
+            'Completadas': task_data[fecha]['Completadas']
+        })
+
+    # Distribución por asistente
+    assistants = Assistant.query.filter_by(doctor_id=doctor_id).all()
+    assistants_distribution = []
+    for a in assistants:
+        count = Task.query.filter_by(assistant_id=a.id).count()
+        if count > 0:
+            assistants_distribution.append({
+                'name': a.name,
+                'task_count': count
+            })
+
+    # === Paginación ===
+    total_tasks_count = len(tasks)
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    total_pages = ceil(total_tasks_count / per_page)
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_tasks = tasks[start:end]
+
+    return render_template(
+        'dashboard.html',
+        # Datos principales
+        can_manage_team=can_manage_team,
+        active_assistant=active_assistant,
+
+        # KPIs
+        total_tasks=total_tasks_count,
+        pending_tasks=pending_tasks,
+        completed_tasks=completed_tasks,
+        total_assistants=total_assistants,
+
+        # Listas
+        assistants=assistants,
+        tasks=paginated_tasks,  # ✅ SOLO ESTA, LA VERSION PAGINADA
+        tasks_by_assistant=tasks_by_assistant,
+        status_labels=status_labels,
+
+        # Gráficos
+        data_evolucion=data_evolucion,
+        assistants_distribution=assistants_distribution,
+
+        # Filtros aplicados
+        assistant_filter=assistant_filter,
+        status_filter=status_filter,
+        date_filter=date_filter,
+        today=today,
+        last_30_days=last_30_days,
+
+        # Paginación
+        total_pages=total_pages,
+        current_page=page,
+    )
+
+@routes.route('/seleccionar-perfil')
+@login_required
+def seleccionar_perfil():
+    roles = []
+
+    # Si es profesional (dueño)
+    if current_user.is_professional:
+        roles.append({
+            'tipo': 'profesional',
+            'nombre': f"Como Profesional: {current_user.username}",
+            'descripcion': 'Gestionar tu clínica, pacientes y agenda'
+        })
+
+    # Si tiene cuentas de asistente
+    asistentias = Assistant.query.filter_by(user_id=current_user.id).all()
+    for ass in asistentias:
+        roles.append({
+            'tipo': 'asistente',
+            'nombre': f"Como Asistente de {ass.doctor.username}",
+            'descripcion': f'Trabajas en {ass.clinic.name if ass.clinic else "equipo general"}',
+            'assistant_id': ass.id
+        })
+
+    # Si solo tiene un rol → redirigir directamente
+    if len(roles) == 1:
+        rol = roles[0]
+        if rol['tipo'] == 'profesional':
+            session['active_role'] = 'profesional'
+            return redirect(url_for('routes.mi_perfil'))
+        else:
+            session['active_role'] = 'asistente'
+            session['active_assistant_id'] = rol['assistant_id']
+            return redirect(url_for('routes.ver_tareas'))
+
+    return render_template('seleccionar_perfil.html', roles=roles)
+
+@routes.route('/iniciar-como')
+@login_required
+def iniciar_como():
+    tipo = request.args.get('tipo')
+    assistant_id = request.args.get('assistant_id', type=int)
+
+    if tipo == 'profesional':
+        session['active_role'] = 'profesional'
+        return redirect(url_for('routes.mi_perfil'))
+
+    elif tipo == 'asistente' and assistant_id:
+        assistant = Assistant.query.get(assistant_id)
+        if not assistant or assistant.user_id != current_user.id:
+            flash("Acceso denegado", "danger")
+            return redirect(url_for('routes.index'))
+
+        session['active_role'] = 'asistente'
+        session['active_assistant_id'] = assistant_id
+        return redirect(url_for('routes.ver_tareas'))
+
+    flash("Rol no válido", "error")
+    return redirect(url_for('routes.index'))
+
+@routes.route('/exportar-tareas-csv')
+@login_required
+def exportar_tareas_csv():
+    # Determinar doctor_id (igual que en dashboard)
+    doctor_id = None
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.filter_by(id=assistant_id, user_id=current_user.id).first()
+            if active_assistant:
+                doctor_id = active_assistant.doctor_id
+    elif current_user.is_professional:
+        doctor_id = current_user.id
+    if not doctor_id:
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.dashboard'))
+    # Obtener tareas
+    tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == doctor_id).all()
+    # Generar CSV
+    si = StringIO()
+    cw = csv.writer(si)
+    cw.writerow(['ID', 'Título', 'Asistente', 'Fecha Límite', 'Estado', 'Creada'])
+    for t in tasks:
+        cw.writerow([
+            t.id,
+            t.title,
+            t.assistant.name,
+            t.due_date.strftime('%Y-%m-%d') if t.due_date else '',
+            t.status,
+            t.created_at.strftime('%Y-%m-%d %H:%M') if t.created_at else ''
+        ])
+    output = si.getvalue()
+    si.close()
+    # Enviar como descarga
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=tareas_equipo.csv"}
+    )
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):
@@ -2643,3 +3672,13 @@ def fix_view_count():
 
     db.session.commit()
     return f"✅ Se corrigieron {len(notes)} notas con view_count NULL"
+
+@routes.context_processor
+def inject_active_assistant():
+    """Inyecta el asistente activo en todas las plantillas"""
+    if current_user.is_authenticated and session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            assistant = Assistant.query.get(assistant_id)
+            return {'active_assistant': assistant}
+    return {'active_assistant': None}

@@ -1,0 +1,71 @@
+<!-- templates/registro_con_codigo.html -->
+{% extends "base.html" %}
+{% block title %}Regístrate como Asistente{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white text-center">
+                    <h3 class="mb-0"><i class="fas fa-user-shield me-2"></i> Bienvenido al Equipo</h3>
+                </div>
+                <div class="card-body">
+                    {% if invite %}
+                    <div class="text-center mb-4">
+                        <img src="/static/img/default-assistant.png" 
+                             alt="Asistente" 
+                             class="rounded-circle mb-3" 
+                             style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;">
+                        <h5>{{ invite.name }}</h5>
+                        <p class="text-muted">Has sido invitado por <strong>{{ invite.doctor.username }}</strong></p>
+                    </div>
+
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Usa este código: <strong>{{ invite.invite_code }}</strong> (solo si no puedes registrarte ahora)
+                    </div>
+                    {% endif %}
+
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nombre de usuario *</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username" 
+                                   required
+                                   minlength="3"
+                                   maxlength="100">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Contraseña *</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password" 
+                                   required
+                                   minlength="6">
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt me-2"></i> Crear Cuenta y Acceder
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <small class="text-muted">
+                            Este enlace expira el {{ invite.expires_at.strftime('%d/%m/%Y a las %H:%M') }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

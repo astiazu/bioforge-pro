@@ -22,13 +22,16 @@ def login():
 
         if not email or not password:
             flash("⚠️ Por favor completa todos los campos.", "warning")
-            return render_template("login.html")
+            return render_template("app/login.html")
 
         user = User.query.filter_by(email=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
             flash("✅ Sesión iniciada correctamente", "success")
-            return redirect(url_for("routes.index"))
+
+            # 🔁 Redirigir a selección de perfil
+            return redirect(url_for("routes.seleccionar_perfil"))
+
         else:
             flash("❌ Credenciales inválidas", "danger")
 
