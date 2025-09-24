@@ -14,7 +14,7 @@ python-dateutil==2.9.0
 pytz==2024.1
 
 # Opcional: para migraciones de base de datos
-Flask-Migrate==4.0.5
+Flask-Migrate==4.0.7
 
 # Opcional: para debugging
 python-dotenv==1.0.1
@@ -44,5 +44,3 @@ requests>=2.31.0
 
 Flask-WTF==1.2.1
 WTForms==3.1.2
-
-#python-magic==0.4.27
