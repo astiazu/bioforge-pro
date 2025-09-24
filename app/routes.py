@@ -1,4 +1,4 @@
-# routes.py - Última actualización: 2025-09-24 - Eliminado import magic global
+print("✅ routes.py v20250924 - SIN import magic global")
 # app/routes.py
 # IMPORTS - ESTÁNDAR
 # ================================
