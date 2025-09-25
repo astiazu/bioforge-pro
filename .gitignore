@@ -21,3 +21,6 @@ static/uploads/
 .DS_Store
 .vscode/
 .idea/
+
+#Scripts
+Scripts/
