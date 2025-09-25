@@ -3740,9 +3740,10 @@ def init_db_render():
     if provided_key != secret_key:
         return jsonify({"error": "Clave secreta inválida"}), 403
 
-    # 🛑 Solo permitir si no hay usuarios (evita sobrescritura)
-    if User.query.first():
-        return jsonify({"error": "La base de datos ya tiene datos"}), 400
+    # 🛑 Solo permitir si no hay mas de 1 usuarios (evita sobrescritura)
+    user_count = User.query.count()
+    if user_count > 1:
+        return jsonify({"error": "La base de datos ya tiene datos reales"}), 400
 
     data = request.get_json()
     if not data:
