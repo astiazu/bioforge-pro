@@ -66,18 +66,18 @@ def create_app():
         db.create_all()
 
         # Crear usuario admin si no existe (usando is_admin)
-        from app.models import User
-        if not User.query.filter_by(is_admin=True).first():
-            admin = User(
-                username='admin',
-                email='admin@bioforge.com',
-                is_admin=True,
-                is_professional=False,
-                role_name='admin'
-            )
-            admin.set_password('temporal123')
-            db.session.add(admin)
-            db.session.commit()
+        # from app.models import User
+        # if not User.query.filter_by(is_admin=True).first():
+        #     admin = User(
+        #         username='admin',
+        #         email='admin@bioforge.com',
+        #         is_admin=True,
+        #         is_professional=False,
+        #         role_name='admin'
+        #     )
+        #     admin.set_password('temporal123')
+        #     db.session.add(admin)
+        #     db.session.commit()
 
         # Registrar Blueprints
         from app.routes import routes
@@ -86,9 +86,9 @@ def create_app():
         app.register_blueprint(auth, url_prefix="/auth")
 
         # Cargar usuario
-        @login_manager.user_loader
-        def load_user(user_id):
-            return User.query.get(int(user_id))
+        # @login_manager.user_loader
+        # def load_user(user_id):
+        #     return User.query.get(int(user_id))
 
         # Filtros personalizados
         from datetime import datetime
