@@ -57,6 +57,12 @@ def create_app():
     mail.init_app(app)
     login_manager.login_view = "auth.login"
 
+    # ✅ USER_LOADER: debe estar aquí, fuera de app_context
+    from app.models import User
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+
     # === Contexto de la aplicación ===
     with app.app_context():
         # Importar todos los modelos para que SQLAlchemy los registre
@@ -65,7 +71,8 @@ def create_app():
         # Crear todas las tablas
         db.create_all()
 
-        # Crear usuario admin si no existe (usando is_admin)
+        # ❌ TEMPORALMENTE COMENTADO: no crear admin automáticamente
+        # Esto permite que el endpoint /init-db-render cargue datos limpios
         # from app.models import User
         # if not User.query.filter_by(is_admin=True).first():
         #     admin = User(
@@ -84,11 +91,6 @@ def create_app():
         from app.auth import auth
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
-
-        # Cargar usuario
-        # @login_manager.user_loader
-        # def load_user(user_id):
-        #     return User.query.get(int(user_id))
 
         # Filtros personalizados
         from datetime import datetime
@@ -114,4 +116,5 @@ def create_app():
 
     return app
 
+# ✅ Instancia para gunicorn (Render)
 app = create_app()
