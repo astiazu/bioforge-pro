@@ -1,0 +1,272 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+
+{% block title %} Datos Consultora - Consultoría y Data {% endblock %}
+
+{% block content %}
+<!-- 1. Hero Section -->
+<section class="hero-section bg-dark text-light py-5">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <!-- Logo/Brand con animación de texto -->
+            <div class="col-12 mb-4 text-center d-flex flex-column align-items-center">
+                <!-- GIF animado (tamaño responsivo) -->
+                <img src="/static/img/logo-datos.gif" 
+                     alt="DatosConsultora" 
+                     class="mb-3"
+                     style="height: 100px; width: auto;">
+                
+                <!-- Texto animado debajo del logo con tamaño escalable -->
+                <h2 id="animated-brand" class="m-0 fw-bold text-info text-center" 
+                    style="font-size: clamp(1.8rem, 6vw, 3.5rem); font-weight: 800;">
+                    # <span>D</span>a</span><span>t</span><span>o</span><span>s</span>C<span>o</span><span>n</span><span>s</span><span>u</span><span>l</span><span>t</span><span>o</span><span>r</span><span>a</span>
+                </h2>
+            </div>
+
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <h1 class="display-4 fw-bold mb-3">
+                    Transformamos datos en <span class="text-info">decisiones estratégicas</span>
+                </h1>
+                <p class="bold-text lead text-secondary mb-4">
+                    Especialistas en análisis de datos, automatización y sistemas. Ayudamos a empresas a tomar mejores decisiones con Python, BI y big data.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('routes.portfolio') }}" class="btn btn-info btn-lg px-4">
+                        <i class="fas fa-folder-open me-2"></i>Ver Casos
+                    </a>
+                    <a href="#contact" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-envelope me-2"></i>Contacto
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <!-- Usa una imagen de fondo profesional -->
+                <img src="/static/img/default-datos.jpg" 
+                     alt="Análisis de datos" 
+                     class="img-fluid rounded shadow-lg">
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #animated-brand span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInSlide 0.6s forwards;
+        }
+        
+        @keyframes fadeInSlide {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Colores cíclicos: azul brillante y blanco con brillo */
+        #animated-brand span:nth-child(odd) {
+            color: #0dcaf0; /* Azul cian brillante */
+            text-shadow: 0 0 10px rgba(13, 202, 240, 0.5);
+            animation-delay: calc(0.1s * var(--i));
+        }
+        
+        #animated-brand span:nth-child(even) {
+            color: #ffffff; /* Blanco */
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            animation-delay: calc(0.1s * var(--i));
+        }
+
+        /* Ajustes específicos para pantallas pequeñas */
+        @media (max-width: 768px) {
+            .hero-section .container {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            .hero-section h1 {
+                font-size: 1.75rem !important;
+            }
+            
+            .hero-section p.lead {
+                font-size: 1rem;
+            }
+            
+            .btn-lg {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            img[alt="Análisis de datos"] {
+                margin-top: 2rem;
+                max-width: 100%;
+            }
+        }
+
+        /* Para pantallas medianas */
+        @media (min-width: 769px) and (max-width: 992px) {
+            #animated-brand {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const spans = document.querySelectorAll('#animated-brand span');
+            spans.forEach((span, index) => {
+                span.style.setProperty('--i', index);
+            });
+        });
+    </script>
+</section>
+
+<!-- 2. Lo que hacemos -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold"><i class="fas fa-tools me-3 text-primary"></i>Lo que hacemos</h2>
+            <p class="lead text-secondary">Soluciones integrales para empresas que quieren escalar con datos.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Análisis de Datos</h5>
+                        <p class="card-text text-secondary">Transformo datos complejos en insights accionables con Python, Pandas y visualización avanzada.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-database fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Big Data & BI</h5>
+                        <p class="card-text text-secondary">Implementación de soluciones de Business Intelligence y manejo de grandes volúmenes de datos.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-robot fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Automatización</h5>
+                        <p class="card-text text-secondary">Scripts y procesos automatizados en Python para optimizar flujos de trabajo repetitivos.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-cogs fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Consultoría en Sistemas</h5>
+                        <p class="card-text text-secondary">Asesoramiento en arquitectura de sistemas, integraciones y optimización tecnológica.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Formación</h5>
+                        <p class="card-text text-secondary">Capacitaciones prácticas en Python, análisis de datos y herramientas de BI.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <i class="fas fa-award fa-3x text-secondary mb-3"></i>
+                        <h5 class="card-title">Certificaciones</h5>
+                        <p class="card-text text-secondary">Google Data Analytics, AWS, Microsoft Power BI y más. Garantía de calidad y experiencia.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Acción resuelta / Caso breve -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <img src="/static/img/default-actions.jpg" 
+                     alt="Caso de éxito" 
+                     class="img-fluid rounded shadow">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="display-6 fw-bold mb-3 text-primary">¿Qué problema resolvemos?</h2>
+                <p class="lead text-secondary">Muchas empresas tienen datos, pero no saben qué hacer con ellos.</p>
+                <ul class="list-check mb-4 text-dark">
+                    <li><strong>Procesos lentos:</strong> Informes manuales que toman horas.</li>
+                    <li><strong>Falta de visibilidad:</strong> Decisiones basadas en intuición, no en datos.</li>
+                    <li><strong>Silos de información:</strong> Datos dispersos en Excel, CRM, ERP.</li>
+                </ul>
+                <p><strong>Nosotros:</strong> Automatizamos, centralizamos y entregamos dashboards claros y actualizados.</p>
+                <a href="{{ url_for('routes.portfolio') }}" class="btn btn-primary">
+                    Ver cómo lo hacemos <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Contacto -->
+<section id="contact" class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center mb-5">
+                <h2 class="display-5 fw-bold">¿Listo para escalar con datos?</h2>
+                <p class="lead text-secondary">Agenda una reunión gratuita para analizar tus necesidades.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5><i class="fas fa-calendar-alt me-2"></i> Agenda una llamada</h5>
+                        <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-outline-primary">
+                            Elegir horario disponible
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <h3 class="mb-4">¿Listo para trabajar juntos?</h3>
+            <p class="text-info mb-4">
+                Transformemos tus datos en decisiones estratégicas. 
+                Contacta con nosotros para discutir tu próximo proyecto.
+            </p>
+            <form method="POST" action="{{ url_for('routes.contacto') }}" class="mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-md-6 mb-3">
+                        <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <input type="email" name="email" class="form-control" placeholder="Tu email" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <input type="text" name="asunto" class="form-control" placeholder="Asunto">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <textarea name="mensaje" class="form-control" rows="4" placeholder="Tu mensaje" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                        <a href="https://wa.me/5493544404054" class="btn btn-outline-success ms-2" target="_blank">
+                            <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

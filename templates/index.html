@@ -1,272 +1,264 @@
-<!-- templates/index.html -->
+<!-- templates/index.html - Landing Profesional -->
 {% extends "base.html" %}
-
-{% block title %} Datos Consultora - Consultoría y Data {% endblock %}
-
+{% block title %}¿Tu PyME genera datos pero no sabes cómo usarlos? - DatosConsultora{% endblock %}
 {% block content %}
-<!-- 1. Hero Section -->
-<section class="hero-section bg-dark text-light py-5">
-    <div class="container py-5">
-        <div class="row align-items-center">
-            <!-- Logo/Brand con animación de texto -->
-            <div class="col-12 mb-4 text-center d-flex flex-column align-items-center">
-                <!-- GIF animado (tamaño responsivo) -->
-                <img src="/static/img/logo-datos.gif" 
-                     alt="DatosConsultora" 
-                     class="mb-3"
-                     style="height: 100px; width: auto;">
-                
-                <!-- Texto animado debajo del logo con tamaño escalable -->
-                <h2 id="animated-brand" class="m-0 fw-bold text-info text-center" 
-                    style="font-size: clamp(1.8rem, 6vw, 3.5rem); font-weight: 800;">
-                    # <span>D</span>a</span><span>t</span><span>o</span><span>s</span>C<span>o</span><span>n</span><span>s</span><span>u</span><span>l</span><span>t</span><span>o</span><span>r</span><span>a</span>
-                </h2>
-            </div>
-
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-dark text-light py-5 position-relative overflow-hidden">
+    <div class="particles-bg position-absolute top-0 start-0 w-100 h-100"></div>
+    <div class="container py-5 position-relative">
+        <div class="row align-items-center min-vh-75">
             <div class="col-lg-7 mb-4 mb-lg-0">
-                <h1 class="display-4 fw-bold mb-3">
-                    Transformamos datos en <span class="text-info">decisiones estratégicas</span>
+                <div class="badge bg-warning text-dark mb-3 px-3 py-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ¿Te resulta familiar?
+                </div>
+                <h1 class="display-3 fw-bold mb-4 animate-fade-in">
+                    ¿Tu empresa genera 
+                    <span class="text-warning position-relative">
+                        muchos datos
+                        <svg class="position-absolute" style="bottom: -10px; left: 0; width: 100%; height: 10px;">
+                            <path d="M5,5 Q50,0 100,5" stroke="#ffc107" stroke-width="3" fill="none" class="animate-draw"/>
+                        </svg>
+                    </span>
+                    pero no sabes cómo usarlos para 
+                    <span class="text-success fw-bold">crecer?</span>
                 </h1>
-                <p class="bold-text lead text-secondary mb-4">
-                    Especialistas en análisis de datos, automatización y sistemas. Ayudamos a empresas a tomar mejores decisiones con Python, BI y big data.
+                <p class="lead mb-4 fs-4 text-light-emphasis">
+                    Convertimos la información dispersa de tu PyME en reportes claros que 
+                    <strong class="text-warning">aumentan ventas, reducen costos y mejoran decisiones</strong>
                 </p>
+                <div class="d-flex align-items-center mb-4 text-warning">
+                    <div class="me-4">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                        <small class="ms-2">+30 empresas transformadas</small>
+                    </div>
+                    <div class="vr me-4"></div>
+                    <div>
+                        <i class="fas fa-clock me-2"></i>
+                        <small>Resultados en 30 días</small>
+                    </div>
+                </div>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="{{ url_for('routes.portfolio') }}" class="btn btn-info btn-lg px-4">
-                        <i class="fas fa-folder-open me-2"></i>Ver Casos
+                    <a href="{{ url_for('routes.portfolio') }}" class="btn btn-warning btn-lg px-4 py-3 fw-bold shadow-lg">
+                        <i class="fas fa-chart-line me-2"></i>Ver Casos Reales
+                        <small class="d-block">ROI +300% promedio</small>
                     </a>
-                    <a href="#contact" class="btn btn-outline-light btn-lg px-4">
-                        <i class="fas fa-envelope me-2"></i>Contacto
+                    <a href="#contacto-form" class="btn btn-outline-light btn-lg px-4 py-3 fw-bold">
+                        <i class="fas fa-calculator me-2"></i>Diagnóstico Gratis
+                        <small class="d-block">30 minutos</small>
                     </a>
                 </div>
             </div>
             <div class="col-lg-5">
-                <!-- Usa una imagen de fondo profesional -->
-                <img src="/static/img/default-datos.jpg" 
-                     alt="Análisis de datos" 
-                     class="img-fluid rounded shadow-lg">
+                <div class="card bg-white text-dark shadow-2xl border-0 transform-hover">
+                    <div class="card-header bg-dark text-light d-flex justify-content-between align-items-center">
+                        <small class="fw-bold">Dashboard Ejecutivo</small>
+                        <div class="d-flex gap-1">
+                            <div class="bg-danger rounded-circle" style="width: 8px; height: 8px;"></div>
+                            <div class="bg-warning rounded-circle" style="width: 8px; height: 8px;"></div>
+                            <div class="bg-success rounded-circle" style="width: 8px; height: 8px;"></div>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <div class="bg-success bg-opacity-10 p-3 rounded">
+                                    <div class="h3 text-success mb-0">+45%</div>
+                                    <small class="text-muted">Ventas</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-info bg-opacity-10 p-3 rounded">
+                                    <div class="h3 text-info mb-0">-30%</div>
+                                    <small class="text-muted">Costos</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-success progress-bar-animated" style="width: 75%"></div>
+                        </div>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar bg-info progress-bar-animated" style="width: 60%"></div>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning progress-bar-animated" style="width: 85%"></div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <small class="text-success fw-bold">ROI: +320%</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    <style>
-        #animated-brand span {
-            display: inline-block;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInSlide 0.6s forwards;
-        }
-        
-        @keyframes fadeInSlide {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        /* Colores cíclicos: azul brillante y blanco con brillo */
-        #animated-brand span:nth-child(odd) {
-            color: #0dcaf0; /* Azul cian brillante */
-            text-shadow: 0 0 10px rgba(13, 202, 240, 0.5);
-            animation-delay: calc(0.1s * var(--i));
-        }
-        
-        #animated-brand span:nth-child(even) {
-            color: #ffffff; /* Blanco */
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-            animation-delay: calc(0.1s * var(--i));
-        }
-
-        /* Ajustes específicos para pantallas pequeñas */
-        @media (max-width: 768px) {
-            .hero-section .container {
-                padding-top: 2rem !important;
-                padding-bottom: 2rem !important;
-            }
-            
-            .hero-section h1 {
-                font-size: 1.75rem !important;
-            }
-            
-            .hero-section p.lead {
-                font-size: 1rem;
-            }
-            
-            .btn-lg {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-            }
-            
-            img[alt="Análisis de datos"] {
-                margin-top: 2rem;
-                max-width: 100%;
-            }
-        }
-
-        /* Para pantallas medianas */
-        @media (min-width: 769px) and (max-width: 992px) {
-            #animated-brand {
-                font-size: 2.5rem;
-            }
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const spans = document.querySelectorAll('#animated-brand span');
-            spans.forEach((span, index) => {
-                span.style.setProperty('--i', index);
-            });
-        });
-    </script>
 </section>
 
-<!-- 2. Lo que hacemos -->
-<section class="py-5">
+<!-- Sección de problemas -->
+<section class="py-5 bg-light">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold"><i class="fas fa-tools me-3 text-primary"></i>Lo que hacemos</h2>
-            <p class="lead text-secondary">Soluciones integrales para empresas que quieren escalar con datos.</p>
+            <h2 class="display-5 fw-bold text-danger">¿Te suena familiar?</h2>
+            <p class="lead text-secondary">Estos son los problemas más comunes que vemos en PyMEs</p>
         </div>
-
         <div class="row g-4">
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
-                        <h5 class="card-title">Análisis de Datos</h5>
-                        <p class="card-text text-secondary">Transformo datos complejos en insights accionables con Python, Pandas y visualización avanzada.</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 text-center pain-point-card">
+                    <div class="card-body p-4">
+                        <div class="text-danger mb-3">
+                            <i class="fas fa-file-excel fa-3x"></i>
+                        </div>
+                        <h5 class="card-title text-danger">Datos Dispersos</h5>
+                        <p class="card-text text-secondary">
+                            Información en Excel, sistemas de ventas, inventarios... 
+                            <strong>pero todo separado</strong>
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-database fa-3x text-success mb-3"></i>
-                        <h5 class="card-title">Big Data & BI</h5>
-                        <p class="card-text text-secondary">Implementación de soluciones de Business Intelligence y manejo de grandes volúmenes de datos.</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 text-center pain-point-card">
+                    <div class="card-body p-4">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-clock fa-3x"></i>
+                        </div>
+                        <h5 class="card-title text-warning">Reportes Manuales</h5>
+                        <p class="card-text text-secondary">
+                            Pierdes <strong>2-3 días cada mes</strong> creando reportes 
+                            que podrían ser automáticos
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-robot fa-3x text-warning mb-3"></i>
-                        <h5 class="card-title">Automatización</h5>
-                        <p class="card-text text-secondary">Scripts y procesos automatizados en Python para optimizar flujos de trabajo repetitivos.</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 text-center pain-point-card">
+                    <div class="card-body p-4">
+                        <div class="text-info mb-3">
+                            <i class="fas fa-question-circle fa-3x"></i>
+                        </div>
+                        <h5 class="card-title text-info">Decisiones a Ciegas</h5>
+                        <p class="card-text text-secondary">
+                            Tomas decisiones por <strong>intuición</strong>, 
+                            no por datos reales de tu negocio
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-cogs fa-3x text-danger mb-3"></i>
-                        <h5 class="card-title">Consultoría en Sistemas</h5>
-                        <p class="card-text text-secondary">Asesoramiento en arquitectura de sistemas, integraciones y optimización tecnológica.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-chalkboard-teacher fa-3x text-primary mb-3"></i>
-                        <h5 class="card-title">Formación</h5>
-                        <p class="card-text text-secondary">Capacitaciones prácticas en Python, análisis de datos y herramientas de BI.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <i class="fas fa-award fa-3x text-secondary mb-3"></i>
-                        <h5 class="card-title">Certificaciones</h5>
-                        <p class="card-text text-secondary">Google Data Analytics, AWS, Microsoft Power BI y más. Garantía de calidad y experiencia.</p>
+            <div class="col-md-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100 text-center pain-point-card">
+                    <div class="card-body p-4">
+                        <div class="text-success mb-3">
+                            <i class="fas fa-dollar-sign fa-3x"></i>
+                        </div>
+                        <h5 class="card-title text-success">Dinero Perdido</h5>
+                        <p class="card-text text-secondary">
+                            Sabes que hay <strong>oportunidades ocultas</strong> 
+                            en tus datos, pero no sabes dónde
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="text-center mt-5">
+            <p class="lead text-danger mb-4">
+                <strong>¿Cuánto dinero estás perdiendo cada mes?</strong>
+            </p>
+            <a href="#solucion" class="btn btn-primary btn-lg">
+                <i class="fas fa-arrow-down me-2"></i>
+                Descubre la Solución
+            </a>
+        </div>
     </div>
 </section>
 
-<!-- 3. Acción resuelta / Caso breve -->
-<section class="bg-light py-5">
+<!-- Método DECIDE -->
+<section id="solucion" class="py-5 bg-primary text-white">
     <div class="container">
-        <div class="row align-items-center g-5">
-            <div class="col-lg-6">
-                <img src="/static/img/default-actions.jpg" 
-                     alt="Caso de éxito" 
-                     class="img-fluid rounded shadow">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">
+                Nosotros lo Solucionamos con el Método 
+                <span class="text-warning">DECIDE</span>
+            </h2>
+            <p class="lead">
+                6 pasos probados que transforman tu caos de datos en decisiones rentables
+            </p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% set steps = [
+                ('D', 'Diagnóstico', 'Auditamos todos tus datos actuales', 'fas fa-search', 'warning'),
+                ('E', 'Estructuración', 'Organizamos la información dispersa', 'fas fa-sitemap', 'info'),
+                ('C', 'Centralización', 'Todo en un solo lugar', 'fas fa-database', 'success'),
+                ('I', 'Implementación', 'Dashboards que se entienden', 'fas fa-chart-bar', 'danger'),
+                ('D', 'Desarrollo', 'Capacitamos a tu equipo', 'fas fa-graduation-cap', 'secondary'),
+                ('E', 'Evaluación', 'Medimos resultados juntos', 'fas fa-chart-line', 'dark')
+            ] %}
+            {% for letra, titulo, desc, icono, color in steps %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="text-center">
+                    <div class="step-circle bg-{{ color }} text-white mb-3 mx-auto">
+                        <span class="step-letter">{{ letra }}</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ titulo }}</h5>
+                    <p class="text-light">{{ desc }}</p>
+                    <div class="step-icon text-{{ color }}">
+                        <i class="{{ icono }} fa-2x"></i>
+                    </div>
+                </div>
             </div>
-            <div class="col-lg-6">
-                <h2 class="display-6 fw-bold mb-3 text-primary">¿Qué problema resolvemos?</h2>
-                <p class="lead text-secondary">Muchas empresas tienen datos, pero no saben qué hacer con ellos.</p>
-                <ul class="list-check mb-4 text-dark">
-                    <li><strong>Procesos lentos:</strong> Informes manuales que toman horas.</li>
-                    <li><strong>Falta de visibilidad:</strong> Decisiones basadas en intuición, no en datos.</li>
-                    <li><strong>Silos de información:</strong> Datos dispersos en Excel, CRM, ERP.</li>
-                </ul>
-                <p><strong>Nosotros:</strong> Automatizamos, centralizamos y entregamos dashboards claros y actualizados.</p>
-                <a href="{{ url_for('routes.portfolio') }}" class="btn btn-primary">
-                    Ver cómo lo hacemos <i class="fas fa-arrow-right ms-2"></i>
-                </a>
-            </div>
+            {% endfor %}
         </div>
     </div>
 </section>
 
-<!-- 4. Contacto -->
-<section id="contact" class="py-5">
+<!-- Contacto -->
+<section id="contacto-form" class="py-5 bg-gradient-primary text-white">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-8 text-center mb-5">
-                <h2 class="display-5 fw-bold">¿Listo para escalar con datos?</h2>
-                <p class="lead text-secondary">Agenda una reunión gratuita para analizar tus necesidades.</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <h5><i class="fas fa-calendar-alt me-2"></i> Agenda una llamada</h5>
-                        <a href="{{ url_for('routes.mi_agenda') }}" class="btn btn-outline-primary">
-                            Elegir horario disponible
-                        </a>
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <h2 class="display-5 fw-bold mb-3">
+                        ¿Listo para Transformar tus Datos en 
+                        <span class="text-warning">Dinero?</span>
+                    </h2>
+                    <p class="lead">
+                        Agenda una evaluación gratuita de 30 minutos
+                    </p>
+                </div>
+                <div class="card bg-white text-dark">
+                    <div class="card-body p-5">
+                        <form method="POST" action="{{ url_for('routes.contacto') }}">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Tu Nombre *</label>
+                                    <input type="text" name="nombre" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Email Corporativo *</label>
+                                    <input type="email" name="email" class="form-control form-control-lg" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Empresa</label>
+                                    <input type="text" name="empresa" class="form-control form-control-lg">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Teléfono</label>
+                                    <input type="tel" name="telefono" class="form-control form-control-lg" placeholder="+54 9 ...">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Describe tu principal desafío con datos *</label>
+                                    <textarea name="mensaje" class="form-control" rows="4" required></textarea>
+                                </div>
+                                <div class="col-12 text-center">
+                                    <button type="submit" class="btn btn-success btn-lg px-5 py-3">
+                                        <i class="fas fa-calendar-check me-2"></i>
+                                        Solicitar Diagnóstico Gratuito
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <div class="row mt-5">
-        <div class="col-12 text-center">
-            <h3 class="mb-4">¿Listo para trabajar juntos?</h3>
-            <p class="text-info mb-4">
-                Transformemos tus datos en decisiones estratégicas. 
-                Contacta con nosotros para discutir tu próximo proyecto.
-            </p>
-            <form method="POST" action="{{ url_for('routes.contacto') }}" class="mt-4">
-                <div class="row justify-content-center">
-                    <div class="col-md-6 mb-3">
-                        <input type="text" name="nombre" class="form-control" placeholder="Tu nombre" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <input type="email" name="email" class="form-control" placeholder="Tu email" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <input type="text" name="asunto" class="form-control" placeholder="Asunto">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <textarea name="mensaje" class="form-control" rows="4" placeholder="Tu mensaje" required></textarea>
-                    </div>
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-                        <a href="https://wa.me/5493544404054" class="btn btn-outline-success ms-2" target="_blank">
-                            <i class="fab fa-whatsapp me-2"></i>WhatsApp
-                        </a>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 </section>
-
 {% endblock %}

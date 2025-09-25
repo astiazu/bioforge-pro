@@ -1,206 +1,314 @@
-<!-- templates/base.html -->
+<!-- templates/base.html - Versión Fusionada -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Datos Consultora - Consultoría y Data{% endblock %}</title>
-    <meta name="description" content="{{ description or 'Servicios de análisis de datos y sistemas' }}">
-    <meta property="og:image" content="{{ image_url or '/static/img/cloud-regular-full.svg' }}">
-    <!-- Bootstrap 5 -->
+    <!-- SEO Optimizado -->
+    <title>{% block title %}¿Tu PyME genera datos pero no los aprovecha? | DatosConsultora{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Convertimos datos dispersos de PyMEs en reportes que aumentan ventas +45%, reducen costos -30% y mejoran decisiones. ROI garantizado en 30 días.{% endblock %}">
+    <meta name="keywords" content="business intelligence pymes, análisis datos empresas, dashboard ejecutivo, consultoría datos argentina">
+    <meta name="author" content="DatosConsultora">
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}DatosConsultora - Transformamos PyMEs con Datos{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}ROI +300% promedio. Convertimos tu caos de datos en decisiones rentables. Casos reales con resultados medibles.{% endblock %}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/og-image-datosconsultora.jpg', _external=True) }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_AR">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}DatosConsultora - Datos que Generan Dinero{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}PyMEs aumentan ventas +45% con nuestros dashboards. Diagnóstico gratuito en 30 min.{% endblock %}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='img/twitter-card-datosconsultora.jpg', _external=True) }}">
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ProfessionalService",
+        "name": "DatosConsultora",
+        "description": "Consultoría especializada en análisis de datos y Business Intelligence para PyMEs",
+        "url": "{{ request.url_root }}",
+        "telephone": "+54-354-440-4054",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Buenos Aires",
+            "addressCountry": "AR"
+        },
+        "priceRange": "$$$",
+        "serviceType": ["Business Intelligence", "Data Analysis", "Dashboard Development", "Process Automation"],
+        "areaServed": "Argentina"
+    }
+    </script>
+    <!-- Preload -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <!-- Estilos personalizados -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Favicon opcional -->
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/datosconsultora.css') }}">
+    <!-- Google Analytics (reemplaza GA_MEASUREMENT_ID) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+        function trackEvent(action, category, label) {
+            gtag('event', action, { event_category: category, event_label: label });
+        }
+    </script>
 </head>
 <body>
-    <!-- Barra de navegación -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <!-- WhatsApp Float -->
+    <div class="whatsapp-float">
+        <a href="https://wa.me/5493544404054" target="_blank" 
+           class="whatsapp-btn" 
+           onclick="trackEvent('click', 'contact', 'whatsapp-float')">
+            <i class="fab fa-whatsapp"></i>
+            <span class="tooltip-text">¡Hablemos por WhatsApp!</span>
+        </a>
+    </div>
+    <!-- Barra promocional -->
+    <div class="notification-bar bg-warning text-dark text-center py-2" id="promo-bar">
         <div class="container">
-            <!-- Logo o nombre del portafolio -->
-            <a class="navbar-brand" href="{{ url_for('routes.index') }}">Datos Consultora</a>
-
-            <!-- Botón para móviles -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <strong>🚀 OFERTA LIMITADA:</strong> Diagnóstico gratuito + 50% descuento
+            <a href="#contacto-form" class="btn btn-dark btn-sm ms-2">Aprovechar</a>
+            <button class="btn-close float-end" onclick="closePromoBar()"></button>
+        </div>
+    </div>
+    <!-- Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-lg" id="main-nav">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('routes.index') }}">
+                <img src="{{ url_for('static', filename='img/logo-datos.gif') }}" 
+                     alt="DatosConsultora" height="40" class="me-2">
+                <span class="text-info">#</span>DatosConsultora
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" 
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <!-- Menú de navegación -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'home' or active_tab == 'inicio' %}active{% endif %}"
-                           href="{{ url_for('routes.index') }}">
-                            Inicio
+                        <a class="nav-link {% if active_tab == 'home' or active_tab == 'inicio' %}active{% endif %}" href="{{ url_for('routes.index') }}">
+                            <i class="fas fa-home me-1"></i>Inicio
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'portfolio' %}active{% endif %}"
-                           href="{{ url_for('routes.portfolio') }}">
-                            Portafolio
+                        <a class="nav-link {% if active_tab == 'portfolio' %}active{% endif %}" href="{{ url_for('routes.portfolio') }}">
+                            <i class="fas fa-chart-line me-1"></i>Casos de Éxito
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'publications' %}active{% endif %}"
-                           href="{{ url_for('routes.publications') }}">
-                            Publicaciones
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'blog_public' %}active{% endif %}"
-                           href="{{ url_for('routes.public_notes') }}">
-                            Blog Público
+                        <a class="nav-link {% if active_tab == 'publications' %}active{% endif %}" href="{{ url_for('routes.publications') }}">
+                            <i class="fas fa-cogs me-1"></i>Servicios
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'profesionales' %}active{% endif %}"
-                        href="{{ url_for('routes.profesionales') }}">
-                            Profesionales
+                        <a class="nav-link {% if active_tab == 'blog_public' %}active{% endif %}" href="{{ url_for('routes.public_notes') }}">
+                            <i class="fas fa-blog me-1"></i>Blog
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_tab == 'upload_csv' %}active{% endif %}"
-                           href="{{ url_for('routes.upload_csv') }}">
-                            Análisis de Datos
+                        <a class="nav-link {% if active_tab == 'profesionales' %}active{% endif %}" href="{{ url_for('routes.profesionales') }}">
+                            <i class="fas fa-user-tie me-1"></i>Profesionales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == 'upload_csv' %}active{% endif %}" href="{{ url_for('routes.upload_csv') }}">
+                            <i class="fas fa-file-csv me-1"></i>Análisis de Datos
                         </a>
                     </li>
                 </ul>
-
-                <!-- Dropdown de usuario o botón de login -->
-                {% if current_user.is_authenticated %}
-                    <div class="dropdown">
-                        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" 
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ current_user.username }}
-                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
-                                {% if active_assistant %}
-                                <span class="badge bg-warning text-dark ms-3">
-                                    <i class="fas fa-briefcase me-1"></i>
-                                    Modo: Asistente en {{ active_assistant.doctor.username }}
-                                </span>
+                <!-- Menú de usuario -->
+                <div class="d-flex align-items-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <div class="dropdown">
+                            <a class="btn btn-outline-light dropdown-toggle btn-sm" href="#" role="button" 
+                               data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                                {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
+                                    {% if active_assistant %}
+                                    <span class="badge bg-warning text-dark ms-2">
+                                        <i class="fas fa-briefcase me-1"></i>Asistente en {{ active_assistant.doctor.username }}
+                                    </span>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <!-- Mi Perfil / Perfil del Equipo -->
-                            <li>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 {% if session.get('active_role') == 'asistente' %}
-                                <a class="dropdown-item" href="{{ url_for('routes.perfil_equipo') }}">
+                                <li><a class="dropdown-item" href="{{ url_for('routes.perfil_equipo') }}">
                                     <i class="fas fa-building me-2"></i>Perfil del Equipo
-                                </a>
+                                </a></li>
                                 {% else %}
-                                <a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}">
+                                <li><a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}">
                                     <i class="fas fa-user-circle me-2"></i>Mi Perfil
-                                </a>
+                                </a></li>
                                 {% endif %}
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.notes') }}">
-                                    <i class="fas fa-newspaper me-2"></i>Mis Notas
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.mi_agenda') }}">
+                                <li><a class="dropdown-item" href="{{ url_for('routes.notes') }}">
+                                    <i class="fas fa-sticky-note me-2"></i>Mis Notas
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('routes.mi_agenda') }}">
                                     <i class="fa-regular fa-calendar me-2"></i> Mi Agenda
-                                </a>
-                            </li>
-                            <!-- Botón condicional: Equipos -->
-                            {% if current_user.is_authenticated and current_user.assistant_accounts %}
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.mis_equipos') }}">
-                                    <!-- <i class="fa-regular fa-people-group me-2"></i> Mis Equipos -->
+                                </a></li>
+                                {% if current_user.assistant_accounts %}
+                                <li><a class="dropdown-item" href="{{ url_for('routes.mis_equipos') }}">
                                     <i class="fa fa-users me-2"></i> Mis Equipos
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}"><i class="fas fa-user-circle me-2"></i>Mi Perfil</a></li>
-                            <!-- Botón condicional: Perfil de Asistente -->
-                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.perfil_asistente') }}">
-                                    <i class="fas fa-briefcase me-2"></i>Perfil de Asistente
-                                </a>
-                            </li>
-                            {% endif %}
-
-                            <!-- Cambiar contraseña -->
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.cambiar_pass') }}">
+                                </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('routes.cambiar_pass') }}">
                                     <i class="fas fa-key me-2"></i>Cambiar Contraseña
-                                </a>
-                            </li>
-
-                            <!-- Panel de Admin (solo si es admin) -->
-                            {% if current_user.is_admin %}
+                                </a></li>
+                                {% if current_user.is_admin %}
                                 <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('routes.admin_panel') }}">
-                                        <i class="fas fa-cog me-2"></i>Panel de Administración
-                                    </a>
-                                </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('routes.dashboard') }}">
+                                <li><a class="dropdown-item" href="{{ url_for('routes.admin_panel') }}">
+                                    <i class="fas fa-cog me-2"></i>Panel de Administración
+                                </a></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('routes.dashboard') }}">
                                     <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                                </a>
-                            </li>
-                            <!-- Cerrar sesión -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <a class="btn btn-outline-light" href="{{ url_for('auth.login') }}">
-                        Iniciar sesión
-                    </a>
-                {% endif %}
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a class="btn btn-info btn-sm" href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
-
     <!-- Contenido principal -->
-    <div class="container mt-4 pt-5">
-        <!-- Mensajes flash -->
+    <main class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+                <div class="container mt-4 pt-5">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'message' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                            <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
-
-        <!-- Bloque de contenido que será reemplazado por cada página -->
         {% block content %}{% endblock %}
-    </div>
-
-    <!-- Footer opcional -->
-    <footer class="footer mt-5 py-4 bg-dark text-light">
-        <div class="container text-center">
-            <p class="mb-0">
-                &copy; 2025 José Luis Astiazu. Todos los derechos reservados.
-            </p>
-            <small class="text-primary">
-                Desarrollado con Flask, Bootstrap y ❤️
-            </small>
+    </main>
+    <!-- Footer -->
+    <footer class="footer bg-dark text-light pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ url_for('static', filename='img/logo-datos.gif') }}" 
+                             alt="DatosConsultora" height="40" class="me-2">
+                        <h5 class="mb-0 fw-bold">
+                            <span class="text-info">#</span>DatosConsultora
+                        </h5>
+                    </div>
+                    <p class="text-light-emphasis mb-3">
+                        Transformamos PyMEs con el poder de sus datos. 
+                        ROI +300% promedio en 30-45 días.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="#" class="text-light fs-4"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://wa.me/5493544404054" class="text-light fs-4"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold text-info mb-3">Servicios</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('routes.publications') }}" class="text-light-emphasis text-decoration-none">Dashboards Ejecutivos</a></li>
+                        <li><a href="{{ url_for('routes.data_analysis') }}" class="text-light-emphasis text-decoration-none">Business Intelligence</a></li>
+                        <li><a href="{{ url_for('routes.upload_csv') }}" class="text-light-emphasis text-decoration-none">Automatización</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="fw-bold text-info mb-3">Especialidades</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light-emphasis text-decoration-none">Manufactura</a></li>
+                        <li><a href="#" class="text-light-emphasis text-decoration-none">Retail</a></li>
+                        <li><a href="#" class="text-light-emphasis text-decoration-none">Salud</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h6 class="fw-bold text-info mb-3">Contacto Directo</h6>
+                    <div class="mb-3">
+                        <i class="fas fa-envelope text-info me-2"></i>
+                        <a href="mailto:hola@datosconsultora.com" class="text-light-emphasis text-decoration-none">
+                            hola@datosconsultora.com
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fab fa-whatsapp text-success me-2"></i>
+                        <a href="https://wa.me/5493544404054" class="text-light-emphasis text-decoration-none">
+                            +54 354 440-4054
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-map-marker-alt text-info me-2"></i>
+                        <span class="text-light-emphasis">Buenos Aires, Argentina</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-light-emphasis">
+                        &copy; 2025 DatosConsultora. Todos los derechos reservados.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <small class="text-light-emphasis">
+                        <a href="/terminos" class="text-decoration-none me-3">Términos</a>
+                        <a href="/privacidad" class="text-decoration-none me-3">Privacidad</a>
+                        <a href="/cookies" class="text-decoration-none">Cookies</a>
+                    </small>
+                </div>
+            </div>
         </div>
     </footer>
-
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Bloque opcional para scripts específicos de cada página -->
+    <script>
+        function closePromoBar() {
+            document.getElementById('promo-bar').style.display = 'none';
+            localStorage.setItem('promo-bar-closed', 'true');
+        }
+        if (localStorage.getItem('promo-bar-closed')) {
+            document.getElementById('promo-bar').style.display = 'none';
+        }
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('main-nav');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
