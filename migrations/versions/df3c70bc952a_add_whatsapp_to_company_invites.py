@@ -9,6 +9,12 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.engine import reflection
 
+# ✅ VARIABLES OBLIGATORIAS PARA ALEMBIC
+revision = 'df3c70bc952a'
+down_revision = None
+branch_labels = None
+depends_on = None
+
 def column_exists(table, column):
     conn = op.get_bind()
     inspector = reflection.Inspector.from_engine(conn)
