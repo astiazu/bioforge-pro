@@ -1,4 +1,4 @@
-"""añadir whatsapp a company_invites
+"""add whatsapp to company_invites
 
 Revision ID: df3c70bc952a
 Revises: 
