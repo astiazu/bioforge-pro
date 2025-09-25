@@ -1,8 +1,9 @@
-print("✅ routes.py v20250924 - SIN import magic global")
+# print("✅ routes.py v20250924 - SIN import magic global")
 # app/routes.py
 # IMPORTS - ESTÁNDAR
 # ================================
 import os
+import io
 import re
 import uuid
 import time
@@ -10,6 +11,8 @@ import json
 import csv
 import string
 import secrets
+import traceback
+
 from datetime import datetime, timedelta, date
 from collections import defaultdict
 from io import StringIO
@@ -26,13 +29,13 @@ import plotly.express as px
 import requests
 from flask import (
     render_template, request, redirect, url_for, flash, jsonify,
-    session, Blueprint, current_app, abort, send_from_directory, Response
+    session, Blueprint, current_app, abort, send_from_directory, Response, send_file, make_response
 )
 from flask_login import current_user, login_required, login_user
 from flask_mail import Message
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
-from sqlalchemy import func
+from sqlalchemy import or_, and_, func, text
 from sqlalchemy.exc import IntegrityError
 
 # ================================
@@ -45,14 +48,27 @@ from app.models import (
     Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
     Assistant, Task, TaskStatus, CompanyInvite
 )
-from app.forms import RegistrationForm
-from app.forms.task_form import TaskForm
+
 from app.utils import (
-    upload_to_cloudinary, enviar_mensaje_telegram, generate_invite_token,
+    upload_to_cloudinary, send_telegram_message, generate_invite_token,
     send_invite_email, verify_invite_token, generate_unique_invite_code,
     send_company_invite, can_manage_tasks
 )
-print("✅ routes.py cargado sin import magic en el nivel superior")
+
+# Modelos y formularios
+from app.models import (
+    User, Note, Publication, NoteStatus, Clinic, Availability,
+    Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
+    Assistant, Task, TaskStatus, CompanyInvite, db
+)
+from app.forms import (
+    NoteForm, PublicationForm, ClinicForm, AssistantForm,
+    TaskAssignmentForm, AppointmentForm, MedicalRecordForm,
+    CompanyInviteForm, SubscriberForm, DataUploadForm,
+    ProfessionalProfileForm, PublicationFilterForm, RegistrationForm, TaskForm
+)
+from app.utils import send_telegram_message, send_whatsapp_message
+
 # ================================
 # BLUEPRINT
 # ================================
@@ -759,7 +775,7 @@ def webhook_telegram():
                 "🔹 /start - Para comenzar\n"
                 "🔹 /registrar_asistente [tu_nombre] - Para vincular tu cuenta"
             )
-            enviar_mensaje_telegram(chat_id, respuesta)
+            send_telegram_message(chat_id, respuesta)
             return jsonify({"status": "ok"}), 200
 
         command_parts = text.split()
@@ -773,11 +789,11 @@ def webhook_telegram():
                 "Ejemplo:\n"
                 "`/registrar_asistente Mabel Pérez`"
             )
-            enviar_mensaje_telegram(chat_id, respuesta)
+            send_telegram_message(chat_id, respuesta)
 
         elif command == '/registrar_asistente':
             if len(command_parts) < 2:
-                enviar_mensaje_telegram(chat_id, "❌ Usa: `/registrar_asistente tu_nombre`")
+                send_telegram_message(chat_id, "❌ Usa: `/registrar_asistente tu_nombre`")
                 return jsonify({"status": "error"}), 200
 
             nombre_solicitado = " ".join(command_parts[1:]).strip()
@@ -785,7 +801,7 @@ def webhook_telegram():
             # Verificar si ya está vinculado desde este chat
             existing_assistant = Assistant.query.filter_by(telegram_id=str(chat_id)).first()
             if existing_assistant:
-                enviar_mensaje_telegram(
+                send_telegram_message(
                     chat_id,
                     f"🟢 Ya estás vinculado como *{existing_assistant.name}*.\n"
                     "No es necesario registrarte nuevamente."
@@ -799,7 +815,7 @@ def webhook_telegram():
             ).first()
 
             if not assistant:
-                enviar_mensaje_telegram(
+                send_telegram_message(
                     chat_id,
                     f"❌ No se encontró un asistente llamado '{nombre_solicitado}'. "
                     "Verifica el nombre e inténtalo de nuevo."
@@ -812,7 +828,7 @@ def webhook_telegram():
                 Assistant.id != assistant.id
             ).first()
             if duplicate:
-                enviar_mensaje_telegram(
+                send_telegram_message(
                     chat_id,
                     f"⚠️ Este dispositivo ya está vinculado a *{duplicate.name}*.\n"
                     "Contacta al administrador si necesitas cambiarlo."
@@ -828,7 +844,7 @@ def webhook_telegram():
                 print(f"✅ Vinculado: {assistant.name} -> {assistant.telegram_id}")
 
                 # Confirmación clara al usuario
-                enviar_mensaje_telegram(
+                send_telegram_message(
                     chat_id,
                     f"✅ ¡Éxito! {assistant.name}, has sido vinculado correctamente.\n\n"
                     "Ahora recibirás notificaciones de tareas asignadas.\n\n"
@@ -847,7 +863,7 @@ def webhook_telegram():
             except Exception as e:
                 db.session.rollback()
                 print(f"❌ Error al guardar en DB: {e}")
-                enviar_mensaje_telegram(
+                send_telegram_message(
                     chat_id,
                     "❌ Hubo un error al registrar tu cuenta. Intenta más tarde."
                 )
@@ -3691,3 +3707,321 @@ def inject_active_assistant():
             assistant = Assistant.query.get(assistant_id)
             return {'active_assistant': assistant}
     return {'active_assistant': None}
+
+# === ENDPOINT TEMPORAL PARA RENDER: INICIALIZAR BASE DE DATOS ===
+def safe_iso_parse(date_str):
+    if not date_str:
+        return None
+    if date_str.endswith('Z'):
+        date_str = date_str[:-1] + '+00:00'
+    try:
+        return datetime.fromisoformat(date_str)
+    except (ValueError, TypeError):
+        return None
+
+def safe_time_parse(time_str):
+    if not time_str:
+        return None
+    try:
+        if len(time_str.split(':')) == 2:
+            return datetime.strptime(time_str, '%H:%M').time()
+        return datetime.strptime(time_str, '%H:%M:%S').time()
+    except (ValueError, TypeError):
+        return None
+
+@routes.route('/init-db-render', methods=['POST'])
+def init_db_render():
+    # 🔒 Verificación de seguridad: clave secreta obligatoria
+    secret_key = os.environ.get('INIT_DB_SECRET_KEY')
+    if not secret_key:
+        return jsonify({"error": "Endpoint deshabilitado"}), 403
+        
+    provided_key = request.args.get('key') or request.headers.get('X-Init-Key')
+    if provided_key != secret_key:
+        return jsonify({"error": "Clave secreta inválida"}), 403
+
+    # 🛑 Solo permitir si no hay usuarios (evita sobrescritura)
+    if User.query.first():
+        return jsonify({"error": "La base de datos ya tiene datos"}), 400
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Se requiere JSON en el cuerpo"}), 400
+
+    try:
+        # === Desactivar FK temporalmente (solo para SQLite, pero inofensivo en PG)
+        if 'sqlite' in str(db.engine.url):
+            db.session.execute(text("PRAGMA foreign_keys = OFF"))
+            db.session.commit()
+
+        # === Limpiar tablas en orden inverso ===
+        tables_to_clear = [
+            Task, Note, Availability, Appointment, MedicalRecord,
+            Schedule, Assistant, Publication, CompanyInvite,
+            Subscriber, Clinic, User, UserRole
+        ]
+        for table in tables_to_clear:
+            db.session.query(table).delete()
+        db.session.commit()
+
+        # === Cargar datos ===
+        
+        # USER ROLES
+        user_roles_data = data.get('user_roles', data.get('user_role', []))
+        for ur in user_roles_data:
+            if ur.get('id') and ur.get('name'):
+                db.session.add(UserRole(id=ur['id'], name=ur['name']))
+        db.session.commit()
+
+        # USERS
+        users_data = data.get('users', data.get('user', []))
+        for u in users_data:
+            if not (u.get('id') and u.get('username') and u.get('email')):
+                continue
+            user = User(
+                id=u['id'],
+                username=u['username'],
+                email=u['email'],
+                is_professional=u.get('is_professional', False),
+                is_admin=u.get('is_admin', False),
+                role_name=u.get('role_name', 'user'),
+                specialty=u.get('specialty'),
+                bio=u.get('bio'),
+                years_experience=u.get('years_experience'),
+                profile_photo=u.get('profile_photo'),
+                url_slug=u.get('url_slug'),
+                license_number=u.get('license_number'),
+                created_at=safe_iso_parse(u.get('created_at')),
+                updated_at=safe_iso_parse(u.get('updated_at'))
+            )
+            user.set_password('temporal123')
+            db.session.add(user)
+        db.session.commit()
+
+        # CLINICS
+        clinics_data = data.get('clinics', data.get('clinic', []))
+        for c in clinics_data:
+            if not (c.get('id') and c.get('name') and c.get('doctor_id')):
+                continue
+            clinic = Clinic(
+                id=c['id'],
+                name=c['name'],
+                address=c.get('address'),
+                phone=c.get('phone'),
+                specialty=c.get('specialty'),
+                doctor_id=c['doctor_id'],
+                is_active=c.get('is_active', True)
+            )
+            db.session.add(clinic)
+        db.session.commit()
+
+        # ASSISTANTS
+        assistants_data = data.get('assistants', data.get('assistant', []))
+        for a in assistants_data:
+            if not (a.get('id') and a.get('name') and a.get('doctor_id')):
+                continue
+            assistant = Assistant(
+                id=a['id'],
+                name=a['name'],
+                email=a.get('email'),
+                whatsapp=a.get('whatsapp'),
+                doctor_id=a['doctor_id'],
+                clinic_id=a.get('clinic_id'),
+                type=a.get('type', 'common'),
+                user_id=a.get('user_id'),
+                telegram_id=a.get('telegram_id'),
+                created_at=safe_iso_parse(a.get('created_at'))
+            )
+            db.session.add(assistant)
+        db.session.commit()
+
+        # PUBLICATIONS
+        pubs_data = data.get('publications', data.get('publication', []))
+        for p in pubs_data:
+            if not (p.get('id') and p.get('title') and p.get('user_id')):
+                continue
+            try:
+                from slugify import slugify
+                slug = p.get('slug') or slugify(p['title']) or f"pub-{p['id']}"
+            except ImportError:
+                slug = p.get('slug') or f"pub-{p['id']}"
+            pub = Publication(
+                id=p['id'],
+                type=p.get('type', 'blog'),
+                title=p['title'],
+                excerpt=p.get('excerpt'),
+                content=p.get('content', ''),
+                is_published=(p.get('status') == 'published'),
+                user_id=p['user_id'],
+                image_url=p.get('image_url'),
+                slug=slug,
+                published_at=safe_iso_parse(p.get('published_at')),
+                view_count=p.get('view_count', 0),
+                tags=", ".join(p.get('tags', [])) if isinstance(p.get('tags'), list) else p.get('tags', "")
+            )
+            db.session.add(pub)
+        db.session.commit()
+
+        # NOTES
+        notes_data = data.get('notes', data.get('note', []))
+        for n in notes_data:
+            if not (n.get('id') and n.get('content') and n.get('user_id')):
+                continue
+            raw_status = n.get('status', 'private')
+            try:
+                status_value = NoteStatus(raw_status).value
+            except ValueError:
+                status_value = NoteStatus.PRIVATE.value
+            note = Note(
+                id=n['id'],
+                title=n.get('title', ''),
+                content=n['content'],
+                user_id=n['user_id'],
+                status=status_value,
+                created_at=safe_iso_parse(n.get('created_at'))
+            )
+            db.session.add(note)
+        db.session.commit()
+
+        # SCHEDULES
+        schedules_data = data.get('schedules', data.get('schedule', []))
+        for s in schedules_data:
+            if not (s.get('id') and s.get('day_of_week') and s.get('doctor_id') and s.get('clinic_id')):
+                continue
+            schedule = Schedule(
+                id=s['id'],
+                day_of_week=s['day_of_week'],
+                start_time=safe_time_parse(s.get('start_time')),
+                end_time=safe_time_parse(s.get('end_time')),
+                doctor_id=s['doctor_id'],
+                clinic_id=s['clinic_id'],
+                is_active=s.get('is_active', True)
+            )
+            db.session.add(schedule)
+        db.session.commit()
+
+        # AVAILABILITY
+        avail_data = data.get('availabilities', data.get('availability', []))
+        for a in avail_data:
+            if not (a.get('id') and a.get('date') and a.get('clinic_id')):
+                continue
+            availability = Availability(
+                id=a['id'],
+                date=safe_iso_parse(a['date']).date() if a.get('date') else None,
+                time=safe_time_parse(a.get('time')),
+                clinic_id=a['clinic_id'],
+                is_booked=a.get('is_booked', False),
+                appointment_id=a.get('appointment_id')
+            )
+            db.session.add(availability)
+        db.session.commit()
+
+        # APPOINTMENTS
+        appts_data = data.get('appointments', data.get('appointment', []))
+        for ap in appts_data:
+            if not (ap.get('id') and ap.get('patient_id') and ap.get('availability_id')):
+                continue
+            appt = Appointment(
+                id=ap['id'],
+                patient_id=ap['patient_id'],
+                availability_id=ap['availability_id'],
+                notes=ap.get('notes'),
+                status=ap.get('status', 'confirmed')
+            )
+            db.session.add(appt)
+        db.session.commit()
+
+        # MEDICAL RECORDS
+        mr_data = data.get('medical_records', data.get('medical_record', []))
+        for mr in mr_data:
+            if not (mr.get('id') and mr.get('patient_id') and mr.get('doctor_id') and mr.get('title')):
+                continue
+            record = MedicalRecord(
+                id=mr['id'],
+                patient_id=mr['patient_id'],
+                doctor_id=mr['doctor_id'],
+                title=mr['title'],
+                notes=mr['notes'],
+                created_at=safe_iso_parse(mr.get('created_at'))
+            )
+            db.session.add(record)
+        db.session.commit()
+
+        # TASKS
+        tasks_data = data.get('tasks', data.get('task', []))
+        for t in tasks_data:
+            if not (t.get('id') and t.get('title') and t.get('doctor_id') and t.get('assistant_id')):
+                continue
+            raw_status = t.get('status', 'pending')
+            try:
+                status_value = TaskStatus(raw_status).value
+            except ValueError:
+                status_value = TaskStatus.PENDING.value
+            task = Task(
+                id=t['id'],
+                title=t['title'],
+                description=t.get('description'),
+                due_date=safe_iso_parse(t.get('due_date')).date() if t.get('due_date') else None,
+                status=status_value,
+                doctor_id=t['doctor_id'],
+                assistant_id=t['assistant_id'],
+                clinic_id=t.get('clinic_id'),
+                created_by=t.get('created_by'),
+                created_at=safe_iso_parse(t.get('created_at'))
+            )
+            db.session.add(task)
+        db.session.commit()
+
+        # COMPANY INVITES
+        invites_data = data.get('company_invites', data.get('company_invite', []))
+        for inv in invites_data:
+            if not (inv.get('id') and inv.get('invite_code') and inv.get('email') and inv.get('doctor_id')):
+                continue
+            invite = CompanyInvite(
+                id=inv['id'],
+                invite_code=inv['invite_code'],
+                email=inv['email'],
+                name=inv.get('name'),
+                doctor_id=inv['doctor_id'],
+                clinic_id=inv.get('clinic_id'),
+                assistant_type=inv['assistant_type'],
+                whatsapp=inv.get('whatsapp'),
+                expires_at=safe_iso_parse(inv.get('expires_at')),
+                is_used=inv.get('is_used', False)
+            )
+            db.session.add(invite)
+        db.session.commit()
+
+        # SUBSCRIBERS
+        subs_data = data.get('subscribers', data.get('subscriber', []))
+        for s in subs_data:
+            if not (s.get('id') and s.get('email')):
+                continue
+            sub = Subscriber(
+                id=s['id'],
+                email=s['email'],
+                subscribed_at=safe_iso_parse(s.get('subscribed_at'))
+            )
+            db.session.add(sub)
+        db.session.commit()
+
+        # Reactivar FK
+        if 'sqlite' in str(db.engine.url):
+            db.session.execute(text("PRAGMA foreign_keys = ON"))
+            db.session.commit()
+
+        return jsonify({
+            "message": "✅ Base de datos inicializada exitosamente",
+            "stats": {
+                "users": User.query.count(),
+                "clinics": Clinic.query.count(),
+                "tasks": Task.query.count(),
+                "publications": Publication.query.count()
+            }
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Falló la inicialización: {str(e)}"}), 500
+
+# === FIN DEL ENDPOINT TEMPORAL ===

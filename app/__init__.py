@@ -1,22 +1,20 @@
+# app/__init__.py
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
-from flask_migrate import Migrate
 
-# Instancias globales (declaradas fuera de create_app)
+# Instancias globales
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
-migrate = Migrate()
 
-# ✅ Cloudinary: import opcional (no rompe si no está instalado)
+# Cloudinary (opcional)
 try:
     import cloudinary
 except ImportError:
     cloudinary = None
-
 
 def create_app():
     app = Flask(
@@ -27,8 +25,8 @@ def create_app():
     )
 
     # === Configuración ===
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo-cambia-esto-en-produccion"
-
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
+    
     # Base de datos
     if os.environ.get('DATABASE_URL'):
         database_url = os.environ.get('DATABASE_URL')
@@ -38,7 +36,7 @@ def create_app():
     else:
         os.makedirs(app.instance_path, exist_ok=True)
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
-
+    
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # Email (Gmail)
@@ -57,39 +55,42 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     mail.init_app(app)
-    migrate.init_app(app, db)
     login_manager.login_view = "auth.login"
-
-    # === Configurar Cloudinary (si está disponible) ===
-    if cloudinary:
-        with app.app_context():
-            cloudinary.config(
-                cloud_name=os.environ.get("CLOUD_NAME"),
-                api_key=os.environ.get("CLOUDINARY_API_KEY"),
-                api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-                secure=True
-            )
-
-    # === Registrar Blueprints ===
-    from app.routes import routes
-    from app.auth import auth
-
-    app.register_blueprint(routes)
-    app.register_blueprint(auth, url_prefix="/auth")
 
     # === Contexto de la aplicación ===
     with app.app_context():
-        # Crear tablas (solo en desarrollo; en producción usa migraciones)
+        # Importar todos los modelos para que SQLAlchemy los registre
+        from app import models
+        
+        # Crear todas las tablas
         db.create_all()
 
-        # Cargar usuario
+        # Crear usuario admin si no existe (usando is_admin)
         from app.models import User
+        if not User.query.filter_by(is_admin=True).first():
+            admin = User(
+                username='admin',
+                email='admin@bioforge.com',
+                is_admin=True,
+                is_professional=False,
+                role_name='admin'
+            )
+            admin.set_password('temporal123')
+            db.session.add(admin)
+            db.session.commit()
 
+        # Registrar Blueprints
+        from app.routes import routes
+        from app.auth import auth
+        app.register_blueprint(routes)
+        app.register_blueprint(auth, url_prefix="/auth")
+
+        # Cargar usuario
         @login_manager.user_loader
         def load_user(user_id):
             return User.query.get(int(user_id))
 
-        # === Filtros personalizados ===
+        # Filtros personalizados
         from datetime import datetime
 
         @app.template_filter('sort_by_due_date')
@@ -100,7 +101,15 @@ def create_app():
 
         @app.template_filter('without_page')
         def without_page(args):
-            """Filtra los args para quitar 'page'"""
             return {k: v for k, v in args.items() if k != 'page'}
+
+        # Configurar Cloudinary
+        if cloudinary:
+            cloudinary.config(
+                cloud_name=os.environ.get("CLOUD_NAME"),
+                api_key=os.environ.get("CLOUDINARY_API_KEY"),
+                api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+                secure=True
+            )
 
     return app

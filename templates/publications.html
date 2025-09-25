@@ -21,14 +21,15 @@
                 <option value="Caso de éxito">Caso de éxito</option>
                 <option value="Análisis">Análisis</option>
                 <option value="Opinión">Opinión</option>
-                <option value="Opinión">Cultura</option>
-                <option value="Opinión">Deportes</option>
+                <option value="Cultura">Cultura</option>
+                <option value="Deportes">Deportes</option>
             </select>
         </div>
     </div>
 
     <!-- 2. Carrusel: 3 publicaciones -->
     <h3 class="mb-4">📌 Publicaciones Destacadas</h3>
+    {% if carousel_items %}
     <div id="carouselPublications" class="carousel slide mb-5" data-bs-ride="carousel">
         <div class="carousel-inner">
             {% for pub in carousel_items %}
@@ -40,9 +41,15 @@
                         <h6>{{ pub.title }}</h6>
                         <small class="text-secondary">
                             <i class="fas fa-eye me-1"></i>
-                            {{ pub.view_count }} vistas
-                            {{ pub.published_at.strftime('%d %b %Y') }} •
-                            Por {{ pub.author }}
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
                         </small>
                     </div>
                 </div>
@@ -56,6 +63,9 @@
             <span class="carousel-control-next-icon"></span>
         </button>
     </div>
+    {% else %}
+    <p class="text-secondary">No hay publicaciones destacadas.</p>
+    {% endif %}
 
     <!-- 3. Publicaciones Actuales -->
     <h3 class="mb-4">📰 Publicaciones Actuales</h3>
@@ -71,15 +81,24 @@
                     <h5 class="card-title mt-2">{{ main_pub.title }}</h5>
                     <p class="card-text small text-secondary">{{ main_pub.content|truncate(150) }}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small><i class="fas fa-eye me-1"></i>
-                            {{ main_pub.view_count }} vistas
-                            {{ main_pub.published_at.strftime('%d %b %Y') }} •
-                            Por {{ main_pub.author }}
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ main_pub.view_count }} vistas •
+                            {% if main_pub.published_at %}
+                                {{ main_pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if main_pub.author %}
+                                • Por {{ main_pub.author.username }}
+                            {% endif %}
                         </small>
                         <a href="{{ url_for('routes.view_publication', pub_id=main_pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
                     </div>
                 </div>
             </div>
+            {% else %}
+            <p class="text-secondary">No hay publicación principal.</p>
             {% endif %}
         </div>
 
@@ -96,16 +115,25 @@
                                 {{ pub.title|truncate(40) }}
                             </h6>
                             <div class="d-flex justify-content-between align-items-center mt-1">
-                                <small><i class="fas fa-eye me-1"></i>
-                                    {{ pub.view_count }} vistas
-                                    {{ pub.published_at.strftime('%d %b %Y') }} •
-                                    Por {{ pub.author }}
+                                <small>
+                                    <i class="fas fa-eye me-1"></i>
+                                    {{ pub.view_count }} vistas •
+                                    {% if pub.published_at %}
+                                        {{ pub.published_at.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        Sin fecha
+                                    {% endif %}
+                                    {% if pub.author %}
+                                        • Por {{ pub.author.username }}
+                                    {% endif %}
                                 </small>
                                 <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer</a>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% else %}
+                <p class="text-secondary">No hay publicaciones secundarias.</p>
                 {% endfor %}
             </div>
         </div>
@@ -113,6 +141,7 @@
 
     <!-- 4. Resto de publicaciones -->
     <h3 class="mb-4">📚 Otras Publicaciones</h3>
+    {% if rest_pubs %}
     <div class="row g-4 mb-5">
         {% for pub in rest_pubs %}
         <div class="col-lg-3 col-md-6">
@@ -128,10 +157,17 @@
                     </h6>
                     <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small><i class="fas fa-eye me-1"></i>
-                            {{ pub.view_count }} vistas
-                            {{ pub.published_at.strftime('%d %b %Y') }} •
-                            Por {{ pub.author }}
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
                         </small>
                         <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" 
                             class="btn btn-outline-primary btn-sm">
@@ -143,6 +179,9 @@
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <p class="text-secondary">No hay otras publicaciones.</p>
+    {% endif %}
 
     <!-- 5. Sociales y Cultura -->
     {% if sociales_y_cultura %}
@@ -157,7 +196,18 @@
                     <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
                     <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small><i class="fas fa-eye me-1"></i>{{ pub.view_count }} vistas</small>
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
                         <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
                     </div>
                 </div>
@@ -180,7 +230,18 @@
                     <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
                     <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small><i class="fas fa-eye me-1"></i>{{ pub.view_count }} vistas</small>
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
                         <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
                     </div>
                 </div>
