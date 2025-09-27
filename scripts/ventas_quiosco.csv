@@ -1,0 +1,201 @@
+id_venta,fecha,vendedor,producto,categoria,cantidad,precio_unitario,total_venta,hora,metodo_pago
+1,2024-03-22,Maria Gonzalez,Alfajor Jorgito,Galletitas,1,500,500,09:01,Transferencia
+2,2024-01-14,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,18:47,Efectivo
+3,2024-01-04,Maria Gonzalez,Alfajor Guaymaren,Galletitas,2,450,900,09:13,Transferencia
+4,2024-01-26,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,19:41,Transferencia
+5,2024-02-05,Carlos Rodriguez,Papas Pringles 100g,Snacks,2,1200,2400,08:48,Tarjeta
+6,2024-01-20,Carlos Rodriguez,Chicles Beldent,Golosinas,1,300,300,11:48,Efectivo
+7,2024-02-15,Juan Perez,Alfajor Jorgito,Galletitas,3,500,1500,13:38,Tarjeta
+8,2024-03-09,Carlos Rodriguez,Snickers 50g,Golosinas,1,500,500,09:59,Transferencia
+9,2024-03-20,Maria Gonzalez,Maní Japonés 80g,Snacks,2,700,1400,13:36,Transferencia
+10,2024-01-30,Carlos Rodriguez,Alfajor Guaymaren,Galletitas,3,450,1350,12:05,Tarjeta
+11,2024-02-28,Carlos Rodriguez,Caramelos Arcor,Golosinas,1,200,200,18:53,Efectivo
+12,2024-03-26,Maria Gonzalez,Sprite 500ml,Bebidas,2,1100,2200,12:44,Transferencia
+13,2024-02-01,Juan Perez,Snickers 50g,Golosinas,1,500,500,10:29,Transferencia
+14,2024-03-12,Maria Gonzalez,Chicles Beldent,Golosinas,3,300,900,11:43,Efectivo
+15,2024-01-05,Juan Perez,Alfajor Jorgito,Galletitas,1,500,500,13:25,Transferencia
+16,2024-02-10,Juan Perez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,11:41,Tarjeta
+17,2024-01-19,Juan Perez,Alfajor Guaymaren,Galletitas,2,450,900,12:08,Tarjeta
+18,2024-03-15,Maria Gonzalez,Barra Cereal,Golosinas,1,400,400,14:57,Efectivo
+19,2024-03-06,Maria Gonzalez,Pepsi 500ml,Bebidas,3,1100,3300,15:05,Transferencia
+20,2024-01-21,Carlos Rodriguez,Chocolate Águila,Golosinas,1,700,700,18:27,Transferencia
+21,2024-02-29,Maria Gonzalez,Diario Clarín,Diarios,3,600,1800,16:16,Transferencia
+22,2024-01-15,Juan Perez,Diario Clarín,Diarios,3,600,1800,18:56,Tarjeta
+23,2024-01-15,Juan Perez,Papas Pringles 100g,Snacks,1,1200,1200,12:27,Transferencia
+24,2024-02-03,Maria Gonzalez,Papas Pringles 100g,Snacks,2,1200,2400,16:48,Transferencia
+25,2024-02-08,Carlos Rodriguez,Chocolate Águila,Golosinas,1,700,700,18:32,Efectivo
+26,2024-03-10,Carlos Rodriguez,Coca-Cola 500ml,Bebidas,2,1200,2400,16:58,Efectivo
+27,2024-01-15,Maria Gonzalez,Galletitas Oreo,Galletitas,1,900,900,13:56,Transferencia
+28,2024-01-11,Juan Perez,Cigarrillos Philip Morris,Tabaco,3,2400,7200,09:46,Efectivo
+29,2024-01-17,Juan Perez,Diario Clarín,Diarios,1,600,600,18:30,Transferencia
+30,2024-02-24,Juan Perez,Diario Clarín,Diarios,3,600,1800,11:59,Efectivo
+31,2024-02-09,Juan Perez,Caramelos Arcor,Golosinas,1,200,200,14:42,Tarjeta
+32,2024-01-16,Juan Perez,Sprite 500ml,Bebidas,1,1100,1100,11:14,Transferencia
+33,2024-01-30,Juan Perez,Coca-Cola 500ml,Bebidas,1,1200,1200,17:14,Efectivo
+34,2024-01-30,Maria Gonzalez,Pepsi 500ml,Bebidas,3,1100,3300,09:57,Transferencia
+35,2024-01-31,Maria Gonzalez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,12:42,Transferencia
+36,2024-03-14,Carlos Rodriguez,Alfajor Guaymaren,Galletitas,3,450,1350,17:30,Efectivo
+37,2024-01-13,Carlos Rodriguez,KitKat 45g,Golosinas,1,500,500,09:42,Tarjeta
+38,2024-01-07,Juan Perez,Agua Mineral 500ml,Bebidas,1,600,600,18:41,Tarjeta
+39,2024-01-14,Maria Gonzalez,Maní Japonés 80g,Snacks,2,700,1400,11:12,Tarjeta
+40,2024-01-24,Maria Gonzalez,Alfajor Guaymaren,Galletitas,3,450,1350,12:29,Tarjeta
+41,2024-03-11,Maria Gonzalez,Diario Clarín,Diarios,3,600,1800,09:03,Efectivo
+42,2024-01-22,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,14:31,Efectivo
+43,2024-01-22,Carlos Rodriguez,Snickers 50g,Golosinas,1,500,500,14:00,Tarjeta
+44,2024-02-24,Carlos Rodriguez,Diario Clarín,Diarios,2,600,1200,19:46,Efectivo
+45,2024-01-25,Juan Perez,Pepsi 500ml,Bebidas,2,1100,2200,12:13,Efectivo
+46,2024-02-10,Juan Perez,Barra Cereal,Golosinas,1,400,400,08:03,Efectivo
+47,2024-01-08,Maria Gonzalez,Papas Pringles 100g,Snacks,1,1200,1200,16:05,Transferencia
+48,2024-01-31,Juan Perez,Barra Cereal,Golosinas,1,400,400,14:07,Efectivo
+49,2024-03-20,Carlos Rodriguez,Barra Cereal,Golosinas,2,400,800,09:26,Tarjeta
+50,2024-01-27,Carlos Rodriguez,Chicles Beldent,Golosinas,1,300,300,18:45,Efectivo
+51,2024-03-26,Maria Gonzalez,Cigarrillos Marlboro,Tabaco,1,2500,2500,18:19,Efectivo
+52,2024-02-28,Maria Gonzalez,Agua Mineral 500ml,Bebidas,1,600,600,17:36,Transferencia
+53,2024-02-03,Maria Gonzalez,Caramelos Arcor,Golosinas,3,200,600,10:59,Tarjeta
+54,2024-02-06,Juan Perez,Diario Clarín,Diarios,2,600,1200,10:28,Transferencia
+55,2024-03-08,Juan Perez,Diario Clarín,Diarios,1,600,600,08:42,Efectivo
+56,2024-01-18,Maria Gonzalez,Agua Mineral 500ml,Bebidas,2,600,1200,12:07,Tarjeta
+57,2024-02-06,Juan Perez,Chicles Beldent,Golosinas,1,300,300,17:13,Tarjeta
+58,2024-03-05,Carlos Rodriguez,Pepsi 500ml,Bebidas,1,1100,1100,15:16,Tarjeta
+59,2024-01-06,Carlos Rodriguez,Papas Lays 90g,Snacks,2,800,1600,08:21,Efectivo
+60,2024-02-26,Maria Gonzalez,KitKat 45g,Golosinas,2,500,1000,16:45,Efectivo
+61,2024-03-29,Juan Perez,Pepsi 500ml,Bebidas,3,1100,3300,10:34,Transferencia
+62,2024-01-19,Maria Gonzalez,Pepsi 500ml,Bebidas,1,1100,1100,14:08,Tarjeta
+63,2024-01-27,Juan Perez,Agua Mineral 500ml,Bebidas,1,600,600,18:15,Tarjeta
+64,2024-03-20,Maria Gonzalez,Alfajor Guaymaren,Galletitas,3,450,1350,19:09,Tarjeta
+65,2024-01-04,Carlos Rodriguez,Chicles Beldent,Golosinas,3,300,900,10:47,Transferencia
+66,2024-02-01,Maria Gonzalez,Agua Mineral 500ml,Bebidas,1,600,600,12:10,Tarjeta
+67,2024-01-29,Maria Gonzalez,Cigarrillos Marlboro,Tabaco,1,2500,2500,11:52,Efectivo
+68,2024-01-04,Maria Gonzalez,Snickers 50g,Golosinas,1,500,500,18:12,Tarjeta
+69,2024-02-14,Juan Perez,Snickers 50g,Golosinas,2,500,1000,18:32,Tarjeta
+70,2024-01-04,Carlos Rodriguez,Alfajor Jorgito,Galletitas,1,500,500,09:56,Efectivo
+71,2024-01-14,Carlos Rodriguez,Caramelos Arcor,Golosinas,2,200,400,17:27,Tarjeta
+72,2024-03-18,Maria Gonzalez,Snickers 50g,Golosinas,3,500,1500,16:07,Tarjeta
+73,2024-01-06,Juan Perez,Coca-Cola 500ml,Bebidas,2,1200,2400,19:27,Transferencia
+74,2024-03-26,Juan Perez,KitKat 45g,Golosinas,1,500,500,11:23,Tarjeta
+75,2024-03-20,Carlos Rodriguez,Agua Mineral 500ml,Bebidas,2,600,1200,13:42,Transferencia
+76,2024-02-09,Carlos Rodriguez,Chicles Beldent,Golosinas,1,300,300,18:26,Transferencia
+77,2024-01-17,Maria Gonzalez,Snickers 50g,Golosinas,2,500,1000,11:26,Transferencia
+78,2024-03-13,Carlos Rodriguez,Diario Clarín,Diarios,3,600,1800,12:25,Tarjeta
+79,2024-01-27,Carlos Rodriguez,Barra Cereal,Golosinas,2,400,800,14:50,Tarjeta
+80,2024-02-26,Juan Perez,Maní Japonés 80g,Snacks,2,700,1400,15:43,Efectivo
+81,2024-03-25,Juan Perez,Revista Barcelona,Revistas,2,1500,3000,09:18,Tarjeta
+82,2024-01-12,Maria Gonzalez,Galletitas Oreo,Galletitas,1,900,900,11:43,Efectivo
+83,2024-01-04,Maria Gonzalez,Cigarrillos Philip Morris,Tabaco,2,2400,4800,08:15,Tarjeta
+84,2024-02-23,Carlos Rodriguez,Maní Japonés 80g,Snacks,2,700,1400,18:36,Tarjeta
+85,2024-02-21,Maria Gonzalez,Coca-Cola 500ml,Bebidas,3,1200,3600,11:09,Tarjeta
+86,2024-01-29,Juan Perez,Revista Barcelona,Revistas,1,1500,1500,10:51,Efectivo
+87,2024-01-16,Juan Perez,Cigarrillos Marlboro,Tabaco,2,2500,5000,15:08,Transferencia
+88,2024-02-10,Juan Perez,Revista Barcelona,Revistas,1,1500,1500,15:39,Tarjeta
+89,2024-01-21,Maria Gonzalez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,19:55,Transferencia
+90,2024-02-05,Maria Gonzalez,Alfajor Guaymaren,Galletitas,1,450,450,16:31,Transferencia
+91,2024-02-06,Juan Perez,Chicles Beldent,Golosinas,1,300,300,11:17,Efectivo
+92,2024-01-18,Juan Perez,Snickers 50g,Golosinas,2,500,1000,10:14,Efectivo
+93,2024-01-09,Carlos Rodriguez,Chicles Beldent,Golosinas,2,300,600,14:26,Efectivo
+94,2024-01-27,Maria Gonzalez,Barra Cereal,Golosinas,4,400,1600,14:24,Transferencia
+95,2024-02-18,Carlos Rodriguez,Caramelos Arcor,Golosinas,1,200,200,15:00,Tarjeta
+96,2024-03-09,Maria Gonzalez,Diario Clarín,Diarios,3,600,1800,19:47,Tarjeta
+97,2024-01-29,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,12:27,Transferencia
+98,2024-03-27,Maria Gonzalez,Papas Pringles 100g,Snacks,3,1200,3600,14:46,Transferencia
+99,2024-03-09,Juan Perez,Snickers 50g,Golosinas,2,500,1000,08:58,Efectivo
+100,2024-01-11,Maria Gonzalez,Papas Lays 90g,Snacks,3,800,2400,18:27,Efectivo
+101,2024-02-03,Carlos Rodriguez,Maní Japonés 80g,Snacks,1,700,700,14:20,Tarjeta
+102,2024-02-05,Juan Perez,Sprite 500ml,Bebidas,1,1100,1100,14:16,Transferencia
+103,2024-01-07,Juan Perez,Sprite 500ml,Bebidas,3,1100,3300,13:14,Efectivo
+104,2024-01-04,Maria Gonzalez,Coca-Cola 500ml,Bebidas,2,1200,2400,11:12,Efectivo
+105,2024-03-01,Carlos Rodriguez,Barra Cereal,Golosinas,4,400,1600,18:07,Transferencia
+106,2024-02-02,Juan Perez,Chocolate Águila,Golosinas,2,700,1400,13:10,Transferencia
+107,2024-01-15,Carlos Rodriguez,Agua Mineral 500ml,Bebidas,2,600,1200,10:19,Transferencia
+108,2024-03-27,Juan Perez,Maní Japonés 80g,Snacks,1,700,700,14:25,Transferencia
+109,2024-02-01,Juan Perez,Galletitas Oreo,Galletitas,3,900,2700,09:44,Efectivo
+110,2024-03-13,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,08:22,Efectivo
+111,2024-03-05,Carlos Rodriguez,Coca-Cola 500ml,Bebidas,3,1200,3600,18:21,Efectivo
+112,2024-02-25,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,2,2500,5000,13:40,Efectivo
+113,2024-03-07,Juan Perez,Chocolate Águila,Golosinas,3,700,2100,18:17,Tarjeta
+114,2024-02-29,Maria Gonzalez,Barra Cereal,Golosinas,1,400,400,14:52,Efectivo
+115,2024-02-05,Juan Perez,Cigarrillos Marlboro,Tabaco,2,2500,5000,15:15,Tarjeta
+116,2024-02-13,Maria Gonzalez,Chicles Beldent,Golosinas,1,300,300,08:31,Tarjeta
+117,2024-02-03,Carlos Rodriguez,Chocolate Águila,Golosinas,2,700,1400,13:17,Transferencia
+118,2024-01-02,Carlos Rodriguez,Sprite 500ml,Bebidas,1,1100,1100,16:12,Tarjeta
+119,2024-03-12,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,2,2400,4800,11:44,Tarjeta
+120,2024-01-03,Maria Gonzalez,Alfajor Guaymaren,Galletitas,1,450,450,09:18,Tarjeta
+121,2024-03-25,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,2,2400,4800,17:23,Tarjeta
+122,2024-03-11,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,1,2500,2500,13:22,Efectivo
+123,2024-01-16,Juan Perez,Chicles Beldent,Golosinas,1,300,300,19:12,Transferencia
+124,2024-01-24,Juan Perez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,11:13,Transferencia
+125,2024-03-17,Carlos Rodriguez,Maní Japonés 80g,Snacks,1,700,700,12:06,Efectivo
+126,2024-02-08,Maria Gonzalez,Diario Clarín,Diarios,1,600,600,08:45,Efectivo
+127,2024-03-11,Carlos Rodriguez,Papas Lays 90g,Snacks,2,800,1600,12:44,Efectivo
+128,2024-01-02,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,17:18,Efectivo
+129,2024-01-07,Maria Gonzalez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,12:55,Tarjeta
+130,2024-03-03,Juan Perez,Pepsi 500ml,Bebidas,1,1100,1100,09:36,Tarjeta
+131,2024-01-11,Juan Perez,Diario Clarín,Diarios,3,600,1800,11:07,Transferencia
+132,2024-03-20,Carlos Rodriguez,Revista Barcelona,Revistas,1,1500,1500,11:49,Tarjeta
+133,2024-03-16,Juan Perez,Barra Cereal,Golosinas,2,400,800,14:19,Transferencia
+134,2024-01-13,Maria Gonzalez,Maní Japonés 80g,Snacks,1,700,700,11:40,Efectivo
+135,2024-01-31,Carlos Rodriguez,Sprite 500ml,Bebidas,1,1100,1100,10:35,Tarjeta
+136,2024-03-29,Carlos Rodriguez,Galletitas Oreo,Galletitas,1,900,900,17:30,Transferencia
+137,2024-02-06,Maria Gonzalez,Cigarrillos Marlboro,Tabaco,1,2500,2500,19:55,Tarjeta
+138,2024-03-21,Juan Perez,Maní Japonés 80g,Snacks,1,700,700,17:42,Efectivo
+139,2024-03-23,Maria Gonzalez,Alfajor Jorgito,Galletitas,3,500,1500,10:58,Efectivo
+140,2024-01-22,Carlos Rodriguez,Barra Cereal,Golosinas,4,400,1600,12:38,Efectivo
+141,2024-02-29,Juan Perez,Snickers 50g,Golosinas,4,500,2000,19:19,Transferencia
+142,2024-03-04,Carlos Rodriguez,Chocolate Águila,Golosinas,1,700,700,15:05,Transferencia
+143,2024-02-11,Juan Perez,Coca-Cola 500ml,Bebidas,1,1200,1200,17:16,Transferencia
+144,2024-03-16,Maria Gonzalez,Alfajor Jorgito,Galletitas,2,500,1000,08:48,Tarjeta
+145,2024-03-07,Juan Perez,Alfajor Jorgito,Galletitas,1,500,500,18:28,Tarjeta
+146,2024-03-22,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,15:05,Tarjeta
+147,2024-03-26,Juan Perez,Papas Pringles 100g,Snacks,1,1200,1200,09:54,Tarjeta
+148,2024-02-06,Maria Gonzalez,Diario Clarín,Diarios,1,600,600,18:25,Tarjeta
+149,2024-02-02,Maria Gonzalez,Snickers 50g,Golosinas,3,500,1500,13:07,Transferencia
+150,2024-03-10,Carlos Rodriguez,Pepsi 500ml,Bebidas,1,1100,1100,15:26,Transferencia
+151,2024-03-04,Juan Perez,Pepsi 500ml,Bebidas,1,1100,1100,18:28,Efectivo
+152,2024-02-06,Juan Perez,Cigarrillos Philip Morris,Tabaco,1,2400,2400,15:56,Transferencia
+153,2024-01-31,Juan Perez,Galletitas Oreo,Galletitas,2,900,1800,19:10,Tarjeta
+154,2024-01-12,Maria Gonzalez,Agua Mineral 500ml,Bebidas,1,600,600,11:53,Transferencia
+155,2024-01-20,Carlos Rodriguez,Galletitas Oreo,Galletitas,2,900,1800,15:59,Tarjeta
+156,2024-03-02,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,2,2500,5000,15:15,Efectivo
+157,2024-03-17,Carlos Rodriguez,Papas Lays 90g,Snacks,3,800,2400,16:47,Tarjeta
+158,2024-02-13,Carlos Rodriguez,Coca-Cola 500ml,Bebidas,1,1200,1200,16:17,Transferencia
+159,2024-03-15,Carlos Rodriguez,Papas Lays 90g,Snacks,1,800,800,18:31,Tarjeta
+160,2024-02-12,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,16:48,Efectivo
+161,2024-03-30,Carlos Rodriguez,Snickers 50g,Golosinas,1,500,500,11:36,Efectivo
+162,2024-02-10,Juan Perez,Snickers 50g,Golosinas,1,500,500,19:30,Transferencia
+163,2024-01-20,Juan Perez,Papas Lays 90g,Snacks,2,800,1600,15:02,Tarjeta
+164,2024-01-13,Maria Gonzalez,Revista Barcelona,Revistas,4,1500,6000,15:06,Transferencia
+165,2024-01-19,Carlos Rodriguez,Papas Lays 90g,Snacks,1,800,800,14:55,Tarjeta
+166,2024-03-20,Juan Perez,Sprite 500ml,Bebidas,3,1100,3300,19:25,Transferencia
+167,2024-02-18,Maria Gonzalez,Cigarrillos Philip Morris,Tabaco,3,2400,7200,13:40,Transferencia
+168,2024-01-09,Juan Perez,Galletitas Oreo,Galletitas,5,900,4500,11:40,Efectivo
+169,2024-02-25,Juan Perez,Agua Mineral 500ml,Bebidas,1,600,600,09:48,Tarjeta
+170,2024-01-04,Carlos Rodriguez,Pepsi 500ml,Bebidas,1,1100,1100,08:20,Tarjeta
+171,2024-01-19,Maria Gonzalez,KitKat 45g,Golosinas,2,500,1000,11:33,Efectivo
+172,2024-01-23,Maria Gonzalez,Snickers 50g,Golosinas,2,500,1000,09:39,Tarjeta
+173,2024-03-15,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,2,2500,5000,10:14,Tarjeta
+174,2024-03-26,Juan Perez,Cigarrillos Marlboro,Tabaco,4,2500,10000,08:57,Transferencia
+175,2024-01-21,Carlos Rodriguez,Caramelos Arcor,Golosinas,5,200,1000,09:28,Transferencia
+176,2024-02-24,Maria Gonzalez,Cigarrillos Marlboro,Tabaco,3,2500,7500,19:16,Tarjeta
+177,2024-03-02,Juan Perez,Snickers 50g,Golosinas,2,500,1000,09:15,Tarjeta
+178,2024-03-30,Juan Perez,Snickers 50g,Golosinas,1,500,500,12:01,Transferencia
+179,2024-01-07,Carlos Rodriguez,Cigarrillos Philip Morris,Tabaco,3,2400,7200,17:47,Efectivo
+180,2024-03-18,Juan Perez,Maní Japonés 80g,Snacks,2,700,1400,13:14,Transferencia
+181,2024-03-25,Juan Perez,Papas Lays 90g,Snacks,2,800,1600,18:53,Transferencia
+182,2024-01-06,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,1,2500,2500,12:50,Transferencia
+183,2024-01-17,Carlos Rodriguez,Galletitas Oreo,Galletitas,1,900,900,09:58,Efectivo
+184,2024-01-26,Carlos Rodriguez,Diario Clarín,Diarios,3,600,1800,10:50,Transferencia
+185,2024-03-05,Carlos Rodriguez,Papas Pringles 100g,Snacks,1,1200,1200,12:53,Tarjeta
+186,2024-02-13,Maria Gonzalez,Sprite 500ml,Bebidas,1,1100,1100,09:29,Transferencia
+187,2024-03-27,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,14:54,Efectivo
+188,2024-02-03,Juan Perez,Cigarrillos Marlboro,Tabaco,1,2500,2500,16:07,Transferencia
+189,2024-02-03,Maria Gonzalez,Caramelos Arcor,Golosinas,1,200,200,17:24,Tarjeta
+190,2024-01-04,Juan Perez,Diario Clarín,Diarios,1,600,600,17:56,Efectivo
+191,2024-03-23,Carlos Rodriguez,Cigarrillos Marlboro,Tabaco,4,2500,10000,09:40,Transferencia
+192,2024-02-22,Carlos Rodriguez,Pepsi 500ml,Bebidas,4,1100,4400,09:08,Tarjeta
+193,2024-01-15,Carlos Rodriguez,Diario Clarín,Diarios,1,600,600,09:15,Tarjeta
+194,2024-03-26,Juan Perez,Diario Clarín,Diarios,1,600,600,19:44,Transferencia
+195,2024-01-20,Juan Perez,Agua Mineral 500ml,Bebidas,3,600,1800,14:41,Tarjeta
+196,2024-02-05,Carlos Rodriguez,Caramelos Arcor,Golosinas,1,200,200,08:44,Efectivo
+197,2024-02-16,Juan Perez,Caramelos Arcor,Golosinas,2,200,400,09:43,Tarjeta
+198,2024-01-08,Carlos Rodriguez,Maní Japonés 80g,Snacks,4,700,2800,14:17,Efectivo
+199,2024-03-25,Maria Gonzalez,Chocolate Águila,Golosinas,5,700,3500,11:41,Tarjeta
+200,2024-02-01,Juan Perez,Barra Cereal,Golosinas,1,400,400,10:50,Efectivo

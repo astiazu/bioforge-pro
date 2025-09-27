@@ -119,8 +119,18 @@ def create_app():
                 api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
                 secure=True
             )
-
+        
+        register_cli_commands(app)
+        
     return app
+
+# === Comandos CLI personalizados ===
+def register_cli_commands(app):
+    @app.cli.command("sync-sequences")
+    def sync_sequences_command():
+        """Sincroniza secuencias de PostgreSQL tras migración."""
+        from scripts.sync_sequences import sync_all_sequences
+        sync_all_sequences()
 
 # ✅ Instancia para gunicorn (Render)
 app = create_app()
