@@ -13,6 +13,9 @@ import string
 import secrets
 import traceback
 
+
+from app.models import *
+
 from datetime import datetime, timedelta, date
 from collections import defaultdict
 from io import StringIO
@@ -3731,3 +3734,1867 @@ def inject_active_assistant():
             return {'active_assistant': assistant}
     return {'active_assistant': None}
 
+@routes.route('/init-db-render', methods=['POST'])
+def init_db_render():
+    # 🔒 Protección con secreto
+    secret = os.environ.get("INIT_DB_SECRET")
+    if request.args.get("secret") != secret:
+        return {"error": "Acceso denegado"}, 403
+
+    try:
+        # 1. Vaciar tablas en orden inverso a las FKs
+        tables_to_clear = [
+            Task, Note, Publication, Appointment, MedicalRecord,
+            Assistant, Schedule, Availability, Clinic,
+            User, UserRole, Subscriber, CompanyInvite, InvitationLog
+        ]
+        for model in tables_to_clear:
+            db.session.query(model).delete()
+        db.session.commit()
+
+        # 2. Cargar datos desde fixtures.json (embebido)
+        # Pega aquí el contenido de tu fixtures.json como un dict
+        DATA = {
+        "user_roles": [
+            {
+            "id": 1,
+            "name": "Profesional",
+            "description": "Profesional de la salud",
+            "is_active": True,
+            "created_at": "2025-09-15T12:49:15.089596"
+            },
+            {
+            "id": 2,
+            "name": "Tienda",
+            "description": "Tienda de productos",
+            "is_active": True,
+            "created_at": "2025-09-15T12:49:15.149453"
+            },
+            {
+            "id": 3,
+            "name": "Visitante",
+            "description": "Usuario visitante",
+            "is_active": True,
+            "created_at": "2025-09-15T12:49:15.207350"
+            },
+            {
+            "id": 4,
+            "name": "Paciente",
+            "description": "Paciente",
+            "is_active": True,
+            "created_at": "2025-09-15T12:49:15.261005"
+            }
+        ],
+        "users": [
+            {
+            "id": 4,
+            "username": "El Vasquito",
+            "email": "elvasquito16@gmail.com",
+            "password_hash": "scrypt:32768:8:1$fAuN0TQivk9YugLQ$1d584cf5ccfd8bde4fe86a34324b6e45b6bcc9ed38ecc0ce58d6c6fa5a829ded1e58da31317dae17a24603e356cafd9d53dd627c69e65183b8f6defdef9350e3",
+            "is_admin": False,
+            "is_professional": True,
+            "created_at": "2025-09-15T22:53:36.025149",
+            "updated_at": "2025-09-15T23:01:06.356271",
+            "url_slug": "el-vasquito",
+            "professional_category": None,
+            "specialty": "Corralón  y Materiales para la construcción",
+            "bio": "Una pequeña descripcion de la biografia/historia",
+            "years_experience": 30,
+            "profile_photo": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757977265/profiles/profile_4.png",
+            "license_number": "1889",
+            "services": "Materiales para la construcción\r\nHormigón Armado\r\nTransporte y logística",
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 5,
+            "username": "JoseLuis",
+            "email": "astiazu@hotmail.com",
+            "password_hash": "scrypt:32768:8:1$lP4evFrgZ2rCSEH2$6c8d16c7d0058ef81d6b0318c30ff70138b65ef54b7ebc1fb63a94fa2ef3dd97eb32c94b54b49d653bf438c4557baffaaa39fd12afff67919eddaca5c06c387b",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-15T23:09:03.927790",
+            "updated_at": "2025-09-15T23:09:03.927796",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 3,
+            "username": "Quique Spada",
+            "email": "spadaenrique@gmail.com",
+            "password_hash": "scrypt:32768:8:1$O3aEVb0gSCNXegRo$b0cbd75d52522d710962f3b2aabace4afa39ac13da8c7becc115a643173e60d561d6e08d39eb1e74444e9452c66f08936f864bac1929de242d38d26f019e1bd8",
+            "is_admin": False,
+            "is_professional": True,
+            "created_at": "2025-09-15T15:57:34.892438",
+            "updated_at": "2025-09-15T21:57:39.416671",
+            "url_slug": "quique-spada",
+            "professional_category": None,
+            "specialty": "Empresario - Dj",
+            "bio": "Socio fundador en el año 1979 de la Productora AUDIVISIÓN - hasta 1981 -\r\nPerfil · Creador digital\r\nPropietario y Creativo de SonrisasProducciones en sonrisas producciones\r\nGerente Propietario en sonrisas producciones",
+            "years_experience": 40,
+            "profile_photo": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757952072/profiles/profile_3.jpg",
+            "license_number": "007",
+            "services": "Entretenimientos - Diversión",
+            "skills": None,
+            "role_name": "user",
+            "role_id": 1
+            },
+            {
+            "id": 10,
+            "username": "patricia.schifini",
+            "email": "patricia.schifini@gmail.com",
+            "password_hash": "scrypt:32768:8:1$nfnexY6RRdbJsU1I$290abae3a52614fb119a5d7c5976fc918d06af2f8acce68077276eee7cbc6ae18eb3807437d1191cf800bd3c9d693974420525850cbfc39546720c1fae0a4fe8",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T13:17:39.993785",
+            "updated_at": "2025-09-18T13:23:03.182494",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": 3
+            },
+            {
+            "id": 7,
+            "username": "Mabel",
+            "email": "macalu1966@gmail.com",
+            "password_hash": "scrypt:32768:8:1$AhXnS31WIaSkLwzr$94f1dce240cf32cd781fd471f834265592bbeb1540cd0503dbe8eae13db45a7bf556f5ae3e85df387b584bd57b132654330ad9d2b2c0df2a28b5c9b76873e0ae",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-16T20:15:42.909522",
+            "updated_at": "2025-09-16T20:15:42.909529",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": 3
+            },
+            {
+            "id": 12,
+            "username": "macalu66",
+            "email": "macalu66@hotmail.com",
+            "password_hash": "scrypt:32768:8:1$9xquiPX71EBGL5ZZ$7896ee4c27fe8fc5bab07b85f43a061e1e04314b77b5917b4ed33e4a8762178cedd51bae8263c1db86ae1c7dc6ee111052106557f4591023d6afe880993479ff",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T13:38:59.795792",
+            "updated_at": "2025-09-18T13:38:59.795799",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 8,
+            "username": "emiliano",
+            "email": "emipaz1975@hotmail.com",
+            "password_hash": "scrypt:32768:8:1$Gy8BpuDHUKD7R9Ss$a4d4add1d7788e4d62121039ce6073badbc7a8d155a79df43e6609a12fb73f72f8d0a50f7317061cd603d8ece750dd26a3753c2c524809ecad4ecb45b0674e62",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-17T19:37:59.412573",
+            "updated_at": "2025-09-17T19:37:59.412580",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 2,
+            "username": "astiazu.joseluis",
+            "email": "astiazu@gmail.com",
+            "password_hash": "scrypt:32768:8:1$vIyDsdbeUB55kvOl$ec1ad02d35b0ed378acd81104d7b697ebc6606a06ddd57c1a30ff0104de86f58a1062008eb3e04ac2dcb53f6afd1e24a0b3fd7a7ebf04abfa75407e81f69f4c1",
+            "is_admin": True,
+            "is_professional": True,
+            "created_at": "2025-09-15T13:59:29.501659",
+            "updated_at": "2025-09-18T10:20:48.380188",
+            "url_slug": "astiazu-joseluis",
+            "professional_category": None,
+            "specialty": "Analista de Sistemas",
+            "bio": "Soy analista de sistemas, orientado hacia los resultados y con excelentes dotes comunicativas. También cuento con conocimiento en análisis de datos. A partir del año 2020 volví a la programación gracias a la Cooperativa del Centro de Graduados de la Facultad de Ingeniería - FIUBA -, inicialmente con Python y luego Data Analytics con Google. Desaprender y aprender ha sido un desafío constante en materia de tecnología. Agradecido de poder hacerlo.",
+            "years_experience": 30,
+            "profile_photo": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757945404/profiles/profile_2.jpg",
+            "license_number": "3571",
+            "services": "Analisis de Datos, Big Data, Automatización, Consultorías, Formación.",
+            "skills": None,
+            "role_name": "user",
+            "role_id": 1
+            },
+            {
+            "id": 14,
+            "username": "elvasqito",
+            "email": "elvasqito@hotmail.com",
+            "password_hash": "scrypt:32768:8:1$knbX3b3pbRjGgdir$afb0269b4b460b6f0dfd666535cecd94f062a9d530f6ff8e81e8e53313bb4e957ab597e1d14d51af6aeaee549992bb24dc4152be3e343d3f1625839c8e4c2660",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T20:00:20.207330",
+            "updated_at": "2025-09-18T20:00:20.207342",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 15,
+            "username": "lucaastiazu0",
+            "email": "lucaastiazu0@gmail.com",
+            "password_hash": "scrypt:32768:8:1$IW4EEw9OWwlzWGxx$60db46247ef0cf3a747e929523d46cd9e2f6456a585147c604c165aa81ad65b5bc68895af634d495dc92a9b5fe836b23be2a2269637ea420c38fe86d8da68802",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T20:06:51.606432",
+            "updated_at": "2025-09-18T20:06:51.606438",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 6,
+            "username": "CD3 -Arq. - Salvador",
+            "email": "salvadorcirio@gmail.com",
+            "password_hash": "scrypt:32768:8:1$Be9cpv3TcL7UKT4U$733dd90611103ce16ffd218f7bd2a77a13dea6a264c6b38bb17dfd184db6637063f7e12cf20f90284e45e99ad56292493d9b0290683a380065fd454bd6ca809c",
+            "is_admin": False,
+            "is_professional": True,
+            "created_at": "2025-09-16T18:30:47.767281",
+            "updated_at": "2025-09-19T15:31:56.509464",
+            "url_slug": "salvador",
+            "professional_category": None,
+            "specialty": "Proyect Líder Licenciado en Sistemas",
+            "bio": "None",
+            "years_experience": 10000,
+            "profile_photo": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758198899/profiles/profile_6.jpg",
+            "license_number": "None",
+            "services": "None",
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 1,
+            "username": "admin",
+            "email": "admin@local",
+            "password_hash": "scrypt:32768:8:1$R9CNmjywCnwEtxq4$08a882ad07c5c738f38ad70cf98ec0aaec887a9f19f7ff1a098c0307c8b15fe3a5a0d3e0b0765a7667271faa9ddab891334a3f0b9f22d9b01bea0d1773cb6b49",
+            "is_admin": True,
+            "is_professional": False,
+            "created_at": "2025-09-15T12:49:15.506259",
+            "updated_at": "2025-09-26T23:55:51.712576",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": 1
+            },
+            {
+            "id": 13,
+            "username": "Stefy",
+            "email": "stefyocen99@gmail.com",
+            "password_hash": "scrypt:32768:8:1$AtUBEHv74RI4Xedq$5d870fa4dc19514da66aac717d13a882efc9747ede3cee3fd8da57d3a89c1e5b4923db49c34b2b9db4f14190754f874ce2d4bd261802924651934b1604e573ae",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T13:50:13.501320",
+            "updated_at": "2025-09-26T23:57:01.345353",
+            "url_slug": "stefy",
+            "professional_category": None,
+            "specialty": "None",
+            "bio": "None",
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": "None",
+            "services": "None",
+            "skills": None,
+            "role_name": "user",
+            "role_id": None,
+            },
+            {
+            "id": 9,
+            "username": "Marcela",
+            "email": "holisticotre@gmail.com",
+            "password_hash": "scrypt:32768:8:1$cv6EWv5DYHyNEqkc$bc29fb459f2cd0f795d44942b8dde3edbe3edb2f98267980587a573b644bd1e6cc7400c84965771f2907bb8a47cd8cdf751fd56bcc7c80f61a92618dcc60f8a6",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-18T13:06:58.894439",
+            "updated_at": "2025-09-27T14:59:46.447027",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": 3
+            },
+            {
+            "id": 16,
+            "username": "Usuario Prueba",
+            "email": "usuarioprueba@bioforge.test",
+            "password_hash": "scrypt:32768:8:1$yOO3iZKZ8PV539lU$e4b58889ac9e7fb2ac17a044a095d063aeff61969550e4c673f4d75df5aca234bfcbebda8ecf2cdd78b603892019d8af0e7c280418b4339aa00d4e5bbcd29f74",
+            "is_admin": False,
+            "is_professional": False,
+            "created_at": "2025-09-27T18:11:02.644654",
+            "updated_at": "2025-09-27T18:11:02.644654",
+            "url_slug": None,
+            "professional_category": None,
+            "specialty": None,
+            "bio": None,
+            "years_experience": None,
+            "profile_photo": None,
+            "license_number": None,
+            "services": None,
+            "skills": None,
+            "role_name": "user",
+            "role_id": None
+            }
+        ],
+        "subscribers": [
+            {
+            "id": 1,
+            "email": "holisticotre@gmail.com",
+            "subscribed_at": "2025-09-18T13:06:58.181810"
+            },
+            {
+            "id": 2,
+            "email": "patricia.schifini@gmail.com",
+            "subscribed_at": "2025-09-18T13:17:39.171417"
+            },
+            {
+            "id": 3,
+            "email": "macalu66@hotmail.com",
+            "subscribed_at": "2025-09-18T13:38:59.033380"
+            },
+            {
+            "id": 4,
+            "email": "elvasqito@hotmail.com",
+            "subscribed_at": "2025-09-18T20:00:19.489848"
+            },
+            {
+            "id": 5,
+            "email": "lucaastiazu0@gmail.com",
+            "subscribed_at": "2025-09-18T20:06:50.750662"
+            }
+        ],
+        "clinic": [
+            {
+            "id": 2,
+            "name": "Corralon El Vasquito - 9 de Julio -",
+            "address": "9 de julio - Mina Clavero",
+            "phone": "+5493544470679",
+            "specialty": "Construcción y Venta de Materiales",
+            "doctor_id": 4,
+            "is_active": True
+            },
+            {
+            "id": 3,
+            "name": "Gina 1",
+            "address": "Quesada 4380",
+            "phone": "",
+            "specialty": "",
+            "doctor_id": 6,
+            "is_active": True
+            },
+            {
+            "id": 1,
+            "name": "Datos Consultora",
+            "address": "Villa Urquiza",
+            "phone": "+5493544404054",
+            "specialty": "Tecnología - Automatización - Big Data",
+            "doctor_id": 2,
+            "is_active": True
+            },
+            {
+            "id": 4,
+            "name": "GINA 1",
+            "address": "QUESADA 4380",
+            "phone": "+5492344441364",
+            "specialty": "ARQUITECTURA",
+            "doctor_id": 13,
+            "is_active": True
+            },
+            {
+            "id": 5,
+            "name": "Palomar",
+            "address": "Virasoro 586",
+            "phone": "+5491160524863",
+            "specialty": "Tecnología",
+            "doctor_id": 2,
+            "is_active": True
+            }
+        ],
+        "assistants": [
+            {
+            "id": 2,
+            "name": "Rodolfo",
+            "email": "rodolfo@gmail.com",
+            "whatsapp": "+541176376566",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.869541",
+            "clinic_id": 1,
+            "doctor_id": 2,
+            "telegram_id": "6210586580",
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 3,
+            "name": "Mabel",
+            "email": "macalu1966@gmail.com",
+            "whatsapp": "+5491160524863",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.884186",
+            "clinic_id": None,
+            "doctor_id": 2,
+            "telegram_id": "6210586580",
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 4,
+            "name": "Luca",
+            "email": "elvasquito16@gmail.com",
+            "whatsapp": "+5493544570009",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.890045",
+            "clinic_id": None,
+            "doctor_id": 4,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 6,
+            "name": "PERRO",
+            "email": "astiazu@gmail.com",
+            "whatsapp": "+5493544404054",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.974037",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 14,
+            "name": "Benitez",
+            "email": "",
+            "whatsapp": "5491165964909",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.987709",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 9,
+            "name": "Claudio",
+            "email": "",
+            "whatsapp": "+5491154571803",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:28.997475",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 15,
+            "name": "Candela",
+            "email": "",
+            "whatsapp": "+5491160152137",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.003339",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 8,
+            "name": "Agustin",
+            "email": "",
+            "whatsapp": "+5491127567346",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.009194",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 10,
+            "name": "Vicente Pintor",
+            "email": "",
+            "whatsapp": "+5491134989650",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.110760",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 12,
+            "name": "Alejandro electricista",
+            "email": "",
+            "whatsapp": "+5491170611762",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.390065",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 11,
+            "name": "William Albañil",
+            "email": "",
+            "whatsapp": "+5491130396026",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.496511",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 13,
+            "name": "Juan electricista",
+            "email": "",
+            "whatsapp": "+5491134990533",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.501397",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 5,
+            "name": "juan cirio",
+            "email": "",
+            "whatsapp": "+5491161329953",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.572684",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 7,
+            "name": "Stefy",
+            "email": "",
+            "whatsapp": "+5492344441364",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.583424",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 16,
+            "name": "Emiliano",
+            "email": "emiliano@gmail.com",
+            "whatsapp": "+5491162919904",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.588797",
+            "clinic_id": None,
+            "doctor_id": 2,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 17,
+            "name": "Gustavo Pendex",
+            "email": "gusty5873@GMAIL.COM",
+            "whatsapp": "+5491169660766",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.595635",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 18,
+            "name": "Junior",
+            "email": "jarajunior5@gmail.com",
+            "whatsapp": "+5491125460229",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.609307",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 19,
+            "name": "Stefy",
+            "email": "stefyocen99@gmail.com",
+            "whatsapp": "",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.633719",
+            "clinic_id": 5,
+            "doctor_id": 2,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 21,
+            "name": "Jose Herrero",
+            "email": "",
+            "whatsapp": "+5491150248868",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.672787",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 22,
+            "name": "Alberto Plomero",
+            "email": "",
+            "whatsapp": "+5491165526968",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.682551",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 20,
+            "name": "Alfredo Pintor",
+            "email": "",
+            "whatsapp": "+5491168804039",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.687436",
+            "clinic_id": None,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 23,
+            "name": "PRIMITIVO BOLITA",
+            "email": "",
+            "whatsapp": "+5491140641851",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.696225",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 24,
+            "name": "Martin yerno Benitez",
+            "email": "",
+            "whatsapp": "+5491123549775",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.849549",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            },
+            {
+            "id": 25,
+            "name": "David",
+            "email": "",
+            "whatsapp": "+5491172233722",
+            "is_active": True,
+            "created_at": "2025-09-26T23:02:29.858338",
+            "clinic_id": 3,
+            "doctor_id": 6,
+            "telegram_id": None,
+            "type": "common",
+            "user_id": None,
+            "created_by_user_id": None
+            }
+        ],
+        "schedules": [],
+        "availability": [],
+        "appointments": [],
+        "medical_records": [],
+        "tasks": [
+            {
+            "id": 44,
+            "title": "4 a",
+            "description": "arreglar el zocalo inferiopr del ventanal de living",
+            "due_date": "2025-09-22",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 18,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-22T14:13:04.889157"
+            },
+            {
+            "id": 26,
+            "title": "1 a enduido",
+            "description": "terminacion pared lateral",
+            "due_date": "2025-09-09",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:53:51.026537"
+            },
+            {
+            "id": 45,
+            "title": "4 c pastinar",
+            "description": "pastrinar piso living y habitacion",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:47:06.204792"
+            },
+            {
+            "id": 4,
+            "title": "ubicaciones",
+            "description": "ver como llevar piso departamento por ubicación",
+            "due_date": None,
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 6,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 5,
+            "title": "relacion entre tareas",
+            "description": "ver poder relacionar tareas puras con tareas que surgen de tareas mal hechas",
+            "due_date": None,
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 6,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 6,
+            "title": "Tarea 1",
+            "description": "descripcion tarea 1",
+            "due_date": "2025-09-22",
+            "status": "pending",
+            "doctor_id": 2,
+            "assistant_id": 3,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 7,
+            "title": "Dashboard gestion de tareas",
+            "description": "importante : grafico de evolucion de tareas por asistente",
+            "due_date": "2025-09-26",
+            "status": "in_progress",
+            "doctor_id": 6,
+            "assistant_id": 6,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T11:16:07.420352"
+            },
+            {
+            "id": 46,
+            "title": "4 c Pintar ",
+            "description": "encima de extractador",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:48:06.855202"
+            },
+            {
+            "id": 10,
+            "title": "4 c Benitez",
+            "description": "Benitez mira porque se descascara la pintura del 4 c, decime como solucionamos ese tema porfa",
+            "due_date": "2025-09-17",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 14,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T14:20:11.584355"
+            },
+            {
+            "id": 3,
+            "title": "pastinar 1 a",
+            "description": "ARREGLAR BORDES DE PLACAR DE LA HABITACION. !",
+            "due_date": "2025-09-17",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 17,
+            "title": "TAREA DE PRUEBA PARA VER SI LLEGAN LOS MENSAJES",
+            "description": "BLABLABLA",
+            "due_date": "2025-09-17",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 15,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T17:13:21.970510"
+            },
+            {
+            "id": 8,
+            "title": "2 b pintar zocalos que faltan en todo el departamento",
+            "description": "Verifica y pinta todos los zócalos que faltan pintar en el departamento 2 b",
+            "due_date": "2025-09-17",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T13:41:33.459326"
+            },
+            {
+            "id": 1,
+            "title": "Asignando nueva tarea",
+            "description": "Probando mensajes de telegram",
+            "due_date": "2025-09-20",
+            "status": "completed",
+            "doctor_id": 2,
+            "assistant_id": 3,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 18,
+            "title": "Enviar correo",
+            "description": "Enviame por favor tu correo electrónico. Gracias",
+            "due_date": "2025-09-18",
+            "status": "in_progress",
+            "doctor_id": 2,
+            "assistant_id": 16,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T17:38:27.388166"
+            },
+            {
+            "id": 2,
+            "title": "probando mensajes de telegram",
+            "description": "probando vinculaciones",
+            "due_date": "2025-09-20",
+            "status": "in_progress",
+            "doctor_id": 2,
+            "assistant_id": 2,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-01T08:00:00"
+            },
+            {
+            "id": 19,
+            "title": "6 B EMPROLIJAR VCIGA HABITACION",
+            "description": "PASAR MNOLADORA Y EMPROLIJAR REBARBAS",
+            "due_date": "2025-09-19",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T14:36:09.684803"
+            },
+            {
+            "id": 20,
+            "title": "2 B PASTINAR PISO",
+            "description": "PASTINAR PISO CONTRA ZOCALOS",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T14:59:38.971769"
+            },
+            {
+            "id": 21,
+            "title": "2 b pintar zocalos habitaciones y living",
+            "description": "revisar yb pintar zocalos de toido el depto",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 17,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T15:15:04.769390"
+            },
+            {
+            "id": 24,
+            "title": "2 c pastinar living",
+            "description": "",
+            "due_date": "2025-09-11",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 13,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:51:06.351874"
+            },
+            {
+            "id": 25,
+            "title": "1 a terrminacion pared lavarropa",
+            "description": "",
+            "due_date": "2025-09-08",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:52:02.633755"
+            },
+            {
+            "id": 27,
+            "title": "3 a lavadero",
+            "description": "emprolijar",
+            "due_date": "2025-09-10",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:55:05.876610"
+            },
+            {
+            "id": 28,
+            "title": "3 a piso",
+            "description": "pastinar pìso",
+            "due_date": "2025-09-10",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:56:02.660837"
+            },
+            {
+            "id": 29,
+            "title": "2 a lavarropa",
+            "description": "emprolija",
+            "due_date": "2025-09-11",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:56:58.948271"
+            },
+            {
+            "id": 32,
+            "title": "3 c lavarropa",
+            "description": "pintar",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:59:36.487388"
+            },
+            {
+            "id": 33,
+            "title": "2 b baños",
+            "description": "limpiar baños",
+            "due_date": "2025-09-12",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T19:00:29.439061"
+            },
+            {
+            "id": 35,
+            "title": "3 a bañadera",
+            "description": "emprolijar",
+            "due_date": "2025-09-04",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T19:01:57.642668"
+            },
+            {
+            "id": 31,
+            "title": "2 b lavarropa",
+            "description": "lavarropa pintar",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:58:57.332989"
+            },
+            {
+            "id": 11,
+            "title": "4 a pintura",
+            "description": "MEÑANA VIENEN LOS DUEÑOS DEL 4 A\r\n\r\nHOY HAY QUE TERMINAR DE HACER ESTOS ARREGLOS\r\nPINTUTRA , HAY RETOQUES SERCA DE LA LLAVE DEL PASILLO.\r\nENDUIDO EN LOS PERFILES DE LOS PLACARES\r\nPINTAR ZOCALOS EN TODO EL DEPARTAMENTO DONDE CORRESPONDA",
+            "due_date": "2025-09-17",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T15:17:55.657757"
+            },
+            {
+            "id": 12,
+            "title": "6 B pintura",
+            "description": "PINTAR PARED CON HUMEDAD DEL DORMITORIO",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T15:27:49.449934"
+            },
+            {
+            "id": 14,
+            "title": "6 B enduido",
+            "description": "HAY UN AGUJERO POR TAPAR ENTRE LA PERED Y EL PISO ANTRES DEL PASILLO QUE DA A DOREMITORIO",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T15:33:15.067121"
+            },
+            {
+            "id": 15,
+            "title": "6 B viga",
+            "description": "EMPROLIOJAR VIGA DE COCINA",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T15:34:29.660787"
+            },
+            {
+            "id": 16,
+            "title": "4 A colocar puerta",
+            "description": "VOLVER A COLOCAR5 PUIERTYA DONDE ESTA CALDERA",
+            "due_date": "2025-09-18",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T15:35:20.791313"
+            },
+            {
+            "id": 34,
+            "title": "4 a limpieza",
+            "description": "limpiar porcelanatos baños",
+            "due_date": "2025-09-09",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T19:01:10.567745"
+            },
+            {
+            "id": 23,
+            "title": "2 c lavarropa",
+            "description": "terminacion pared de lavarroipa",
+            "due_date": "2025-09-12",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:50:15.943278"
+            },
+            {
+            "id": 30,
+            "title": "3 b pastina",
+            "description": "pastina en cocina",
+            "due_date": "2025-09-04",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T18:58:10.003987"
+            },
+            {
+            "id": 9,
+            "title": "Verificar estado de colocación de mesadas que falktan en deptos",
+            "description": "Ste mira en que departamentos falta colocar todavía las mesadas o vanitoris porfa",
+            "due_date": "2025-09-17",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 7,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-17T13:43:56.032547"
+            },
+            {
+            "id": 22,
+            "title": "2 bb arreglar con enduido ventanales",
+            "description": "arreglar bordes de ventana con enduido",
+            "due_date": "2025-09-18",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T15:19:52.817550"
+            },
+            {
+            "id": 41,
+            "title": "1 B ENDUIDO",
+            "description": "ENDUIDO A VENTANA",
+            "due_date": "2025-09-19",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-19T17:43:19.384974"
+            },
+            {
+            "id": 37,
+            "title": "prueba",
+            "description": "jyuhdsgafjhfgdjhgfdjhsgtjuhdsgfef",
+            "due_date": "2025-09-18",
+            "status": "cancelled",
+            "doctor_id": 6,
+            "assistant_id": 6,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-18T20:07:23.422197"
+            },
+            {
+            "id": 40,
+            "title": "1 C ENDUIDO",
+            "description": "ERNDUIDO A VENTANA DEL CUARTO",
+            "due_date": "2025-09-19",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-19T17:41:37.063707"
+            },
+            {
+            "id": 38,
+            "title": "1 a PASTINA",
+            "description": "pastinar PISO",
+            "due_date": "2025-09-19",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-19T15:29:38.197211"
+            },
+            {
+            "id": 39,
+            "title": "LLaamar a Cecilia por posible interesado de deptos al pozo",
+            "description": "gestion comerciual",
+            "due_date": "2025-09-19",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 9,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-19T15:31:53.776755"
+            },
+            {
+            "id": 42,
+            "title": "LIMPIEZA 5TO PISO",
+            "description": "LIMPIAR OFICINA",
+            "due_date": "2025-09-19",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-19T17:51:44.733504"
+            },
+            {
+            "id": 43,
+            "title": " 4 a techo",
+            "description": "limpiar manchas en techo de habitación principal del lado de la cabecera ",
+            "due_date": "2025-09-22",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-22T14:11:58.704048"
+            },
+            {
+            "id": 47,
+            "title": "4 c lijar",
+            "description": "emprolijar viga de habitacion",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 24,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:51:49.183991"
+            },
+            {
+            "id": 48,
+            "title": "4 c clavoi",
+            "description": "sacar clavo del techo y emprolijar",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 24,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:52:26.012381"
+            },
+            {
+            "id": 49,
+            "title": "4 c",
+            "description": "emprolijar viga con pared living",
+            "due_date": "2025-09-24",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:54:43.912711"
+            },
+            {
+            "id": 50,
+            "title": "4 c emproliojar",
+            "description": "emprolijar pared dfe habitacion",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:55:39.418806"
+            },
+            {
+            "id": 51,
+            "title": "4 c  zocalo",
+            "description": "arreglar zocalo debajo de venmtanal del living",
+            "due_date": "2025-09-24",
+            "status": "completed",
+            "doctor_id": 6,
+            "assistant_id": 25,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:58:36.500042"
+            },
+            {
+            "id": 52,
+            "title": "4 c premarcops",
+            "description": "revisar terminación de premarcos",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 5,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T13:59:42.241057"
+            },
+            {
+            "id": 54,
+            "title": "3 c",
+            "description": "lijar viga de habitación",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 20,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T14:02:34.027685"
+            },
+            {
+            "id": 55,
+            "title": "3 c  enduido",
+            "description": "poner enduido ensima de ventanal de habitacion princvipal",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T14:03:53.552784"
+            },
+            {
+            "id": 53,
+            "title": "3 c  pintar",
+            "description": "pintar debajo de ventanal del living",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 10,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T14:01:39.473851"
+            },
+            {
+            "id": 56,
+            "title": "1 a pintura",
+            "description": "emproliojar pintura habitacion y living",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 20,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T14:36:31.490999"
+            },
+            {
+            "id": 57,
+            "title": "3 a  enduido",
+            "description": "emportliojar ventana Habitacion enduido",
+            "due_date": "2025-09-24",
+            "status": "pending",
+            "doctor_id": 6,
+            "assistant_id": 20,
+            "created_by": None,
+            "clinic_id": None,
+            "created_at": "2025-09-24T14:37:24.992896"
+            }
+        ],
+        "notes": [
+            {
+            "id": 1,
+            "title": "Estamos de vuelta !!",
+            "content": "🌸🎶 Vuelve BanZaiShow – MC 🎶🌸\r\nDespués del parate de marzo, este sábado 20 de septiembre reabrimos el escenario con todo: llega la banda de Carlos Flores para ponerle música, energía y fiesta al arranque de la primavera. 🌺🔥\r\n\r\nEs el regreso que estabas esperando: un show que mezcla la potencia de la banda en vivo, el espíritu de BanZai y la promesa de una temporada de verano que arranca a pura música y diversión.\r\n\r\n📍 Lugar: Poeta Lugones 1443 - a metros de la calle San Martín - Mina Clavero -\r\n🕘 Hora: 23\r\n🎟️ Entrada: llamanos al +54 351 202 6579 \r\n\r\n👉 Vení con tus amigos, preparate para cantar, bailar y ser parte de este renacer. BanZaiShow – MC vuelve y lo hace a lo grande.",
+            "status": "published",
+            "user_id": 3,
+            "patient_id": None,
+            "created_at": "2025-09-15T16:09:11.829155",
+            "approved_by": 1,
+            "approved_at": "2025-09-15T16:10:10.673182",
+            "updated_at": "2025-09-18T14:10:06.384342",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757952551/notes/o7uwlprajx126yanemz7.jpg",
+            "view_count": 33
+            },
+            {
+            "id": 3,
+            "title": "El precio de construcción por metro cuadrado llegó a $ 1.865.348,15 en agosto de 2025.",
+            "content": "🔴 Según la Asociación de Pymes de la Construcción de la Provincia de Buenos Aires (Apymeco), el precio de construcción por metro cuadrado llegó en agosto de 2025 a $ 1.865.348,15, lo que representa una variación mensual del 0,66% respecto a julio. Si agosto protagonizó aumentos, fueron menores a los protagonizados en meses anteriores.\r\n\r\nSegún la entidad, el crecimiento interanual fue del 25,99 por ciento, mientras en lo que va del año el aumento fue del 16,62 por ciento. La variación mensual de  materiales para la construcción fue del 0,76%, mientras que la mano de obra lo hizo en un 0,67 por ciento.",
+            "status": "private",
+            "user_id": 4,
+            "patient_id": None,
+            "created_at": "2025-09-16T14:44:54.835442",
+            "approved_by": None,
+            "approved_at": None,
+            "updated_at": "2025-09-16T14:44:54.835457",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758033894/notes/elcgqsvc8tww0m1sjwa3.png",
+            "view_count": 0
+            },
+            {
+            "id": 4,
+            "title": "👏👏 Ingresaron carretillas y hormigoneras!",
+            "content": "Visita nuestro local en 9 de julio 961!!👏👏\r\n\r\n- Detalles del producto\r\n\r\n- Precio\r\n\r\n- Forma de pago",
+            "status": "private",
+            "user_id": 4,
+            "patient_id": None,
+            "created_at": "2025-09-16T19:36:41.095883",
+            "approved_by": None,
+            "approved_at": None,
+            "updated_at": "2025-09-16T19:36:41.095891",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758051400/notes/nbv0wekyn2aiuvkrigdf.jpg",
+            "view_count": 0
+            },
+            {
+            "id": 5,
+            "title": "📌 ¿Cómo preparar tu obra para recibir el hormigón?",
+            "content": "Antes de la llegada del mixer, hay detalles clave que aseguran una descarga rápida, segura y sin contratiempos:\r\n\r\n🔸 Acceso libre para el camión y/o bomba\r\n🔸 Personal listo para distribuir y nivelar\r\n🔸 Encofrado limpio y húmedo\r\n🔸 Herramientas listas\r\n\r\n✅ Una obra preparada ahorra tiempo, evita pérdidas y garantiza mejores resultados.\r\n\r\n📲 ¿Tenés dudas sobre tu próxima obra? Escribinos y te asesoramos.",
+            "status": "private",
+            "user_id": 4,
+            "patient_id": None,
+            "created_at": "2025-09-16T20:12:47.252536",
+            "approved_by": None,
+            "approved_at": None,
+            "updated_at": "2025-09-16T20:12:47.252544",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758053566/notes/wz7fp3ouibrkcifw30oo.jpg",
+            "view_count": 0
+            },
+            {
+            "id": 2,
+            "title": "Microsoft Power BI - CURSO GRATUITO",
+            "content": "Microsoft Power BI - CURSO GRATUITO\r\n\r\nCertificado Profesional en Visualización de Datos de Microsoft\r\n\r\nFormulario de inscripción: https://forms.gle/7z1jPqa7JA89ojJB9\r\n\r\nDesarrollá habilidades en análisis y visualización de datos.\r\nAdquirí competencias laborales para una carrera en visualización de datos, una de las áreas más demandadas.\r\nNo se requiere experiencia previa ni título universitario para comenzar.\r\n\r\n🌟 Primer encuentro gratuito online\r\n\r\n📅 Sábado 20 de septiembre\r\n🕖 10 a 13 hs (Argentina, GMT-3)\r\n💻 Modalidad online (Zoom) – el enlace te lo mandamos por mail el día de la clase\r\n🎓 Organiza: Centro de Graduados de Ingeniería – UBA\r\n\r\n¡ATENCIÓN SUPER REGALO!\r\n\r\nTodos los que completen el formulario, se conecten al zoom y den el presente recibirán en forma totalmente gratis el acceso al curso:\r\n\r\nMicrosoft - Power BI\r\nFundamentos de Visualización de Datos\r\nEste curso forma parte del Certificado Profesional en Visualización de Datos con Power BI de Microsoft\r\nImpartido en español (doblaje con IA)\r\n\r\nPodrás obtener un certificado oficial de Microsoft a tu nombre \r\n\r\nCertificado Profesional – Serie de 5 cursos\r\n\r\nFormulario de inscripción: https://forms.gle/7z1jPqa7JA89ojJB9",
+            "status": "published",
+            "user_id": 2,
+            "patient_id": None,
+            "created_at": "2025-09-15T16:44:09.767201",
+            "approved_by": 1,
+            "approved_at": "2025-09-15T16:45:10.177284",
+            "updated_at": "2025-09-17T19:13:49.508365",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757954649/notes/wol6rptl1i2bgy0zge6a.jpg",
+            "view_count": 29
+            },
+            {
+            "id": 6,
+            "title": "Para aumentar la oferta de dólares, no habrá retenciones a los granos hasta el 31 de octubre",
+            "content": "- El gobierno nacional dispuso que no le cobrará retenciones a los granos hasta el 31 de octubre o hasta que se concreten declaraciones juradas de exportación por USD 7 mil millones, lo que ocurra primero. La medida busca generar una mayor oferta de dólares luego de varios días de suba que llevaron la cotización oficial a $1.515 y le provocaron pérdidas de más de USD 1.100 millones en las reservas del Banco Central.\r\n- “La vieja política busca generar incertidumbre para boicotear el programa de gobierno. Al hacerlo castigan a los argentinos: no lo vamos a permitir. Por eso, y con el objetivo de generar mayor oferta de dólares durante este período, hasta el 31 de octubre habrá retenciones cero para todos los granos. Fin”, anticipó el funcionario.\r\n- Voceros del Ministerio de Economía detallaron que la medida alcanza a la soja, el maíz, el trigo, la cebada, el sorgo y el girasol.\r\n- El anuncio oficial tomó por sorpresa al presidente de la Sociedad Rural Argentina (SRA), Nicolás Pino, quien se enteró del cambio regulatorio mientras daba una entrevista a Radio Mitre.",
+            "status": "published",
+            "user_id": 2,
+            "patient_id": None,
+            "created_at": "2025-09-22T16:47:03.403187",
+            "approved_by": 2,
+            "approved_at": "2025-09-22T16:47:40.124160",
+            "updated_at": "2025-09-24T13:44:04.252544",
+            "featured_image": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758559622/notes/hbmfqnsmtogiutumo8fo.png",
+            "view_count": 1
+            }
+        ],
+        "publications": [
+            {
+            "id": 2,
+            "slug": None,
+            "type": "Deportes",
+            "title": "Argentina dio vuelta un partidazo y le ganó 3-2 a Finlandia por el debut del Mundial de vóley",
+            "content": "Argentina debutó en el Mundial de vóley con una remontada histórica: tras ir 0-2 contra Finlandia, ganó 3-2 con parciales 19-25, 18-25, 25-22, 25-22 y 15-11 en 2h30, primer tie-break del torneo. Sin jugar bien, pero con carácter, logró por primera vez dar vuelta un 0-2 en un Mundial.\r\n\r\nMarcelo Méndez sorprendió con Matías Sánchez como armador y De Cecco al banco, completando con Kukartsev, Loser, Gallego, Palonsky, Vicentín y Danani. El inicio fue errático, con bloqueo finlandés implacable (5-0 en el primer set). Los europeos dominaron saque y defensa, y se llevaron los dos primeros parciales casi sin oposición.\r\n\r\nEn el tercero, Méndez devolvió a De Cecco y el equipo mostró otra cara: más defensa, presión desde el saque y puntos claves de Palonsky y Kukartsev. Argentina ganó confianza, sostuvo la presión y forzó el tie-break.\r\n\r\nEn el quinto, los errores de Marttila y el ingreso decisivo de Martínez (bloqueo y ace vital) inclinaron la balanza. Finlandia se desmoronó en el cierre y Argentina selló el 15-11. Fue un triunfo trabajado, irregular en el juego pero enorme en carácter, que sirve para creer de cara al choque contra Corea.\r\n\r\nFormación inicial: Sánchez, Kukartsev, Loser, Gallego, Vicentín, Palonsky y Danani. Ingresaron De Cecco, Gómez, Martínez, Armoa, Zerba y Giraudo.",
+            "excerpt": "Pese a que arrancó 0-2 en sets y desdibujada, la Selección lo pudo ganar con el ingreso clave de Martínez y mejoras varias. Ahora se viene Corea para pensar en los octavos de final.",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "argentina, mundial, remontada, mendez",
+            "read_time": None,
+            "created_at": "2025-09-15T13:58:30.509061",
+            "updated_at": "2025-09-15T22:34:58.640416",
+            "published_at": "2025-09-15T13:58:30.508436",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757944710/publications/jwccsrisdzof2ncnir81.jpg",
+            "view_count": 1
+            },
+            {
+            "id": 4,
+            "slug": None,
+            "type": "Cultura",
+            "title": "🚶‍♂️✨ Camino del Peregrino: fe, tradición y comunidad en movimiento ✨🚶‍♀️",
+            "content": "El domingo, desde las primeras horas, cientos de fieles emprendieron la caminata por el Camino del Peregrino, partiendo desde Giulio Cesare y llegando al Santuario del Cura Brochero. Cada paso estuvo cargado de oraciones, intenciones y agradecimientos, en una experiencia única que combina espiritualidad, tradición, naturaleza y cultura.\r\n\r\nLa gran novedad de este año fue el Primer Encuentro de Peregrinos, realizado el sábado, con la Misa del Peregrino, espectáculos artísticos y momentos de preparación espiritual que reforzaron el sentido comunitario de la experiencia.\r\n\r\nPero la peregrinación no solo dejó huella en lo religioso: también impactó en la economía local, impulsando hotelería, gastronomía y comercios. A la vez, la articulación entre instituciones, municipios, fuerzas de seguridad, vecinos y voluntarios garantizó un evento seguro, organizado y hospitalario.\r\n\r\nEl presidente de la Agencia Córdoba Turismo, Darío Capitani, lo resumió con claridad:\r\n“El Santo Brochero no solo representa un ejemplo de fe y compromiso social, sino también un motor para el turismo religioso, que moviliza a miles de personas y posiciona a Córdoba como un destino espiritual único en el país”.\r\n\r\nLa actividad fue organizada por la Diócesis de Cruz del Eje, el Santuario del Cura Brochero y la Municipalidad de Villa Cura Brochero, con el acompañamiento del Gobierno de Córdoba a través de la Agencia Córdoba Turismo.",
+            "excerpt": "El evento, que ya se ha consolidado como uno de los encuentros de fe más importantes del país, reafirma a Villa Cura Brochero como un destino central del turismo religioso en Córdoba.",
+            "is_published": True,
+            "user_id": 2,
+            "tags": "misa, peregrinos, religion, caminata, cura brochero, santo brochero",
+            "read_time": None,
+            "created_at": "2025-09-15T16:39:23.094835",
+            "updated_at": "2025-09-15T17:04:13.369125",
+            "published_at": "2025-09-15T16:39:23.094096",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757954363/publications/b7hixjbcdnjdhnusuvob.jpg",
+            "view_count": 1
+            },
+            {
+            "id": 3,
+            "slug": None,
+            "type": "Cultura",
+            "title": "BanZaiShow - MC - Esta de vuelta !!",
+            "content": "🌸🎶 Vuelve BanZaiShow – MC 🎶🌸\r\nDespués del parate de marzo, este Sábado 20 de septiembre reabrimos el escenario con todo: llega la banda de Carlos Flores para ponerle música, energía y fiesta al arranque de la primavera. 🌺🔥\r\n\r\nEs el regreso que estabas esperando: un show que mezcla la potencia de la banda en vivo, el espíritu de BanZai y la promesa de una temporada de verano que arranca a pura música y diversión.\r\n\r\n📍 Lugar: Poeta Lugones 1443 - a metros de la calle San Martín - Mina Clavero -\r\n🕘 Hora: 23\r\n🎟️ Entrada: llamanos al +54 351 202 6579 \r\n\r\n👉 Vení con tus amigos, preparate para cantar, bailar y ser parte de este renacer. BanZaiShow – MC vuelve y lo hace a lo grande.",
+            "excerpt": "- Volvimos !!! y queremos festejarlos con todo ... !",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "Entretenimiento, diversión, noche, mina clavero, baile, carlos flores",
+            "read_time": None,
+            "created_at": "2025-09-15T16:23:12.889797",
+            "updated_at": "2025-09-21T16:08:21.014882",
+            "published_at": "2025-09-15T16:23:12.888177",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757953393/publications/pzwru665yxneqmatr1xt.jpg",
+            "view_count": 39
+            },
+            {
+            "id": 1,
+            "slug": None,
+            "type": "Análisis",
+            "title": "A cuánto cerró el dólar blue este viernes 12 de septiembre",
+            "content": "El dólar blue hoy viernes 12 de septiembre de 2025, cerró de la siguiente manera para esta jornada cambiaria.\r\n\r\nA cuánto cotiza el dólar Blue\r\nEl dólar paralelo cotiza con un valor en el mercado de $1405,00 para la compra y $1425,00 para la venta.\r\n\r\nA cuánto cotiza el dólar Oficial\r\nSegún la pizarra del Banco de la Nación Argentina (BNA), este viernes 12 de septiembre cerró en $1390,00 para la compra y $1440,00 para la venta.\r\n\r\nA cuánto cotiza el dólar MEP\r\nEl dólar MEP, también conocido como dólar bolsa, cerró en $1415,00 para la compra, $1465,00 para la venta.\r\n\r\nA cuánto cotiza el dólar contado con liquidación\r\nEl dólar contado con liquidación (CCL) cerró en las pizarras a $1460,70 para la compra y $1462,00 para la venta.\r\n\r\nA cuánto cotiza el dólar cripto\r\nA través de las operaciones con criptomonedas, el dólar cripto cotiza en $1464,12\r\n\r\n​para la compra, y en $1468,27 para la venta.\r\n\r\nA cuánto cotiza el dólar tarjeta\r\nEl tipo de cambio, al cual se debe convertir el monto en dólares que nos llega en el resumen de nuestra tarjeta, opera hoy en $1904,50.\r\n\r\nLos consumos en moneda extranjera pueden ser por utilización de productos digitales, plataformas de streaming o compras en el exterior.\r\n\r\nRiesgo País\r\nEl riesgo país es un indicador elaborado por el JP Morgan que mide la diferencia que pagan los bonos del Tesoro de Estados Unidos contra las del resto de los países.\r\n\r\nEste jueves 11 de septiembre dicho índice ubicó al riesgo país en 1070 puntos básicos.",
+            "excerpt": "Conocé como cerró en el mercado la divisa norteamericana el viernes, 12 de septiembre del 2025",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "",
+            "read_time": None,
+            "created_at": "2025-09-15T13:51:02.402106",
+            "updated_at": "2025-09-15T21:32:17.354441",
+            "published_at": "2025-09-15T13:51:02.399277",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1757944263/publications/xqhq07yrseavad3dxg57.png",
+            "view_count": 2
+            },
+            {
+            "id": 6,
+            "slug": None,
+            "type": "Educativo",
+            "title": "🌾 Conferencia sobre Condiciones Climáticas – Campaña 2025-2026 🌦",
+            "content": "🌾 Conferencia sobre Condiciones Climáticas – Campaña 2025-2026 🌦\r\n📅 19 de septiembre – 18:00 hs\r\n📍 Consorcio Caminero N°151, Alto Grande\r\n\r\n🎙 Disertante: Rafael Di Marco\r\n🎟 Entradas: $20.000 general | $15.000 socios\r\n(Cupos limitados)\r\n\r\nAdquirí tu entrada completando el formulario \r\n https://docs.google.com/forms/d/e/1FAIpQLSfUbhNYh57IN4HQZKiBOUhYFTHaBNdfAdmhr1Q1Bsbtl6kAMg/viewform?usp=header \r\n\r\n👉 Reservá tu lugar al 3544-410592",
+            "excerpt": "Expertos y productores analizarán cómo las variaciones climáticas afectarán la campaña 2025-2026: lluvias, sequías, plagas y su impacto en rindes, costos y logística. Se discutirán modelos predictivos, estrategias de adaptación, manejo de suelo, seguros agrícolas y políticas públicas para mitigar riesgos y mejorar la resiliencia del sector agropecuario. Prácticas sostenibles.",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "#Clima, #Agro2025, #CampañaAgrícola,  #SustentabilidadRural,  #ProductoresEnAcción",
+            "read_time": None,
+            "created_at": "2025-09-17T11:47:32.627416",
+            "updated_at": "2025-09-17T11:47:49.535005",
+            "published_at": "2025-09-17T11:47:32.626069",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758109653/publications/kv2gsszf7uyeulfkxidl.jpg",
+            "view_count": 1
+            },
+            {
+            "id": 5,
+            "slug": None,
+            "type": "Deportes",
+            "title": "Argentina 3 - Korea 1 ! Con un pie en segunda ronda.",
+            "content": "En su segunda presentación del Grupo C del Mundial, la Selección masculina dirigida por Marcelo Méndez superó a Corea del Sur por 3-1 y quedó muy cerca de la segunda ronda.\r\n\r\nEl arranque fue parejo, con un rival que mostró mejorías pero nunca logró incomodar en serio. La diferencia estuvo en los momentos clave: el ingreso de Nico Zerba (2,04 m) dio aire con un pasaje de 3-0, y los bloqueos de Pablo Kukartsev y los puntos de Luciano Vicentín inclinaron la balanza.\r\n\r\nEl tercer set fue todo celeste y blanco: variantes, solidez y un Kukartsev imparable con 21 puntos y 3 bloqueos. Con esa contundencia, Argentina cerró un 25-18 que sentenció la historia y dejó al equipo con la confianza a tope para lo que viene.",
+            "excerpt": "El seleccionado nacional masculino, dirigido por Marcelo Méndez, le ganó por 3-1 a Corea del Sur, que disputan su segunda presentación por el Grupo D del Mundial que se celebra en Filipinas. Pablo Kukartsev fue el máximo anotador con 21 puntos.",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "seleccion argentina, voley, mundial, segunda ronda, korea",
+            "read_time": None,
+            "created_at": "2025-09-16T11:56:02.478456",
+            "updated_at": "2025-09-16T15:04:24.177555",
+            "published_at": "2025-09-16T11:56:02.444156",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758023763/publications/jjkt9iyvnkopl5uyhwi8.jpg",
+            "view_count": 2
+            },
+            {
+            "id": 7,
+            "slug": None,
+            "type": "Tecnología",
+            "title": "Marina Hasson: “La incorporación de la IA en las pymes es un camino, no es prender y apagar la luz”",
+            "content": "La inteligencia artificial (IA) dejó de ser promesa y ya persigue a empresas de todos los tamaños. Según Marina Hasson, directora de pymes en Microsoft para Latam, su adopción es un camino, no una receta lista: se ajusta a cada realidad y a lo que muestre mejor retorno.\r\n\r\nEl estudio 2025 de Microsoft/Edelman muestra que, en Argentina, la importancia de la IA para las pymes se cuadruplicó en un año, pasando del 7% al 30%, sobre todo en medianas. Los principales desafíos: reducir costos, ganar clientes y aumentar ventas.\r\n\r\nHasson identifica cuatro ejes estratégicos: experiencia de empleados (retener talento), interacción con clientes (mejor servicio), automatización de procesos y espacio para la innovación. Todo con seguridad como base crítica: proteger datos, dispositivos e identidades.\r\n\r\nHoy existe un fenómeno de “traer tu propia IA”, lo que obliga a uniformidad y gobernanza interna. La clave, dice Hasson, es la cultura organizacional y un liderazgo fuerte que impulse la adopción, con apoyo de Tecnología y Recursos Humanos.\r\n\r\nEl estudio revela que el 54% de las pymes ya tiene estrategia de IA, y 82% ve con optimismo su uso, aunque el 49% admite que necesita cambios culturales. Además, el 58% ya usa alguna IA, y 83% planea invertir en 2025.\r\n\r\nMotivos: en microempresas, la prioridad es costos y continuidad; en medianas, competencia, eficiencia e innovación. Las aplicaciones más comunes son: atención al cliente virtual, búsquedas de información y marketing con IA generativa.\r\n\r\nEn síntesis: la adopción avanza a distintas velocidades, pero las oportunidades para pymes están en mejorar la experiencia laboral, el servicio al cliente, la eficiencia de procesos y el valor agregado en productos o servicios.",
+            "excerpt": "La número uno del segmento de pymes de Microsoft para la región, destaca que en un año se cuadriplicó la importancia de proyectos con la nueva tecnología en la Argentina",
+            "is_published": True,
+            "user_id": 2,
+            "tags": "IA, Tecnología, PYMES, Empresas, oportunidades",
+            "read_time": None,
+            "created_at": "2025-09-18T11:53:24.968108",
+            "updated_at": "2025-09-18T11:53:26.373209",
+            "published_at": "2025-09-18T11:53:24.964108",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758196405/publications/ntv2dgjrmbrumh65pilz.png",
+            "view_count": 0
+            },
+            {
+            "id": 9,
+            "slug": None,
+            "type": "Tecnología",
+            "title": "Qué sectores lideran la implementación de la inteligencia artificial en Argentina",
+            "content": "La inteligencia artificial convirtió en un factor clave para la transformación digital de las empresas en Argentina. De acuerdo a un estudio de International Data Corporation (IDC), la inversión en tecnologías de IA en América Latina alcanzará los $3,400 millones en 2025, y en el país. Estas industrias están aprovechando la IA para personalizar servicios y mejorar la experiencia del cliente, marcando el camino hacia un uso más sofisticado de los datos. \r\n\r\nLos usuarios demandan servicios más personalizados, y el análisis de datos históricos y preferencias permite a las empresas ofrecer soluciones a medida. Esto es posible gracias a la implementación de tecnologías de IA que explotan la información de manera eficiente.\r\n\r\nAunque la adopción de IA crece de manera sostenida, algunos sectores enfrentan desafíos significativos. Entre ellos, se destaca el sector salud que es uno de los que enfrentan más retos debido a preocupaciones sobre la seguridad y privacidad de los datos. El manejo de datos sensibles genera dudas, especialmente en tecnologías emergentes. Sin embargo, estas preocupaciones representan oportunidades para desarrollar soluciones más seguras y eficientes. El sector agrícola también está comenzando a explorar el uso de IA en decisiones ambientales y monitoreo climatológico, mostrando un gran potencial de crecimiento.\r\n\r\nLas soluciones más buscadas incluyen chatbots avanzados, análisis predictivo y herramientas para ciberseguridad. Las nuevas versiones de chatbots, ahora más inteligentes, están siendo ampliamente adoptadas, especialmente en áreas operativas y de atención al cliente. Además, las empresas están aprovechando la IA para predicción y mantenimiento en plantas de operaciones, así como para fortalecer sus estrategias de ciberseguridad.\r\n\r\nAunque la implementación de IA no está exenta de retos. Para que la IA funcione correctamente, es crucial tener una estrategia de datos estructurada. Esto implica contar con fuentes de datos confiables y consistentes, integrar datos estructurados y no estructurados, y construir un Data Lake que permita explotar la información de manera efectiva. Además, proteger estos datos y minimizar vulnerabilidades sigue siendo un desafío clave para las organizaciones.\r\n\r\nLa inteligencia artificial se convirtió en un tema estratégico en las discusiones a nivel directivo. La resistencia a esta tecnología ha disminuido considerablemente. Las empresas saben que la IA no reemplazará a las personas, sino que empodera a quienes sepan utilizarla. Esto está redefiniendo la competitividad empresarial. Según sus estimaciones, para 2030, un alto porcentaje de compañías en la región contará con al menos un proyecto significativo basado en IA.\r\n...\r\n\r\nLee la nota completa aca : https://www.ambito.com/opiniones/que-sectores-lideran-la-implementacion-la-inteligencia-artificial-argentina-n6186668",
+            "excerpt": "Según una investigación de International Data Corporation (IDC) la inversión en tecnologías de IA en América Latina alcanzará los $3,400 millones en 2025, y en el país.",
+            "is_published": True,
+            "user_id": 2,
+            "tags": "IA, Tecnología, PYMES, Empresas, oportunidades, datos",
+            "read_time": None,
+            "created_at": "2025-09-18T13:21:54.611646",
+            "updated_at": "2025-09-18T13:21:55.800841",
+            "published_at": "2025-09-18T13:21:54.611052",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758201715/publications/zp4zrvl6ao62bp9g6dxv.png",
+            "view_count": 0
+            },
+            {
+            "id": 8,
+            "slug": None,
+            "type": "Tecnología",
+            "title": "Conuar fabricará componentes para un prototipo de micro reactor nuclear que se construirá en EE.UU.",
+            "content": "La empresa Combustibles Nucleares Argentina (Conuar) podría fabricar componentes para un micro reactor atómico diseñado por una firma europea. La compañía, que es controlada por el grupo Perez Companc y tiene a la Comisión Nacional de Energía Atómica (CNEA) como accionista minoritario, firmó en Viena un acuerdo con la firma Terra Innovatum que involucra al reactor micromodular SOLO, según pudo saber EconoJournal. El acuerdo también abre la puerta a establecer en la Argentina un hub de ensamblaje y cadena de valor para Latinoamérica relacionado con este reactor.\r\n\r\nEl convenio suscrito establece que Conuar diseñará y fabricará componentes críticos para el SOLO Micro-Modular Reactor (MMR) de Terra Innovatum, una compañía europea enfocada en el desarrollo de soluciones nucleares innovadoras.\r\n\r\nEl CEO de CONUAR, Rodolfo Kramer, celebró la firma del convenio. “Este acuerdo representa una oportunidad única para demostrar cómo la capacidad industrial argentina puede integrarse a proyectos internacionales de vanguardia. En Conuar nos sentimos orgullosos de aportar nuestra experiencia y know-how para hacer realidad un diseño que promete energía limpia y accesible para futuras generaciones”, dijo.\r\n\r\nLee la nota completa acá : https://econojournal.com.ar/2025/09/conuar-fabricara-componentes-para-un-prototipo-de-micro-reactor-nuclear-que-se-construira-en-ee-uu/",
+            "excerpt": "La empresa Conuar, controlada por el grupo Perez Companc, rubricó esta semana un acuerdo con la firma europea Terra Innovatum para fabricar componentes críticos del reactor micro modular SOLO. Terra Innovatum comenzó a tramitar el licenciamiento para la construcción de una primera unidad prototipo en los Estados Unidos.",
+            "is_published": True,
+            "user_id": 2,
+            "tags": "Tecnología, energía nuclear, energía, Argentina",
+            "read_time": None,
+            "created_at": "2025-09-18T12:17:15.030874",
+            "updated_at": "2025-09-18T17:04:16.575261",
+            "published_at": "2025-09-18T12:17:15.030195",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758197835/publications/x7178mz11xkzbz58uae3.jpg",
+            "view_count": 3
+            },
+            {
+            "id": 10,
+            "slug": None,
+            "type": "Deportes",
+            "title": "𝗣𝗥𝗜𝗠𝗘𝗥𝗢 𝗔𝗥𝗚𝗘𝗡𝗧𝗜𝗡𝗔 𝗖𝗟𝗔𝗦𝗜𝗙𝗜𝗖𝗔𝗗𝗔 !! ... Segundo 𝗙𝗥𝗔𝗡𝗖𝗜𝗔.",
+            "content": "Argentina dio un tremendo golpe en el Mundial de vóleibol: eliminó a Francia y se clasificó a los octavos de final.\r\nSe impuso por 3-2 para dejar afuera del torneo al bicampeón olímpico.\r\n\r\nLa selección argentina de vóleibol dio un gran golpe contra Francia, porque consiguió el pasaporte para los octavos de final del Mundial, en el cierre del Grupo C, y eliminó al bicampeón olímpico. El conjunto de Marcelo Méndez se impuso por 3-2 (28-26, 25-23, 21-25, 20-25 y 15-12), en el tie break con una tarea impresionante en el ataque de Luciano Vicentín (22 puntos) y de Luciano Palonsky (17). Ahora el conjunto nacional espera rival que será el segundo del Grupo F (que podría ser Italia o Ucrania).\r\n\r\nLa victoria de la Argentina resonó en todo el estadio en el Coliseo Smart Araneta de Quenzon City, Filipinas, pero uno de los momentos más particulares se dio cuando el entrenador de Francia, Andrea Giani, que interrumpió el festejo del conjunto de Marcelo Méndez, al parecer, para advertir algún comportamiento que le pareció desmedido. Los jugadores argentinos lo escucharon con respeto, aunque no dejó de ser una acción, al menos curiosa, porque sus jugadores, durante el partido, también entraron en el juego de las provocaciones.\r\n\r\nLee la nota completa acá : https://www.lanacion.com.ar/deportes/voley/argentina-vs-francia-por-un-lugar-en-los-octavos-de-final-del-mundial-de-voleibol-en-vivo-nid18092025/",
+            "excerpt": "VAMOS ARGENTINA CARAJO",
+            "is_published": True,
+            "user_id": 2,
+            "tags": "#VAMOSARGENTINA #VamosLosPibes #mundial #WorldChampionship #voley #volei #voleibol",
+            "read_time": None,
+            "created_at": "2025-09-18T13:32:36.155961",
+            "updated_at": "2025-09-18T22:40:14.309235",
+            "published_at": "2025-09-18T13:32:36.155310",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758202356/publications/v4vftyh7pawosa8er56m.png",
+            "view_count": 14
+            },
+            {
+            "id": 11,
+            "slug": None,
+            "type": "Deportes",
+            "title": "Argentina y otra cita con la historia del vóleibol: frente a Italia en busca de los cuartos de final",
+            "content": "Por qué es importante el partido del Mundial de Vóleibol\r\nArgentina e Italia buscarán seguir avanzando en el cuadro del Mundial, buscando alcanzar el podio en la máxima competencia Mundial de Selecciones. El torneo es durísimo, de hecho varios candidatos a pelear por las medallas quedaron fuera de competencia, como Brasil, que desde 2002 siempre había estado entre los cuatro mejores de este torneo.\r\n\r\nAsí llegan los equipos\r\nCómo dijimos, Argentina debió vencer en su último duelo de Fase de Grupos a Francia, el actual bicampeón olímpico. Tras ir ganando 2 a 0, los galos remontaron y el partido se definió en un tremendo quinto set. ARgentina con ese resltado ganó el grupo con tres victorias en tres presentaciones.\r\n\r\nItalia también llegó necesitada de un triunfo a su último duelo de zona ante Ucrania, pero para obtener el segundo lugar de la misma, detrás de Bélgica, que había sido su verdugo en el debut. La Selección italiana se adueñó del partido desde la primera pelota y lo ganó con parciales de 25-21, 25-22 y 25-18, con 11 puntos de Romano, otros 11 de Bottolo y 12 de Michieletto, máximo goleador italiano.\r\n\r\nLee la nota completa aca : https://www.espn.com.ar/otros-deportes/nota/_/id/15692421/argentina-vs-italia-por-los-octavos-de-final-del-mundial-de-voleibol-equipo-fecha-hora-y-tv-en-vivo",
+            "excerpt": "La Selección Argentina masculina consiguió una histórica e inolvidable victoria 3-2 sobre la bicampeona olímpica Francia y enfrentará el domingo 21 de septiembre a Italia por los octavos de final del Campeonato Mundial de Vóleibol Filipinas 2025.\r\n\r\nEl partido comienza a las 04:30 (ARG/URU/CHI) y 02:30 (COL/PER/ECU).",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "argentina, mundial, italia, mendez, voley",
+            "read_time": None,
+            "created_at": "2025-09-20T00:41:01.604045",
+            "updated_at": "2025-09-20T12:19:19.111657",
+            "published_at": "2025-09-20T00:41:01.600091",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758328862/publications/wnlzolyxvlacdpg19oew.jpg",
+            "view_count": 2
+            },
+            {
+            "id": 13,
+            "slug": None,
+            "type": "Deportes",
+            "title": "👏👏 - GRACIAS MUCHACHOS - 👏👏",
+            "content": "No siempre gana el que levanta la copa. A veces el verdadero triunfo es dejar el corazón en cada jugada, emocionar a un país entero y recordarnos que el vóley argentino está entre los grandes del mundo. Gracias, muchachos, por hacernos latir fuerte, por pintarnos de celeste y blanco en cada punto, por mostrarnos que la disciplina, el compromiso y la pasión también son victorias. Para nosotros ya son campeones. Orgullo total. 🙌🇦🇷❤️",
+            "excerpt": "Argentina cayó, pero dejó el alma en la cancha. 🏐🇦🇷",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "argentina, corazon, garra, mundial2025",
+            "read_time": None,
+            "created_at": "2025-09-22T14:34:09.609732",
+            "updated_at": "2025-09-22T14:34:11.269414",
+            "published_at": "2025-09-22T14:34:09.608069",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758551650/publications/j3ierianmmisgcak8w3q.png",
+            "view_count": 0
+            },
+            {
+            "id": 14,
+            "slug": None,
+            "type": "Deportes",
+            "title": "El piloto récord del que habla todo el país! 🏁🔥🇦🇷",
+            "content": "Matías Lorenzato, originario de Mina Clavero, Traslasierra, Córdoba, Argentina, es sin duda uno de los pilotos más destacados y en ascenso en el motociclismo argentino y regional. Con una historia marcada por esfuerzo, pasión y resultados impresionantes, Lorenzato se ha consolidado como una figura clave en el Campeonato Argentino de Motociclismo (CAM).\r\n\r\nActualmente, el piloto de Mina Clavero tiene en su haber 74 victorias, logrando 9 títulos en diferentes categorías y acercándose rápidamente a convertirse en el máximo ganador en la historia del CAM, a solo 11 triunfos de alcanzar ese récord. Su desempeño en 2025 ha sido excepcional, mostrando una conducción madura y una competitividad que lo mantienen en la cima de manera constante.\r\n\r\nDestaca en categorías altamente competitivas, siendo líder absoluto en la 450cc Internacional y también en la 125cc Graduados, las categorías más duras y exigentes del certamen. Recientemente, su fantástico rendimiento en carreras en Centeno y Villa Trinidad, donde también fue el piloto más ganador en esas pistas, confirma su potencial y su gran capacidad para adaptarse y dominar en diferentes circuitos.\r\n\r\nEn la temporada 2025, Lorenzato ha obtenido 9 podios, con 4 victorias en la categoría 450cc y la primera posición en 125cc, demostrando una vez más su consistencia y talento. En la última fecha, enfrentó mano a mano a los grandes, luchando con Marcos Barrios y Matías Frey, conquistando las victorias sin errores y asegurando la punta en las carreras más complicadas.\r\n\r\nSu historia y logros no solo reflejan su talento como piloto, sino también su dedicación y perseverancia, que inspiran a toda la comunidad de Traslasierra y Argentina. Matías Lorenzato continúa escribiendo su propia leyenda, con la mira puesta en más triunfos y récords, consolidándose como uno de los referentes del motociclismo nacional.\r\n\r\nEste es solo el comienzo de una historia que sigue creciendo y emocionando a todos los amantes del deporte sobre dos ruedas.",
+            "excerpt": "Matías Lorenzato, de Mina Clavero, Córdoba, destacado piloto argentino en el CAM, con 74 victorias y 9 títulos en categorías duras como 450cc y 125cc. Líder en 2025, busca récords y consolidarse como uno de los mejores, demostrando talento, madurez y perseverancia en cada carrera.",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "motoCAM, record, mina clavero, traslasierra, matiaslorenzato",
+            "read_time": None,
+            "created_at": "2025-09-22T15:12:41.830905",
+            "updated_at": "2025-09-22T15:12:43.394274",
+            "published_at": "2025-09-22T15:12:41.826947",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758553962/publications/sddk7qmrolgtvxxmtsem.png",
+            "view_count": 0
+            },
+            {
+            "id": 12,
+            "slug": None,
+            "type": "Análisis",
+            "title": "Payway Trends: Orquestación estratégica en el ecosistema de pagos argentino",
+            "content": "Payway Trends se consolida como el epicentro donde converge la vanguardia del ecosistema de pagos argentino. Más allá de un evento corporativo, se erige como termómetro de las transformaciones que redefine la interacción entre dinero, tecnología y consumo. Con un lineup que integra desde economistas como Santiago Bulat hasta disruptores como Mario Pergolini, el encuentro profundiza en tensiones clave: seguridad versus experiencia seamless, inclusión financiera versus sophistication tecnológica, innovación global versus adaptación local.\r\n\r\nTras el discurso colaborativo —donde actores como Visa, Mastercard y retailers líderes comparten casos— subyace una apuesta estratégica de Payway por posicionarse no como un mero procesador, sino como el orquestador central de un ecosistema fragmentado. El evento refleja así los desafíos de una industria en transición: cómo escalar soluciones sin sacrificar usabilidad, cómo integrar legacy systems con APIs de última milla, y cómo construir confianza en un contexto de alta volatilidad económica.\r\n\r\nPero más allá de las tendencias, Payway Trends expone una verdad incómoda: la innovación real often choca con inercias estructurales del mercado. El evento, entonces, funciona tanto como vitrina de avances como espejo de las limitaciones que aún persisten en la democratización financiera argentina. Un diálogo necesario, aunque aún dominado por la retórica corporativa, en un país donde el futuro de los pagos aún se escribe entre promesas y restricciones.\r\n\r\nLee la nota completa aca: https://www.lanacion.com.ar/economia/negocios/como-pagaremos-en-el-futuro-tendencias-e-innovacion-en-un-encuentro-que-reunio-a-los-referentes-del-nid17092025/",
+            "excerpt": "Payway Trends reunió a actores clave del ecosistema financiero para debatir el futuro de los pagos. El evento, organizado por Payway, se presentó como un espacio de orquestación entre bancos, fintechs y comercios, destacando tendencias como tokenización, seguridad y experiencia de usuario.",
+            "is_published": True,
+            "user_id": 1,
+            "tags": "tecnologia, futuro, pagos, fintech, networking",
+            "read_time": None,
+            "created_at": "2025-09-20T12:12:47.273322",
+            "updated_at": "2025-09-20T12:16:26.793553",
+            "published_at": "2025-09-20T12:12:47.272491",
+            "image_url": "https://res.cloudinary.com/dxpxsv7ui/image/upload/v1758370368/publications/rlngqxxszrcpujxqx5od.png",
+            "view_count": 4
+            }
+        ],
+        "company_invites": [],
+        "invitation_logs": []
+        }
+
+        # 3. Insertar UserRole primero
+        for r in DATA["user_roles"]:
+            db.session.add(UserRole(**r))
+        db.session.commit()
+
+        # 4. Insertar User
+        for u in DATA["users"]:
+            db.session.add(User(**u))
+        db.session.commit()
+
+        # 5. Insertar Subscriber
+        for s in DATA["subscribers"]:
+            db.session.add(Subscriber(**s))
+        db.session.commit()
+
+        # 6. Insertar Clinic
+        for c in DATA["clinic"]:
+            db.session.add(Clinic(**c))
+        db.session.commit()
+
+        # 7. Insertar Assistant
+        for a in DATA["assistants"]:
+            db.session.add(Assistant(**a))
+        db.session.commit()
+
+        # 8. Insertar Schedule
+        for s in DATA["schedules"]:
+            db.session.add(Schedule(**s))
+        db.session.commit()
+
+        # 9. Insertar Availability
+        for a in DATA["availability"]:
+            db.session.add(Availability(**a))
+        db.session.commit()
+
+        # 10. Insertar Appointment
+        for a in DATA["appointments"]:
+            db.session.add(Appointment(**a))
+        db.session.commit()
+
+        # 11. Insertar MedicalRecord
+        for m in DATA["medical_records"]:
+            db.session.add(MedicalRecord(**m))
+        db.session.commit()
+
+        # 12. Insertar Task
+        for t in DATA["tasks"]:
+            db.session.add(Task(**t))
+        db.session.commit()
+
+        # 13. Insertar Note
+        for n in DATA["notes"]:
+            db.session.add(Note(**n))
+        db.session.commit()
+
+        # 14. Insertar Publication
+        for p in DATA["publications"]:
+            db.session.add(Publication(**p))
+        db.session.commit()
+
+        # 15. Insertar CompanyInvite
+        for c in DATA["company_invites"]:
+            db.session.add(CompanyInvite(**c))
+        db.session.commit()
+
+        # 16. Insertar InvitationLog
+        for l in DATA["invitation_logs"]:
+            db.session.add(InvitationLog(**l))
+        db.session.commit()
+
+        # 17. Sincronizar secuencias
+        from sqlalchemy import text
+        tables = [
+            "user_roles", "users", "subscribers", "clinic", "assistants",
+            "schedules", "availability", "appointments", "medical_records",
+            "tasks", "notes", "publications", "company_invites", "invitation_logs"
+        ]
+        for table in tables:
+            result = db.session.execute(text(f"SELECT MAX(id) FROM {table}")).scalar()
+            next_val = result + 1 if result is not None else 1
+            db.session.execute(text(f"SELECT setval('{table}_id_seq', {next_val - 1})"))
+        db.session.commit()
+
+        return {"status": "✅ Base de datos actualizada en Render"}, 200
+
+    except Exception as e:
+        db.session.rollback()
+        return {"error": str(e)}, 500
