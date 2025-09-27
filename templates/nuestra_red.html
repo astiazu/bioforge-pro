@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Nuestra Comunidad - BioForge{% endblock %}
+
+{% block content %}
+<div class="py-16 px-4 bg-gradient-to-r from-blue-50 to-indigo-50">
+    <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Donde profesionales, emprendedores y PyMEs construyen juntos el futuro
+        </h1>
+        <p class="text-lg text-gray-700 mb-8 leading-relaxed">
+            BioForge no es un directorio. Es una comunidad activa que conecta talento, ideas y oportunidades para crecer en red.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{{ url_for('auth.register') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium inline-block">
+                👉 Sumate a la red (es gratis)
+            </a>
+            <a href="{{ url_for('routes.profesionales') }}" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-medium inline-block">
+                🔍 Encontrá un colaborador
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ¿Qué es BioForge? -->
+<div class="py-16 px-4">
+    <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-8">
+            Imaginá una red donde...
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-gray-700">Un diseñador ayuda a una PyME a renovar su marca</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-gray-700">Una contadora asesora a un emprendedor sin costo inicial</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <p class="text-gray-700">Un desarrollador encuentra socios para su startup</p>
+            </div>
+        </div>
+        <p class="text-center text-lg text-gray-700 max-w-2xl mx-auto">
+            Esto es BioForge: <strong class="text-blue-600">colaboración real</strong>, no solo contactos.
+        </p>
+    </div>
+</div>
+
+<!-- Los 3 pilares -->
+<div class="py-16 px-4 bg-gray-50">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl md:text-3xl font-bold text-center text-gray-900 mb-12">
+            Tres formas de crecer juntos
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                <h3 class="text-xl font-bold text-blue-600 mb-4">Profesionales</h3>
+                <p class="text-gray-700">
+                    Ofrecé tus servicios, encontrá proyectos y construí tu reputación en una red de confianza.
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                <h3 class="text-xl font-bold text-blue-600 mb-4">Emprendedores</h3>
+                <p class="text-gray-700">
+                    Accedé a mentores, aliados técnicos y apoyo práctico para lanzar tu idea.
+                </p>
+            </div>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                <h3 class="text-xl font-bold text-blue-600 mb-4">PyMEs</h3>
+                <p class="text-gray-700">
+                    Resolvé desafíos operativos con expertos que entienden tu realidad.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testimonio -->
+<div class="py-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+        <blockquote class="text-xl italic text-gray-700 mb-6">
+            “Encontré a mi socia técnica en BioForge. Hoy tenemos 12 clientes y crecemos juntas.”
+        </blockquote>
+        <cite class="text-lg font-medium text-gray-900">— Martina, fundadora de EcoPack</cite>
+    </div>
+</div>
+
+<!-- CTA Final -->
+<div class="py-16 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+    <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6">
+            ¿Listo para dejar de trabajar en soledad?
+        </h2>
+        <p class="mb-8 text-blue-100">
+            Gratis para unirte. Valor para crecer.
+        </p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{{ url_for('auth.register') }}" class="bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg transition">
+                🚀 Creá tu perfil en 2 minutos
+            </a>
+            <a href="{{ url_for('routes.como_funciona') }}" class="text-white underline font-medium">
+                ¿Cómo funciona? (sin compromiso)
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

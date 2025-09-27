@@ -230,3 +230,4 @@ def get_assistant_for_doctor(user, doctor_id):
     """Obtiene el Assistant activo del usuario en una empresa específica"""
     from app.models import Assistant
     return next((a for a in user.assistant_accounts if a.doctor_id == doctor_id), None)
+

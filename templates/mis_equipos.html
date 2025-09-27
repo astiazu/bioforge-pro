@@ -50,8 +50,14 @@
                 {% set team_tasks = tasks_by_assistant.get(assistant.id, []) %}
                 {% if team_tasks %}
                 <h6 class="text-muted mb-3"><i class="fas fa-tasks me-2"></i>Tareas Asignadas</h6>
+
+                {# ——— CORRECCIÓN CLAVE: separar y ordenar sin fallar ——— #}
+                {%- set tasks_with_date = team_tasks | selectattr('due_date') | list -%}
+                {%- set tasks_without_date = team_tasks | rejectattr('due_date') | list -%}
+                {%- set sorted_tasks = (tasks_with_date | sort(attribute='due_date')) + tasks_without_date -%}
+
                 <ul class="list-group list-group-flush mb-3">
-                    {% for task in team_tasks | sort(attribute='due_date') %}
+                    {% for task in sorted_tasks %}
                     <li class="list-group-item d-flex justify-content-between align-items-center py-2">
                         <div class="flex-grow-1">
                             <strong>{{ task.title[:40] }}{% if task.title|length > 40 %}...{% endif %}</strong>
@@ -60,6 +66,8 @@
                                     {% if task.due_date < today %}<span class="text-danger">📅 Atrasada: </span>{% endif %}
                                     {{ task.due_date.strftime('%d/%m') }}
                                 </small>
+                            {% else %}
+                                <small class="d-block text-muted">📅 Sin fecha</small>
                             {% endif %}
                             <span class="badge bg-{{ {
                                 'pending': 'warning',

@@ -318,6 +318,17 @@ def upload_csv():
 
     return render_template('upload_csv.html')
 
+@routes.context_processor
+def inject_active_assistant():
+    from flask import session
+    from app.models import Assistant  # ajusta la ruta según tu estructura
+    active_assistant = None
+    if current_user.is_authenticated and session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            active_assistant = Assistant.query.get(assistant_id)
+    return dict(active_assistant=active_assistant)
+
 @routes.route('/select_columns', methods=['GET', 'POST'])
 @login_required
 def select_columns():
@@ -1439,31 +1450,43 @@ def analyze_data():
         current_app.logger.error(f"Error analyzing data: {str(e)}")
         return jsonify({"error": f"Error analyzing data: {str(e)}"}), 500
     
+@routes.route('/redes')
+def redes():
+    return render_template('nuestra_red.html')
+
+@routes.route('/como-funciona')
+def como_funciona():
+    return render_template('funcionales/como_funciona.html')
+
 @routes.route("/profesionales")
 def profesionales():
     category = request.args.get('category', '')
-    query = User.query.filter_by(is_professional=True)
-    if category:
-        # ✅ Filtrar por nombre de rol
-        role = UserRole.query.filter_by(name=category).first()
-        if role:
-            query = query.filter_by(role_id=role.id)
     
-    professionals = query.options(db.joinedload(User.clinics)).all()
-    professionals = [p.to_dict() for p in professionals]
-
-    # ✅ Categorías = roles activos
-    roles = UserRole.query.filter_by(is_active=True).all()
-    categories = [r.name for r in roles if r.name not in ['Visitante', 'Paciente']]
-
+    # Si no hay categoría, mostramos los 3 tipos
+    if not category:
+        # Asumiendo que tenés un campo `user_type` o `role_name`
+        query = User.query.filter(
+            (User.is_professional == True) #|(User.is_entrepreneur == True) |(User.is_pyme == True)
+        )
+    else:
+        # Filtrar por categoría específica
+        if category == "Profesional":
+            query = User.query.filter_by(is_professional=True)
+        elif category == "Emprendedor":
+            query = User.query.filter_by(is_entrepreneur=True)
+        elif category == "PyME":
+            query = User.query.filter_by(is_pyme=True)
+        else:
+            query = User.query.filter_by(is_professional=True)  # fallback
+    
+    professionals = query.all()
+    categories = ["Profesional", "Emprendedor", "PyME"]
+    
     return render_template(
-        "profesionales.html",
+        'profesionales.html',
         professionals=professionals,
         categories=categories,
-        selected_category=category,
-        bio_short=BIO_SHORT,
-        bio_extended=BIO_EXTENDED,
-        active_tab="profesionales"
+        selected_category=category
     )
 
 # Perfil público más completo

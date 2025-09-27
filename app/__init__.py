@@ -17,12 +17,18 @@ except ImportError:
     cloudinary = None
 
 def create_app():
+    # ✅ Cargar variables de entorno desde .env (solo en desarrollo)
+    if os.environ.get("FLASK_ENV") != "production":
+        from dotenv import load_dotenv
+        load_dotenv()
+
     app = Flask(
         __name__,
         instance_relative_config=True,
         template_folder="../templates",
         static_folder="../static"
     )
+    # ... resto del código ...
 
     # === Configuración ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
