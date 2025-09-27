@@ -5589,8 +5589,12 @@ def init_db_render():
         ]
         for table in tables:
             result = db.session.execute(text(f"SELECT MAX(id) FROM {table}")).scalar()
-            next_val = result + 1 if result is not None else 1
-            db.session.execute(text(f"SELECT setval('{table}_id_seq', {next_val - 1})"))
+            if result is None:
+                # Tabla vacía → próximo ID = 1
+                db.session.execute(text(f"SELECT setval('{table}_id_seq', 1, false)"))
+            else:
+                # Próximo ID = result + 1 → setval recibe result
+                db.session.execute(text(f"SELECT setval('{table}_id_seq', {result})"))
         db.session.commit()
 
         return {"status": "✅ Base de datos actualizada en Render"}, 200
