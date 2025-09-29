@@ -1,51 +1,51 @@
-<!-- templates/dashboard/assistant.html -->
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Mi Trabajo</h2>
-    <span class="badge bg-{{ 'success' if assistant.type == 'general' else 'secondary' }}">
-      {% if assistant.type == 'general' %}Senior{% else %}Junior{% endif %}
-    </span>
-  </div>
+  <h2>Mi Trabajo - {{ assistant.name }}</h2>
+  <span class="badge bg-{{ 'success' if assistant.type == 'general' else 'secondary' }}">
+    {{ 'Senior' if assistant.type == 'general' else 'Junior' }}
+  </span>
 
-  <p>
-    <strong>Ubicación:</strong> 
-    {% if assistant.clinic %}
-      {{ assistant.clinic.name }}
-    {% else %}
-      Sin ubicación
-    {% endif %}
-  </p>
-
-  <h4>Mis tareas ({{ tasks|length }})</h4>
-  
-  {% if tasks %}
-    {% for task in tasks %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <h5 class="card-title">{{ task.title }}</h5>
-          <span class="badge bg-{{ 'warning' if task.status == 'pending' else 'info' if task.status == 'in_progress' else 'success' }}">
-            {{ task.status }}
-          </span>
-        </div>
-        <p class="card-text">{{ task.description or "Sin descripción" }}</p>
-        <small class="text-muted">
-          Vence: {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else "Sin fecha" }}
-        </small>
-        
-        {% if assistant.type == 'general' %}
-        <div class="mt-2">
-          <a href="#" class="btn btn-sm btn-outline-primary">Editar</a>
-          <a href="#" class="btn btn-sm btn-outline-secondary">Asignar a otro</a>
-        </div>
+  <!-- Mis tareas -->
+  <h4>Mis tareas ({{ mis_tareas|length }})</h4>
+  {% for task in mis_tareas %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>{{ task.title }}</h5>
+      <p>{{ task.description or "Sin descripción" }}</p>
+      <small class="text-muted">Vence: {{ task.due_date or "Sin fecha" }}</small>
+      
+      <!-- Estados permitidos -->
+      <div class="mt-2">
+        {% if assistant.type == 'common' %}
+          <!-- Junior: solo en proceso / completada -->
+          <a href="#" class="btn btn-sm btn-warning">En proceso</a>
+          <a href="#" class="btn btn-sm btn-success">Completada</a>
+        {% else %}
+          <!-- Senior: todos los estados -->
+          <a href="#" class="btn btn-sm btn-warning">En proceso</a>
+          <a href="#" class="btn btn-sm btn-success">Completada</a>
+          <a href="#" class="btn btn-sm btn-secondary">Pausada</a>
+          <a href="#" class="btn btn-sm btn-danger">Cancelada</a>
         {% endif %}
       </div>
     </div>
-    {% endfor %}
-  {% else %}
-    <div class="alert alert-info">No tenés tareas asignadas.</div>
+  </div>
+  {% endfor %}
+
+  <!-- Tareas que asigné (solo Senior) -->
+  {% if assistant.type == 'general' and tareas_asignadas_por_mi %}
+  <h4 class="mt-5">Tareas que asigné ({{ tareas_asignadas_por_mi|length }})</h4>
+  {% for task in tareas_asignadas_por_mi %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>{{ task.title }} → {{ task.assistant.name }}</h5>
+      <small class="text-muted">Estado: {{ task.status }}</small>
+      <!-- Senior no puede eliminar -->
+      <a href="#" class="btn btn-sm btn-outline-primary mt-2">Editar</a>
+    </div>
+  </div>
+  {% endfor %}
   {% endif %}
 </div>
 {% endblock %}

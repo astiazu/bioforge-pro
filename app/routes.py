@@ -2447,96 +2447,55 @@ def subscribe():
 
     return redirect(request.referrer or url_for('routes.index'))
 
-# Ruta: Ver asistentes
 @routes.route('/asistentes')
 @login_required
 def mis_asistentes():
-
-    doctor_id = None
-    active_assistant = None
-
-    if session.get('active_role') == 'asistente':
-        assistant_id = session.get('active_assistant_id')
-        if assistant_id:
-            active_assistant = Assistant.query.filter_by(
-                id=assistant_id,
-                user_id=current_user.id
-            ).first()
-        if active_assistant:
-            doctor_id = active_assistant.doctor_id
-    elif current_user.is_professional:
-        doctor_id = current_user.id
-
-    if not doctor_id:
-        flash("Acceso denegado", "danger")
-        return redirect(url_for('routes.index'))
-
     if not current_user.is_professional:
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
-    
-    # 🔁 Forzar recarga de datos desde la DB
-    db.session.expire_all()
 
-    # Obtener todos los consultorios del médico
-    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
-    
-    # Agrupar asistentes por consultorio
-    assistants_by_clinic = {}
-    for clinic in clinics:
-        assistants_by_clinic[clinic] = Assistant.query.filter_by(
-            clinic_id=clinic.id,
-            doctor_id=current_user.id
-        ).all()
-    
-    # ✅ Consulta directa y simple
-    general_assistants = Assistant.query.filter(
-        Assistant.doctor_id == current_user.id,
-        Assistant.type == 'general'
-    ).filter(Assistant.clinic_id.is_(None)).all()
-
-    # 🔥 DEBUG: imprime en consola
-    print(f"\n🔍 DEBUG - Doctor ID: {current_user.id}")
-    print(f"📋 Asistentes generales encontrados: {len(general_assistants)}")
-    for a in general_assistants:
-        print(f"  - {a.name} (ID: {a.id}, user_id: {a.user_id})")
-
-    # Lista completa para conteos
-    all_assistants = general_assistants + [
-        assistant for assistants in assistants_by_clinic.values() for assistant in assistants
-    ]
-
-    total_assistants = len(all_assistants)
-
-    # Obtener tareas
-    tasks = Task.query.join(Assistant).filter(
-        Assistant.doctor_id == current_user.id
+    # Obtener TODOS los asistentes activos del profesional actual
+    all_assistants = Assistant.query.filter_by(
+        doctor_id=current_user.id,
+        is_active=True
     ).all()
 
+    # Agrupar: generales (sin clínica) y por clínica
+    general_assistants = [a for a in all_assistants if a.clinic_id is None]
+    assistants_by_clinic = {}
+    for assistant in all_assistants:
+        if assistant.clinic_id is not None:
+            clinic = Clinic.query.get(assistant.clinic_id)
+            if clinic:
+                if clinic not in assistants_by_clinic:
+                    assistants_by_clinic[clinic] = []
+                assistants_by_clinic[clinic].append(assistant)
+
+    # Obtener tareas asignadas a estos asistentes
+    assistant_ids = [a.id for a in all_assistants]
+    tasks = Task.query.filter(Task.assistant_id.in_(assistant_ids)).all()
     tasks_by_assistant = {}
     for task in tasks:
         if task.assistant_id not in tasks_by_assistant:
             tasks_by_assistant[task.assistant_id] = []
         tasks_by_assistant[task.assistant_id].append(task)
 
-    today = date.today()
-
-    # Crear mapa de invitaciones activas
+    # Invitaciones activas (para reenviar código)
     active_invite_map = {}
-    for invite in current_user.sent_invites:
-        if not invite.is_used and invite.email:
-            active_invite_map[invite.email] = invite
-    # Fuerza recarga de datos
-    db.session.expire_all()
+    if hasattr(current_user, 'sent_invites'):
+        for invite in current_user.sent_invites:
+            if not invite.is_used and invite.email:
+                active_invite_map[invite.email] = invite
+
+    today = date.today()
 
     return render_template(
         'asistentes.html',
         general_assistants=general_assistants,
         assistants_by_clinic=assistants_by_clinic,
-        clinics=clinics,
         all_assistants=all_assistants,
         tasks_by_assistant=tasks_by_assistant,
-        no_assistants=(total_assistants == 0),
+        no_assistants=(len(all_assistants) == 0),
         today=today,
         active_invite_map=active_invite_map
     )
@@ -2544,19 +2503,13 @@ def mis_asistentes():
 @routes.route('/asistente/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_asistente():
-    # === Determinar doctor_id según rol activo ===
     doctor_id = None
-    active_assistant = None
-
     if session.get('active_role') == 'asistente':
         assistant_id = session.get('active_assistant_id')
         if assistant_id:
-            active_assistant = Assistant.query.filter_by(
-                id=assistant_id,
-                user_id=current_user.id
-            ).first()
-        if active_assistant and active_assistant.doctor_id:
-            doctor_id = active_assistant.doctor_id
+            assistant = Assistant.query.get(assistant_id)
+            if assistant and assistant.doctor_id:
+                doctor_id = assistant.doctor_id
     elif current_user.is_professional:
         doctor_id = current_user.id
 
@@ -2564,10 +2517,7 @@ def nuevo_asistente():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # Validar que las clínicas pertenezcan al doctor actual
     clinics = Clinic.query.filter_by(doctor_id=doctor_id, is_active=True).all()
-
-    share_data = None
 
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -2593,85 +2543,53 @@ def nuevo_asistente():
                 return render_template('nuevo_asistente.html', clinics=clinics)
             clinic_id_value = clinic.id
 
-        try:
-            with db.session.begin_nested():
-                # Verificar duplicados
-                existing = Assistant.query.filter(
-                    Assistant.name == name,
-                    Assistant.doctor_id == doctor_id,
-                    Assistant.clinic_id == clinic_id_value
-                ).first()
+        # Verificar duplicado
+        existing = Assistant.query.filter_by(
+            name=name,
+            doctor_id=doctor_id,
+            clinic_id=clinic_id_value
+        ).first()
+        if existing:
+            lugar = f"en {Clinic.query.get(clinic_id_value).name}" if clinic_id_value else "sin ubicación"
+            flash(f'Ya existe un asistente llamado "{name}" {lugar}', 'error')
+            return render_template('nuevo_asistente.html', clinics=clinics)
 
-                if existing:
-                    lugar = f"en {Clinic.query.get(clinic_id_value).name}" if clinic_id_value else "sin ubicación"
-                    flash(f'Ya existe un asistente llamado "{name}" {lugar}', 'error')
-                    return render_template('nuevo_asistente.html', clinics=clinics)
-
-                # Crear el Assistant
-                assistant = Assistant(
-                    name=name,
-                    email=email or None,
-                    whatsapp=whatsapp or None,
-                    doctor_id=doctor_id,
-                    clinic_id=clinic_id_value,
-                    type=assistant_type,
-                    is_active=True  # ✅ ¡Clave para que aparezca en el selector!
-                )
-                db.session.add(assistant)
-                db.session.flush()
-
-                # Si es general: crear usuario e invitación
-                if assistant_type == 'general':
-                    user = User.query.filter_by(email=email).first()
-                    if not user:
-                        username_base = email.split('@')[0]
-                        username = username_base
-                        counter = 1
-                        while User.query.filter_by(username=username).first():
-                            username = f"{username_base}{counter}"
-                            counter += 1
-
-                        new_user = User(
-                            username=username,
-                            email=email,
-                            is_professional=False,
-                            role_id=3  # Asistente
-                        )
-                        new_user.set_password(os.getenv('DEFAULT_USER_PASSWORD', 'bioforge123'))
-                        db.session.add(new_user)
-                        db.session.flush()
-                        user = new_user
-
-                    assistant.user_id = user.id
-
-                    # Crear invitación
-                    invite_code = generate_unique_invite_code()
-                    invite = CompanyInvite(
-                        doctor_id=doctor_id,
-                        invite_code=invite_code,
-                        email=email,
-                        name=name,
-                        clinic_id=clinic_id_value,
-                        assistant_type='general',
-                        expires_at=datetime.utcnow() + timedelta(days=7)
-                    )
-                    db.session.add(invite)
-                    share_data = send_company_invite(invite, User.query.get(doctor_id))
-
-            db.session.commit()
-            ubicacion = f"en {assistant.clinic.name}" if assistant.clinic else "sin ubicación específica"
-            flash(f'✅ Asistente {assistant.type.title()} agregado correctamente {ubicacion}', 'success')
-
-            return render_template(
-                'nuevo_asistente.html',
-                clinics=clinics,
-                invite_share=share_data
+        # Buscar o crear usuario
+        user = User.query.filter_by(email=email).first() if email else None
+        if assistant_type == 'general' and not user:
+            # Crear usuario para Senior
+            username_base = email.split('@')[0]
+            username = username_base
+            counter = 1
+            while User.query.filter_by(username=username).first():
+                username = f"{username_base}{counter}"
+                counter += 1
+            user = User(
+                username=username,
+                email=email,
+                is_professional=False,
+                role_id=3
             )
+            user.set_password(os.getenv('DEFAULT_USER_PASSWORD', 'bioforge123'))
+            db.session.add(user)
+            db.session.flush()
 
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error creando asistente: {str(e)}", exc_info=True)
-            flash('❌ Error al crear el asistente.', 'danger')
+        # Crear asistente
+        assistant = Assistant(
+            name=name,
+            email=email or None,
+            whatsapp=whatsapp or None,
+            doctor_id=doctor_id,
+            clinic_id=clinic_id_value,
+            type=assistant_type,
+            is_active=True,
+            user_id=user.id if user else None
+        )
+        db.session.add(assistant)
+        db.session.commit()
+
+        flash(f'✅ Asistente {assistant_type} agregado correctamente', 'success')
+        return redirect(url_for('routes.mis_asistentes'))
 
     return render_template('nuevo_asistente.html', clinics=clinics)
 
@@ -2983,12 +2901,31 @@ def nueva_tarea():
 
 @routes.route('/ver-tareas')
 @login_required
-def ver_tareas():    
+def ver_tareas():
     if session.get('active_role') != 'asistente':
-        flash("Acceso denegegado", "danger")
+        flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.seleccionar_perfil'))
-    
-    return redirect(url_for('routes.dashboard'))
+
+    assistant_id = session.get('active_assistant_id')
+    my_assistant = Assistant.query.get(assistant_id)
+    if not my_assistant or my_assistant.user_id != current_user.id:
+        flash('Asistente no válido', 'danger')
+        return redirect(url_for('routes.seleccionar_perfil'))
+
+    # Tareas asignadas a mí
+    mis_tareas = Task.query.filter_by(assistant_id=assistant_id).all()
+
+    # Tareas que yo asigné (solo si soy Senior)
+    tareas_asignadas_por_mi = []
+    if my_assistant.type == 'general':
+        tareas_asignadas_por_mi = Task.query.filter_by(created_by=current_user.id).all()
+
+    return render_template(
+        'dashboard/assistant.html',
+        assistant=my_assistant,
+        mis_tareas=mis_tareas,
+        tareas_asignadas_por_mi=tareas_asignadas_por_mi
+    )
 
 @routes.route('/tarea/<int:task_id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -3073,6 +3010,33 @@ def cambiar_estado_tarea(task_id):
     else:
         flash('Estado no válido', 'error')
     return redirect(url_for('routes.dashboard'))
+
+@routes.route('/tarea/<int:task_id>/actualizar-estado', methods=['POST'])
+@login_required
+def actualizar_estado_tarea(task_id):
+    task = Task.query.get_or_404(task_id)
+    
+    # ¿Soy el asignado?
+    if task.assistant and task.assistant.user_id == current_user.id:
+        assistant = task.assistant
+        nuevo_estado = request.form.get('status')
+        if assistant.type == 'common':
+            if nuevo_estado not in ['in_progress', 'completed']:
+                flash('No podés cambiar a ese estado', 'error')
+                return redirect(url_for('routes.ver_tareas'))
+        # Senior puede cambiar cualquier estado
+        task.status = nuevo_estado
+        db.session.commit()
+        return redirect(url_for('routes.ver_tareas'))
+
+    # ¿Soy quien asignó la tarea? (Senior o Dueño)
+    if task.created_by == current_user.id or task.doctor_id == current_user.id:
+        task.status = request.form.get('status')
+        db.session.commit()
+        return redirect(url_for('routes.ver_tareas'))
+
+    flash('No tenés permisos para esta acción', 'danger')
+    return redirect(url_for('routes.index'))
 
 @routes.route('/profiles/private/cambiar-pass', methods=['GET', 'POST'])
 @login_required
@@ -3596,17 +3560,18 @@ def seleccionar_perfil():
             'descripcion': 'Gestionar usuarios, roles y configuración del sitio'
         })
 
-    # Rol: Profesional / Dueño
-    if current_user.is_professional:
+    # Rol: Profesional / Dueño - y como asistente si lo fuera 
+    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    if clinics:
         roles.append({
             'tipo': 'profesional',
             'nombre': f"Como Profesional: {current_user.username}",
             'descripcion': 'Gestionar tus ubicaciones, asistentes y tareas'
         })
 
-    # Rol: Asistente (una entrada por cada asignación activa)
+    # Buscar asistentes activos vinculados al usuario - dueño o profesional
     asistentias = Assistant.query.filter_by(
-        user_id=current_user.id,  # = 2
+        user_id=current_user.id,
         is_active=True
     ).all()
     

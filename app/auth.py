@@ -2,7 +2,7 @@
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, Assistant
+from app.models import User, Assistant, Clinic
 
 auth = Blueprint('auth', __name__)
 
@@ -24,12 +24,25 @@ def login():
             login_user(user, remember=True)
             flash('✅ Sesión iniciada correctamente', 'success')
 
-            # Detectar todos los roles activos
-            es_admin = user.is_admin
-            es_profesional = user.is_professional
+            # Detectar roles usando consultas reales, no campos booleanos
+            es_admin = user.is_admin is True
+            es_profesional = Clinic.query.filter_by(doctor_id=user.id, is_active=True).first() is not None
             es_asistente = Assistant.query.filter_by(user_id=user.id, is_active=True).first() is not None
 
             roles_activos = sum([es_admin, es_profesional, es_asistente])
+            print(f"   Roles activos: admin={es_admin}, profesional={es_profesional}, asistente={es_asistente} → total={roles_activos}")
+
+            # qué devuelve la consulta ----------------
+            asistente_encontrado = Assistant.query.filter_by(user_id=user.id, is_active=True).first()
+            print(f"\n🔍 DIAGNÓSTICO LOGIN - Usuario ID: {user.id}")
+            print(f"   ¿Es asistente activo? → {'SÍ' if asistente_encontrado else 'NO'}")
+            if asistente_encontrado:
+                print(f"   Assistant ID: {asistente_encontrado.id}, Doctor ID: {asistente_encontrado.doctor_id}, Type: {asistente_encontrado.type}")
+            es_asistente = asistente_encontrado is not None
+            # ------------------
+            roles_activos = sum([int(es_admin), int(es_profesional), int(es_asistente)])
+            print(f"   VALORES: admin={es_admin} ({type(es_admin)}), profesional={es_profesional} ({type(es_profesional)}), asistente={es_asistente} ({type(es_asistente)})")
+            print(f"   SUMA: {roles_activos}")
 
             if roles_activos == 1:
                 # Un solo rol → redirigir directamente

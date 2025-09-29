@@ -10,69 +10,45 @@
       <p class="text-center mb-4">Tenés varios roles activos. Elegí con cuál querés trabajar hoy:</p>
 
       <div class="row g-4">
-        <!-- Opción: Modo Administrador -->
-        {% if current_user.is_admin %}
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-danger">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">🛠️ Modo Administrador</h5>
-              <p class="text-muted small flex-grow-1">
-                Gestionar usuarios, roles, publicaciones y configuración del sitio.
-              </p>
-              <a href="{{ url_for('routes.admin_dashboard') }}" class="btn btn-danger w-100 mt-auto">
-                Ingresar como Admin
-              </a>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Opción: Modo Profesional / Dueño -->
-        {% if current_user.is_professional %}
-        <div class="col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm border-success">
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title">🏢 Modo Profesional</h5>
-              <p class="text-muted small flex-grow-1">
-                Gestionar tus ubicaciones, asistentes, tareas y publicaciones.
-              </p>
-              <a href="{{ url_for('routes.iniciar_como', tipo='profesional') }}" class="btn btn-success w-100 mt-auto">
-                Ingresar como Profesional
-              </a>
-            </div>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Opción: Modo Asistente (una por cada asignación activa) -->
-        {% set asistentias = assistants_activos if assistants_activos is defined else [] %}
-        {% if asistentias %}
-          {% for ass in asistentias %}
+        {% for rol in roles %}
+          {% if rol.tipo == 'admin' %}
           <div class="col-md-6 col-lg-4">
-            <div class="card h-100 shadow-sm border-info">
+            <div class="card h-100 shadow-sm border-danger">
               <div class="card-body d-flex flex-column">
-                <h5 class="card-title">
-                  {% if ass.type == 'general' %}
-                  👨‍💼 Asistente Senior
-                  {% else %}
-                  👨 Asistente Junior
-                  {% endif %}
-                </h5>
-                <p class="text-muted small flex-grow-1">
-                  <strong>Trabajás para:</strong><br>
-                  {{ ass.doctor.username if ass.doctor else 'Profesional' }}<br>
-                  <strong>Ubicación:</strong><br>
-                  {{ ass.clinic.name if ass.clinic else 'Sin ubicación' }}
-                </p>
-                <a href="{{ url_for('routes.iniciar_como', tipo='asistente', assistant_id=ass.id) }}"
-                   class="btn btn-info w-100 mt-auto">
-                  Ingresar aquí
+                <h5 class="card-title">🛠️ {{ rol.nombre }}</h5>
+                <p class="text-muted small flex-grow-1">{{ rol.descripcion }}</p>
+                <a href="{{ url_for('routes.admin_dashboard') }}" class="btn btn-danger w-100 mt-auto">
+                  Ingresar
                 </a>
               </div>
             </div>
           </div>
-          {% endfor %}
-        {% endif %}
+          {% elif rol.tipo == 'profesional' %}
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-success">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">🏢 {{ rol.nombre }}</h5>
+                <p class="text-muted small flex-grow-1">{{ rol.descripcion }}</p>
+                <a href="{{ url_for('routes.iniciar_como', tipo='profesional') }}" class="btn btn-success w-100 mt-auto">
+                  Ingresar
+                </a>
+              </div>
+            </div>
+          </div>
+          {% elif rol.tipo == 'asistente' %}
+          <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-info">
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">👨‍💼 {{ rol.nombre }}</h5>
+                <p class="text-muted small flex-grow-1">{{ rol.descripcion }}</p>
+                <a href="{{ url_for('routes.iniciar_como', tipo='asistente', assistant_id=rol.assistant_id) }}" class="btn btn-info w-100 mt-auto">
+                  Ingresar
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        {% endfor %}
       </div>
 
       <div class="text-center mt-4">

@@ -1,11 +1,20 @@
--- 1. Mabel y Emiliano → clinic_id = 1
-UPDATE assistants
-SET clinic_id = 1
-WHERE clinic_id IS NULL
-  AND email IN ('macalu1966@gmail.com', 'emiliano@gmail.com');
+UPDATE clinic
+SET doctor_id = 36
+WHERE id = 4;  -- GINA 1
 
--- 2. Todos los demás (incluidos los que NO tienen email) → clinic_id = 3
-UPDATE assistants
-SET clinic_id = 3
-WHERE clinic_id IS NULL
-  AND (email IS NULL OR email NOT IN ('macalu1966@gmail.com', 'emiliano@gmail.com'));
+SELECT id, username, is_professional FROM users WHERE id = 36;
+
+SELECT id, name, doctor_id FROM clinic WHERE id = 4;
+
+-- Verificar asistente
+SELECT id, user_id, doctor_id, type FROM assistants WHERE user_id = 36;
+
+DELETE FROM users WHERE id = 13;
+
+SELECT id, name, email, user_id
+FROM assistants
+WHERE email = 'stefyocen99@gmail.com';
+
+SELECT id, username, is_professional
+FROM users
+WHERE id = 36;

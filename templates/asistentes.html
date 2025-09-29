@@ -9,21 +9,12 @@
             <i class="fas fa-plus me-2"></i>Nuevo Asistente
         </a>
     </div>
-    <!-- 🔴 DEBUG: muestra cuántos hay -->
-    <div class="alert alert-info">
-        Debug: {{ general_assistants|length }} asistentes generales cargados
-    </div>
 
-    {% if general_assistants %}
-        <div class="card mb-4">
-            <!-- ... resto del contenido ... -->
-        </div>
-    {% endif %}
-    <!-- Asistentes Generales -->
+    <!-- Asistentes Generales (sin clínica) -->
     {% if general_assistants %}
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Asistentes Senior</h5>
+                <h5 class="mb-0">Asistentes Senior (Sin ubicación específica)</h5>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -31,20 +22,17 @@
                     <div class="col-md-6 col-lg-4 mb-3">
                         <div class="card h-100 shadow-sm hover-glow">
                             <div class="card-body">
-                                <!-- Foto por defecto (centrada) -->
                                 <div class="text-center mb-3">
                                     <img src="/static/img/default-assistant.png" 
                                          alt="{{ assistant.name }}" 
                                          class="rounded-circle" 
                                          style="width: 60px; height: 60px; object-fit: cover; border: 2px solid #0d6efd;">
                                 </div>
-
                                 <h5 class="card-title">{{ assistant.name }}</h5>
                                 <p class="card-text"><i class="fas fa-envelope me-2"></i>{{ assistant.email or 'Sin email' }}</p>
                                 <p class="card-text"><i class="fab fa-whatsapp me-2"></i>{{ assistant.whatsapp or 'Sin WhatsApp' }}</p>
                                 
-                                <!-- Rol destacado -->
-                                <span class="badge bg-primary badge-status mb-2">
+                                <span class="badge bg-success badge-status mb-2">
                                     <i class="fas fa-crown me-1"></i>Asistente Senior
                                 </span>
 
@@ -79,29 +67,20 @@
                                     </a>
                                     {% endif %}
 
-                                    <!-- Reenviar código solo si es senior y no ha usado el acceso -->
                                     {% if assistant.type == 'general' and assistant.user_id %}
                                     <div class="mt-2">
                                         {% set invite = active_invite_map.get(assistant.email) %}
                                         {% if invite %}
-                                            {% if config.DEBUG %}
-                                            {% set base_url = 'http://127.0.0.1:5000' %}
-                                            {% else %}
-                                            {% set base_url = 'https://tu-app.onrender.com' %}
-                                            {% endif %}
-
+                                            {% set base_url = 'http://127.0.0.1:5000' if config.DEBUG else 'https://tu-app.onrender.com' %}
                                             <a href="https://wa.me/{{ assistant.whatsapp|replace('+','') }}?text=Tu%20código%3A%20{{ invite.invite_code }}.%20Ingresa%3A%20{{ base_url }}/registro/{{ invite.invite_code }}"
                                             target="_blank"
                                             class="btn btn-outline-info btn-sm w-100">
                                                 <i class="fas fa-redo-alt me-1"></i> Reenviar Código
                                             </a>
-                                        {% else %}
-                                        <small class="text-muted">Código ya usado o no disponible</small>
                                         {% endif %}
                                     </div>
                                     {% endif %}
 
-                                    <!-- Estado de Telegram -->
                                     <span class="badge {% if assistant.telegram_id %}bg-success{% else %}bg-secondary{% endif %}">
                                         {% if assistant.telegram_id %}
                                             📱 Telegram vinculado
@@ -111,7 +90,7 @@
                                     </span>
                                 </div>
 
-                                <!-- Ver tareas (colapsable) -->
+                                <!-- Ver tareas -->
                                 <div class="mt-3 pt-3 border-top">
                                     <button class="btn btn-sm btn-outline-primary w-100"
                                             type="button"
@@ -121,27 +100,17 @@
                                         <i class="fas fa-tasks me-1"></i>
                                         Ver tareas ({{ tasks_by_assistant.get(assistant.id, []) | length }})
                                     </button>
-
                                     <div class="collapse mt-2" id="tareas-{{ assistant.id }}">
                                         {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
                                         {% if tareas %}
                                         <ul class="list-unstyled small mb-0">
                                             {% for task in tareas | sort_by_due_date %}
-                                            <li class="mb-1
-                                                {% if task.status == 'completed' %}text-success
+                                            <li class="mb-1 {% if task.status == 'completed' %}text-success
                                                 {% elif task.status == 'cancelled' %}text-danger
-                                                {% else %}{% if task.due_date and task.due_date < today %}text-warning{% endif %}
-                                                {% endif %}">
+                                                {% elif task.due_date and task.due_date < today %}text-warning{% endif %}">
                                                 <i class="fas fa-circle text-xs me-1"></i>
                                                 {{ task.title[:30] }}{% if task.title|length > 30 %}...{% endif %}
-                                                <br>
-                                                <small class="text-muted">
-                                                    {% if task.due_date %}
-                                                        ({{ task.due_date.strftime('%d/%m') }})
-                                                    {% else %}
-                                                        (Sin fecha)
-                                                    {% endif %}
-                                                </small>
+                                                <br><small>{{ task.due_date.strftime('%d/%m') if task.due_date else 'Sin fecha' }}</small>
                                             </li>
                                             {% endfor %}
                                         </ul>
@@ -176,7 +145,15 @@
                                 <h5 class="card-title">{{ assistant.name }}</h5>
                                 <p class="card-text"><i class="fas fa-envelope me-2"></i>{{ assistant.email or 'Sin email' }}</p>
                                 <p class="card-text"><i class="fab fa-whatsapp me-2"></i>{{ assistant.whatsapp or 'Sin WhatsApp' }}</p>
-                                <span class="badge bg-primary badge-status mb-2">Asistente Común</span>
+                                
+                                <!-- ✅ CORRECCIÓN CLAVE: mostrar tipo real -->
+                                <span class="badge {% if assistant.type == 'general' %}bg-success{% else %}bg-primary{% endif %} badge-status mb-2">
+                                    {% if assistant.type == 'general' %}
+                                        <i class="fas fa-crown me-1"></i>Asistente Senior
+                                    {% else %}
+                                        Asistente Común
+                                    {% endif %}
+                                </span>
 
                                 <!-- Botones de acción -->
                                 <div class="mt-3 d-flex gap-2">
@@ -218,7 +195,7 @@
                                     </span>
                                 </div>
 
-                                <!-- Ver tareas (colapsable) -->
+                                <!-- Ver tareas -->
                                 <div class="mt-3 pt-3 border-top">
                                     <button class="btn btn-sm btn-outline-primary w-100"
                                             type="button"
@@ -228,27 +205,17 @@
                                         <i class="fas fa-tasks me-1"></i>
                                         Ver tareas ({{ tasks_by_assistant.get(assistant.id, []) | length }})
                                     </button>
-
                                     <div class="collapse mt-2" id="tareas-{{ assistant.id }}">
                                         {% set tareas = tasks_by_assistant.get(assistant.id, []) %}
                                         {% if tareas %}
                                         <ul class="list-unstyled small mb-0">
                                             {% for task in tareas | sort_by_due_date %}
-                                            <li class="mb-1
-                                                {% if task.status == 'completed' %}text-success
+                                            <li class="mb-1 {% if task.status == 'completed' %}text-success
                                                 {% elif task.status == 'cancelled' %}text-danger
-                                                {% else %}{% if task.due_date and task.due_date < today %}text-warning{% endif %}
-                                                {% endif %}">
+                                                {% elif task.due_date and task.due_date < today %}text-warning{% endif %}">
                                                 <i class="fas fa-circle text-xs me-1"></i>
                                                 {{ task.title[:30] }}{% if task.title|length > 30 %}...{% endif %}
-                                                <br>
-                                                <small class="text-muted">
-                                                    {% if task.due_date %}
-                                                        ({{ task.due_date.strftime('%d/%m') }})
-                                                    {% else %}
-                                                        (Sin fecha)
-                                                    {% endif %}
-                                                </small>
+                                                <br><small>{{ task.due_date.strftime('%d/%m') if task.due_date else 'Sin fecha' }}</small>
                                             </li>
                                             {% endfor %}
                                         </ul>
@@ -288,17 +255,14 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="assistant_id" id="assistantId">
-                    
                     <div class="mb-3">
                         <label for="title" class="form-label text-black-50">Título *</label>
                         <input type="text" class="form-control" id="title" name="title" required>
                     </div>
-                    
                     <div class="mb-3">
                         <label for="description" class="form-label text-black-50">Descripción</label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     </div>
-                    
                     <div class="mb-3">
                         <label for="due_date" class="form-label text-black-50">Fecha Límite</label>
                         <input type="date" class="form-control" id="due_date" name="due_date">
@@ -319,7 +283,6 @@
         box-shadow: 0 8px 15px rgba(0,0,0,0.1)!important;
         transition: all 0.3s ease;
     }
-    
     .btn-task {
         width: 32%;
         padding: 0.25rem 0.5rem;
@@ -336,10 +299,8 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const name = this.getAttribute('data-name');
             const id = this.getAttribute('data-id');
-            
             document.getElementById('assistantName').textContent = name;
             document.getElementById('assistantId').value = id;
-            
             taskModalInstance.show();
         });
     });
