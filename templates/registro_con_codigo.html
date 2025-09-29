@@ -18,27 +18,42 @@
                              class="rounded-circle mb-3" 
                              style="width: 80px; height: 80px; object-fit: cover; border: 3px solid #28a745;">
                         <h5>{{ invite.name }}</h5>
-                        <p class="text-muted">Has sido invitado por <strong>{{ invite.doctor.username }}</strong></p>
+                        <p class="text-muted">Invitado por <strong>{{ invite.doctor.username }}</strong></p>
+                        <p class="text-muted"><strong>Email:</strong> {{ invite.email }}</p>
                     </div>
 
                     <div class="alert alert-info small">
                         <i class="fas fa-info-circle me-2"></i>
-                        Usa este código: <strong>{{ invite.invite_code }}</strong> (solo si no puedes registrarte ahora)
+                        Código de invitación: <strong>{{ invite.invite_code }}</strong>
                     </div>
                     {% endif %}
 
                     <form method="POST">
+                        <!-- Email (solo lectura) -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   value="{{ invite.email if invite else '' }}" 
+                                   readonly>
+                        </div>
+
+                        <!-- Username -->
                         <div class="mb-3">
                             <label for="username" class="form-label">Nombre de usuario *</label>
                             <input type="text" 
                                    class="form-control" 
                                    id="username" 
                                    name="username" 
+                                   value="{{ request.form.username or '' }}" 
                                    required
                                    minlength="3"
-                                   maxlength="100">
+                                   maxlength="100"
+                                   placeholder="Ej: rodolfo123">
                         </div>
 
+                        <!-- Contraseña -->
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña *</label>
                             <input type="password" 
@@ -46,7 +61,8 @@
                                    id="password" 
                                    name="password" 
                                    required
-                                   minlength="6">
+                                   minlength="6"
+                                   placeholder="Mínimo 6 caracteres">
                         </div>
 
                         <div class="d-grid">

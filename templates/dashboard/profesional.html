@@ -1,0 +1,50 @@
+<!-- templates/dashboard/professional.html (fragmento clave) -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Mi Negocio</h2>
+  
+  {% if locations|length > 1 %}
+  <div class="mb-3">
+    <label class="form-label">Seleccioná una ubicación:</label>
+    <select class="form-select" onchange="location = this.value;">
+      {% for loc in locations %}
+      <option value="{{ url_for('dashboard.professional', location=loc.id) }}"
+              {% if selected_location and loc.id == selected_location.id %}selected{% endif %}>
+        {{ loc.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  {% elif locations %}
+  <p><strong>Ubicación actual:</strong> {{ selected_location.name }}</p>
+  {% endif %}
+
+  <!-- Aquí va el resto: lista de asistentes, tareas, etc. -->
+  <!-- Ejemplo básico de asistentes -->
+  <h4>Asistentes ({{ assistants|length }})</h4>
+  {% for assistant in assistants %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <strong>{{ assistant.name }}</strong>
+      {% if assistant.email %} - {{ assistant.email }}{% endif %}
+      <span class="badge bg-{{ 'success' if assistant.type == 'general' else 'secondary' }} ms-2">
+        {{ 'Senior' if assistant.type == 'general' else 'Junior' }}
+      </span>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Ejemplo básico de tareas -->
+  <h4>Tareas ({{ tasks|length }})</h4>
+  {% for task in tasks %}
+  <div class="card mb-2">
+    <div class="card-body">
+      <strong>{{ task.title }}</strong> - 
+      {% if task.assistant %}{{ task.assistant.name }}{% endif %}
+      <span class="badge bg-{{ 'warning' if task.status == 'pending' else 'info' if task.status == 'in_progress' else 'success' }}">{{ task.status }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

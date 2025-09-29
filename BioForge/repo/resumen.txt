@@ -1,0 +1,136 @@
+Claro. Aquí tienes un **resumen técnico detallado y estructurado** del estado actual de **BioForge**, listo para continuar mañana en un nuevo hilo o en este mismo.
+
+---
+
+## 🧠 **Contexto del Proyecto: BioForge**
+Plataforma colaborativa que conecta **profesionales, emprendedores y PyMEs**, con énfasis en **colaboración real**, no en directorios.
+
+### 🛠️ Stack técnico
+- **Backend**: Flask + SQLAlchemy + Flask-Login  
+- **Frontend**: Jinja2 + **Bootstrap 5** (sin Tailwind)  
+- **Base de datos**: **PostgreSQL** (local = Render)  
+- **Deploy**: Render (Web + PostgreSQL)  
+- **Autenticación**: Roles funcionales (`is_admin`, `is_professional`, `UserRole`)
+
+---
+
+## ✅ Logros alcanzados
+- Migración completa de **SQLite → PostgreSQL** sin errores de secuencias ni relaciones.
+- Carga exitosa de datos desde JSON (usuarios, roles, tareas, clínicas, asistentes, etc.).
+- Contraseñas preservadas (hash original intacto).
+- Rutas y templates actualizados (`/profesionales` → “Nuestra Comunidad”).
+- Verificación de datos vía `pgAdmin` y `psql`.
+
+---
+
+## 🧩 Funcionalidades actuales
+- **Sitio público**: Landing con valor claro y CTAs duales.
+- **Sitio privado**: Dashboard, gestión de equipos, tareas, agenda, publicaciones.
+- **Roles**: Admin, Profesional, Asistente, Visitante, Paciente.
+- **Gestión de tareas**: Asignación, estados, notificaciones (Telegram/WhatsApp).
+- **Publicaciones**: Blog con categorías, SEO, vistas.
+- **Clínicas y perfiles**: Datos profesionales completos.
+
+---
+
+## 🔍 Diagnóstico actual: Problemas identificados
+
+### 1. **Problema de acceso de asistentes al dashboard**
+- **Caso concreto**: **Stefy** (asistente general de **CD3 Arquitectos**) **no puede acceder al dashboard de su empleador** al iniciar sesión.
+- **Causa raíz**:  
+  - En la tabla `assistants`, **Stefy aparece dos veces**:  
+    - **ID 7**: `type="general"`, pero `user_id=NULL` ❌  
+    - **ID 19**: `type="common"`, `user_id=NULL`, `doctor_id=2` (no CD3) ❌  
+  - **Ningún registro vincula a Stefy (user_id=13) con CD3 (doctor_id=6) como asistente general**.
+
+### 2. **Inconsistencia en la creación de asistentes**
+- El flujo de invitación (`/registro/<invite_code>`) **no garantiza la creación del `Assistant`** si el usuario ya existe.
+- Resultado: asistentes con cuenta de usuario, pero **sin registro en `assistants`** → no aparecen en selección de perfil.
+
+### 3. **Datos inconsistentes en tablas**
+- **PERRO** (ID 6): `user_id=2` (astiazu), pero asignado a CD3 (`doctor_id=6`) → conflicto de pertenencia.
+- **Rodolfo** (ID 3): `user_id=NULL`, pero asignó tareas → ¿cómo lo hizo sin login?
+
+---
+
+## ✅ Soluciones implementadas o propuestas
+
+### A. **Corrección inmediata de datos**
+Ejecutar en PostgreSQL:
+```sql
+-- 1. Vincular a Stefy correctamente
+UPDATE assistants 
+SET type = 'general', doctor_id = 6, user_id = 13, email = 'stefyocen99@gmail.com'
+WHERE id = 19;
+
+-- 2. Eliminar duplicado
+DELETE FROM assistants WHERE id = 7;
+
+-- 3. Corregir PERRO (asistente sin login)
+UPDATE assistants SET user_id = NULL WHERE id = 6;
+```
+
+### B. **Corrección del flujo de registro**
+En `/registro/<invite_code>`:
+- **Siempre crear `Assistant`** si no existe, **independientemente de si el usuario es nuevo o existente**.
+- Asegurar que `user_id` y `doctor_id` se asignen correctamente.
+
+### C. **Redirección automática al dashboard**
+En `/seleccionar-perfil`:
+- Si el usuario tiene **un solo rol** (profesional o asistente), **redirigir directamente a `/dashboard`**.
+- El dashboard ya maneja correctamente el contexto de `doctor_id` según el rol activo.
+
+---
+
+## 🚀 Próximos pasos estratégicos
+
+### 1. **Monetización**
+- Comunicar valor de pertenencia.
+- Preparar planes (gratuito → premium).
+
+### 2. **Agente conversacional**
+- Integrar asistente para responder:
+  - “¿Para qué sirve BioForge?”
+  - “¿Cómo me registro?”
+  - “¿Qué puedo hacer acá?”
+
+### 3. **Crecimiento de la red**
+- CTAs claros para nuevos miembros.
+- Onboarding optimizado.
+- Perfiles atractivos y completos.
+
+### 4. **Mejoras técnicas**
+- Validar migraciones para Render.
+- Optimizar queries.
+- Añadir tests básicos.
+
+---
+
+## 🔑 Puntos clave para continuar
+
+- **No usar Tailwind**: el sitio usa solo Bootstrap 5.
+- **Los 3 tipos de perfil** se gestionan con:
+  - `role_id` → `UserRole`
+  - `is_professional` (booleano heredado, mantener por compatibilidad)
+- **Render = PostgreSQL**: cualquier cambio local debe ser compatible.
+- **El JSON de respaldo está completo**: se puede recargar en cualquier momento.
+
+---
+
+## 📌 Estado actual de las tablas (resumen)
+
+| Tabla | Observación |
+|------|-------------|
+| `users` | Stefy (ID 13) existe con email `stefyocen99@gmail.com` |
+| `assistants` | Stefy no está vinculada correctamente a CD3 Arquitectos |
+| `tasks` | Tarea ID 58 confirma que Stefy asignó una tarea a PERRO en el equipo de CD3 |
+
+---
+
+Con este resumen, puedes retomar mañana con total claridad:  
+✅ **Qué funciona**,  
+⚠️ **Qué falla**,  
+🔧 **Cómo arreglarlo**,  
+🚀 **Qué sigue**.
+
+¿Te gustaría que lo exporte en formato Markdown o PDF para tu documentación personal?
