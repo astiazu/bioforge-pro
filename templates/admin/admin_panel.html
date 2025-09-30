@@ -110,6 +110,23 @@
             </a>
         </div>
     </div>
+    {% if config.DEBUG %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0">🛠️ Herramientas de Desarrollo</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('routes.admin_backup_render') }}" 
+            class="btn btn-warning"
+            onclick="return confirm('¿Descargar backup de Render a local?')">
+                <i class="fas fa-download me-2"></i>Backup desde Render
+            </a>
+            <small class="text-muted d-block mt-2">
+                Genera backup_render.sql en la carpeta /backups
+            </small>
+        </div>
+    </div>
+    {% endif %}
     <!-- Pending Notes -->
     {% if pending_notes %}
     <div class="row mb-5">

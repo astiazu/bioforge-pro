@@ -12,7 +12,7 @@ import csv
 import string
 import secrets
 import traceback
-
+import subprocess
 
 from app.models import *
 
@@ -1481,11 +1481,19 @@ def profesionales():
     professionals = query.all()
     categories = ["Profesional", "Emprendedor", "PyME"]
     
+    # Obtener perfiles destacados para el slider (solo profesionales activos con foto)
+    featured_profiles = User.query.filter(
+        User.is_professional == True,
+        User.profile_photo.isnot(None),
+        User.profile_photo != ''
+    ).order_by(db.func.random()).limit(4).all()
+
     return render_template(
         'profesionales.html',
         professionals=professionals,
         categories=categories,
-        selected_category=category
+        selected_category=category,
+        featured_profiles=featured_profiles  # ← Pasar al template
     )
 
 # Perfil público más completo
@@ -2326,6 +2334,63 @@ def admin_delete_subscriber(sub_id):
     db.session.commit()
     flash('✅ Suscriptor eliminado', 'success')
     return redirect(url_for('routes.admin_subscribers'))
+
+@routes.route('/admin/backup-render')
+@login_required
+def admin_backup_render():
+    if not current_user.is_admin:
+        abort(403)
+
+    # Solo permitido en modo desarrollo
+    if not current_app.debug:
+        flash("Esta función solo está disponible en modo desarrollo.", "danger")
+        return redirect(url_for('routes.admin_panel'))
+
+    try:
+        # Obtener credenciales de Render desde variables de entorno
+        render_host = os.getenv('RENDER_DB_HOST')
+        render_db = os.getenv('RENDER_DB_NAME')
+        render_user = os.getenv('RENDER_DB_USER')
+        render_pass = os.getenv('RENDER_DB_PASS')
+        render_port = os.getenv('RENDER_DB_PORT', '5432')
+
+        if not all([render_host, render_db, render_user, render_pass]):
+            flash("Faltan variables de entorno de Render.", "danger")
+            return redirect(url_for('routes.admin_panel'))
+
+        # Ruta del backup
+        backup_path = os.path.join(os.getcwd(), 'backups', 'backup_render.sql')
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+
+        # Comando pg_dump
+        cmd = [
+            'pg_dump',
+            '-h', render_host,
+            '-p', render_port,
+            '-U', render_user,
+            '-d', render_db,
+            '--no-owner',
+            '--no-privileges',
+            '--clean',
+            '--if-exists',
+            '-f', backup_path
+        ]
+
+        # Ejecutar con contraseña en variable de entorno
+        env = os.environ.copy()
+        env['PGPASSWORD'] = render_pass
+
+        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            flash(f"✅ Backup de Render completado: {backup_path}", "success")
+        else:
+            flash(f"❌ Error: {result.stderr}", "danger")
+
+    except Exception as e:
+        flash(f"❌ Excepción: {str(e)}", "danger")
+
+    return redirect(url_for('routes.admin_panel'))
 
 @routes.route('/contacto', methods=['POST'])
 def contacto():
@@ -3714,15 +3779,6 @@ def exportar_tareas_csv():
         mimetype="text/csv",
         headers={"Content-Disposition": "attachment;filename=tareas_equipo.csv"}
     )
-
-# @routes.route('/dashboard')
-# @login_required
-# def index():
-#     # Redirección de respaldo
-#     if Assistant.query.filter_by(user_id=current_user.id).first():
-#         return redirect(url_for('dashboard.assistant'))
-#     else:
-#         return redirect(url_for('dashboard.professional'))
 
 @routes.route('/dashboard/professional')
 @login_required

@@ -48,6 +48,38 @@
     </div>
 </section>
 
+<!-- Slider de perfiles reales (dinámico) -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h3 class="h4">Conocé a quienes ya construyen en BioForge</h3>
+        </div>
+        <div class="row justify-content-center g-4">
+            {% for prof in featured_profiles %}
+            <div class="col-md-6 col-lg-3">
+                <div class="text-center">
+                    <div class="mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #e2e8f0;">
+                        <img src="{{ prof.profile_photo }}" 
+                             alt="{{ prof.username }}"
+                             class="w-100 h-100"
+                             style="object-fit: cover;">
+                    </div>
+                    <h5 class="mb-1">{{ prof.username }}</h5>
+                    <p class="text-primary fw-bold mb-0">{{ prof.specialty or prof.professional_category or 'Profesional' }}</p>
+                    <p class="text-muted small">
+                        {% if prof.clinics %}
+                            {{ prof.clinics[0].name if prof.clinics[0].name else 'PyME' }}
+                        {% else %}
+                            Emprendedor
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
 <!-- Los 3 pilares -->
 <section class="py-5 bg-light">
     <div class="container">
@@ -122,18 +154,17 @@
         {% for prof in professionals %}
         <div class="col-md-6 col-lg-4">
             <div class="card h-100 shadow-sm border-light">
-                <div class="position-relative">
-                    <img src="{{ prof.profile_photo }}" 
-                         class="card-img-top" 
-                         alt="{{ prof.username }}"
-                         style="height: 200px; object-fit: cover;">
-                    <span class="position-absolute top-0 end-0 m-2 badge bg-primary text-white">
-                        {{ prof.role_name }}
-                    </span>
+                <div class="position-relative d-flex justify-content-center p-3" style="height: 200px;">
+                    <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 4px solid #f8f9fa;">
+                        <img src="{{ prof.profile_photo or url_for('static', filename='img/default-avatar.png') }}" 
+                            alt="{{ prof.username }}"
+                            class="w-100 h-100"
+                            style="object-fit: cover;">
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h5 class="card-title">{{ prof.username }}</h5>
-                    <p class="text-primary fw-bold">{{ prof.specialty }}</p>
+                    <p class="text-primary fw-bold">{{ prof.specialty or prof.professional_category or 'Sin especialidad' }}</p>
                     <p class="card-text text-secondary">
                         {% set bio = prof.bio or '' %}
                         {{ bio[:120] }}{% if bio | length > 120 %}...{% endif %}
@@ -153,7 +184,7 @@
                         </a>
                         {% if prof.clinics and prof.clinics|length > 0 %}
                         <a href="{{ url_for('routes.calendario_turnos', doctor_id=prof.id, clinic_id=prof.clinics[0].id) }}" 
-                           class="btn btn-success btn-sm">
+                        class="btn btn-success btn-sm">
                             Agendar cita
                         </a>
                         {% else %}
@@ -165,7 +196,6 @@
         </div>
         {% endfor %}
     </div>
-
     {% if not professionals %}
     <div class="text-center py-5">
         <h4>No hay miembros en esta categoría</h4>
