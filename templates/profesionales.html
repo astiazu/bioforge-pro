@@ -134,7 +134,7 @@
                 <div class="card-body">
                     <h5 class="card-title">{{ prof.username }}</h5>
                     <p class="text-primary fw-bold">{{ prof.specialty }}</p>
-                    <p class="card-text text-muted">
+                    <p class="card-text text-secondary">
                         {% set bio = prof.bio or '' %}
                         {{ bio[:120] }}{% if bio | length > 120 %}...{% endif %}
                     </p>

@@ -1489,7 +1489,7 @@ def profesionales():
     )
 
 # Perfil público más completo
-@routes.route('/profesional/<string:url_slug>')
+@routes.route('/profesional/<string:url_slug>') 
 def perfil_profesional(url_slug):
     professional = User.query.filter_by(
         url_slug=url_slug, 
