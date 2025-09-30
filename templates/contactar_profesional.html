@@ -1,0 +1,71 @@
+<!-- templates/contactar_profesional.html -->
+{% extends "base.html" %}
+
+{% block title %}Contactar a {{ profesional.username }} - BioForge{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <div class="bg-light rounded-circle d-inline-block p-3 mb-3">
+                    <img src="{{ profesional.profile_photo or url_for('static', filename='img/default-avatar.png') }}"
+                         alt="{{ profesional.username }}"
+                         class="rounded-circle"
+                         style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+                <h1 class="text-primary">Contactar a {{ profesional.username }}</h1>
+                <p class="lead text-muted">
+                    Enviá un mensaje para solicitar servicios, colaborar o pedir más información.
+                </p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="mb-4"><i class="fas fa-envelope text-info me-2"></i>Enviar mensaje</h4>
+
+                    <form method="POST" action="{{ url_for('routes.enviar_mensaje', user_id=profesional.id) }}">
+                        <input type="hidden" name="servicio" value="{{ servicio }}">
+
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Tu nombre *</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Tu email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        {% if servicio == 'inteligencia' %}
+                        <div class="alert alert-info small mb-3">
+                            <i class="fas fa-file-invoice-dollar me-1"></i>
+                            <strong>Servicio solicitado:</strong> Inteligencia Comercial (análisis de solvencia y riesgo crediticio)
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="mensaje" class="form-label">Mensaje *</label>
+                            <textarea class="form-control" id="mensaje" name="mensaje" rows="5" required></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Enviar mensaje
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información de contacto alternativa -->
+            <div class="mt-4 text-center text-muted small">
+                <p>
+                    ¿Preferís contactar directamente?<br>
+                    Si el profesional tiene WhatsApp o Telegram vinculado, podrás verlo en su perfil público.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

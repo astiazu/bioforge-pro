@@ -1670,6 +1670,32 @@ def perfil_equipo():
     # Si es dueño, mostrar su perfil normal
     return redirect(url_for('routes.mi_perfil'))
 
+@routes.route('/profesional/<int:user_id>/contactar')
+def contactar_profesional(user_id):
+    profesional = User.query.get_or_404(user_id)
+    # Solo permitimos contacto con el dueño del sitio (user_id=2) desde esta sección
+    if user_id != 2:
+        # Opcional: redirigir o abortar si se intenta acceder a otro ID
+        return redirect(url_for('routes.contactar_profesional', user_id=2))
+    
+    servicio = request.args.get('servicio')
+    return render_template('contactar_profesional.html', profesional=profesional, servicio=servicio)
+
+@routes.route('/servicios/<servicio>')
+def servicio_detalle(servicio):
+    if servicio == 'inteligencia-comercial':
+        return render_template('servicios/inteligencia_comercial.html')
+    else:
+        abort(404)
+
+@routes.route('/profesional/<int:user_id>/mensaje', methods=['POST'])
+@login_required
+def enviar_mensaje(user_id):
+    profesional = User.query.get_or_404(user_id)
+    # Aquí procesarías el formulario: guardar en DB, enviar notificación, etc.
+    flash("✅ Mensaje enviado. El profesional se contactará a la brevedad.", "success")
+    return redirect(url_for('routes.perfil_profesional', url_slug=profesional.url_slug))
+
 @routes.route('/consultorio/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_consultorio():

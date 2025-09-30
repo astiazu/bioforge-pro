@@ -31,7 +31,9 @@
                 <div class="card-body">
                     <div class="row align-items-center">
                         <div class="col-md-3 text-center mb-3 mb-md-0">
-                            <i class="fas fa-user-tie fa-5x text-secondary"></i>
+                            <img src="{{ url_for('static', filename='img/logo-datos.gif') }}" 
+                               alt="DatosConsultora" height="80" class="me-2">
+                        <!-- <i class="fas fa-user-tie fa-5x text-secondary"></i>-->
                         </div>
                         <div class="col-md-6">
                             <p class="text-secondary">
@@ -103,6 +105,21 @@
                                     <h6 class="mb-1 text-white-50">Formación y capacitaciones</h6>
                                     <small class="text-white-50">Cursos personalizados</small>
                                 </div>
+                            </div>
+                        </div>
+                        <!-- ✅ Inteligencia Comercial: SIEMPRE visible, contacto fijo al dueño -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="d-flex align-items-center p-3 bg-dark rounded">
+                                <i class="fas fa-file-invoice-dollar fa-2x text-warning me-3"></i>
+                                <div>
+                                    <h6 class="mb-1 text-white-50">Inteligencia Comercial</h6>
+                                    <small class="text-white-50">Análisis de solvencia y riesgo crediticio</small>
+                                </div>
+                                <a href="{{ url_for('routes.contactar_profesional', user_id=2) }}"
+                                class="btn btn-sm btn-outline-light ms-2"
+                                style="white-space: nowrap;">
+                                    Contactar
+                                </a>
                             </div>
                         </div>
                     </div>
