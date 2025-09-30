@@ -1,12 +1,13 @@
 <!-- templates/contactar_profesional.html -->
 {% extends "base.html" %}
 
-{% block title %}Contactar a {{ profesional.username }} - BioForge{% endblock %}
+{% block title %}Inteligencia Comercial - {{ profesional.username }} - BioForge{% endblock %}
 
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
+            <!-- Encabezado -->
             <div class="text-center mb-5">
                 <div class="bg-light rounded-circle d-inline-block p-3 mb-3">
                     <img src="{{ profesional.profile_photo or url_for('static', filename='img/default-avatar.png') }}"
@@ -14,18 +15,63 @@
                          class="rounded-circle"
                          style="width: 80px; height: 80px; object-fit: cover;">
                 </div>
-                <h1 class="text-primary">Contactar a {{ profesional.username }}</h1>
+                <h1 class="text-primary">Inteligencia Comercial</h1>
                 <p class="lead text-muted">
-                    Enviá un mensaje para solicitar servicios, colaborar o pedir más información.
+                    Análisis de solvencia y riesgo crediticio para decisiones comerciales seguras.
                 </p>
             </div>
 
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h4 class="mb-4"><i class="fas fa-envelope text-info me-2"></i>Enviar mensaje</h4>
+            <!-- Sección informativa (estilo Nosis) -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h4 class="text-success mb-3"><i class="fas fa-shield-alt me-2"></i>¿Qué es?</h4>
+                            <p>
+                                Servicio especializado que permite evaluar la **capacidad de pago** y el **comportamiento financiero** de personas físicas o jurídicas antes de:
+                            </p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success me-2"></i> Vender a crédito</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i> Contratar proveedores</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i> Asociarse comercialmente</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i> Alquilar propiedades</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <h4 class="text-info mb-3"><i class="fas fa-lightbulb me-2"></i>¿Qué obtenés?</h4>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-file-alt text-info me-2"></i> Informe de solvencia actualizada</li>
+                                <li><i class="fas fa-chart-line text-info me-2"></i> Indicadores de riesgo crediticio</li>
+                                <li><i class="fas fa-user-check text-info me-2"></i> Verificación de identidad y actividad económica</li>
+                                <li><i class="fas fa-lock text-info me-2"></i> Datos confidenciales y con cumplimiento normativo</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Llamado a la acción -->
+            <div class="card shadow-sm border-0 mb-5">
+                <div class="card-body text-center">
+                    <h4 class="mb-3"><i class="fas fa-handshake text-primary me-2"></i>¿Necesitás tomar una decisión informada?</h4>
+                    <p class="text-muted mb-0">
+                        Completá el formulario y te contactaremos para gestionar tu análisis.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Formulario de contacto -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Solicitar análisis</h5>
+                </div>
+                <div class="card-body">
                     <form method="POST" action="{{ url_for('routes.enviar_mensaje', user_id=profesional.id) }}">
-                        <input type="hidden" name="servicio" value="{{ servicio }}">
+                        <input type="hidden" name="servicio" value="inteligencia">
 
                         <div class="mb-3">
                             <label for="nombre" class="form-label">Tu nombre *</label>
@@ -37,33 +83,18 @@
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
 
-                        {% if servicio == 'inteligencia' %}
-                        <div class="alert alert-info small mb-3">
-                            <i class="fas fa-file-invoice-dollar me-1"></i>
-                            <strong>Servicio solicitado:</strong> Inteligencia Comercial (análisis de solvencia y riesgo crediticio)
-                        </div>
-                        {% endif %}
-
                         <div class="mb-3">
-                            <label for="mensaje" class="form-label">Mensaje *</label>
-                            <textarea class="form-control" id="mensaje" name="mensaje" rows="5" required></textarea>
+                            <label for="mensaje" class="form-label">¿Sobre quién necesitás el análisis? *</label>
+                            <textarea class="form-control" id="mensaje" name="mensaje" rows="4" placeholder="Nombre, CUIT/DNI, tipo de relación (cliente, proveedor, socio, etc.)" required></textarea>
                         </div>
 
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-paper-plane me-2"></i>Enviar mensaje
+                                <i class="fas fa-paper-plane me-2"></i>Solicitar análisis
                             </button>
                         </div>
                     </form>
                 </div>
-            </div>
-
-            <!-- Información de contacto alternativa -->
-            <div class="mt-4 text-center text-muted small">
-                <p>
-                    ¿Preferís contactar directamente?<br>
-                    Si el profesional tiene WhatsApp o Telegram vinculado, podrás verlo en su perfil público.
-                </p>
             </div>
         </div>
     </div>
