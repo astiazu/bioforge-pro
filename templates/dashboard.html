@@ -105,6 +105,18 @@
                         {% endfor %}
                     </select>
                 </div>
+                <!-- Ubicación (Clínica) -->
+                <div class="col-md-3">
+                    <label for="clinic" class="form-label">Filtrar por ubicación</label>
+                    <select id="clinic" name="clinic" class="form-select">
+                        <option value="">Todas</option>
+                        {% for c in clinics %}
+                        <option value="{{ c.id }}" {% if clinic_filter == c.id %}selected{% endif %}>
+                            {{ c.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <!-- Estado -->
                 <div class="col-md-3">
                     <label for="status" class="form-label">Filtrar por estado</label>
@@ -120,14 +132,14 @@
                 <div class="col-md-3">
                     <label for="date" class="form-label">Fecha límite</label>
                     <input type="date" id="date" name="date" class="form-control"
-                           value="{{ date_filter or '' }}">
+                        value="{{ date_filter or '' }}">
                 </div>
                 <!-- Checkbox: Solo atrasadas -->
                 <div class="col-md-3">
                     <label class="form-label">Mostrar solo atrasadas</label>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="solo_atrasadas" name="solo_atrasadas" 
-                               {% if request.args.get('solo_atrasadas') %}checked{% endif %}>
+                            {% if request.args.get('solo_atrasadas') %}checked{% endif %}>
                         <label class="form-check-label" for="solo_atrasadas">
                             <i class="fas fa-exclamation-triangle text-danger me-1"></i> Atrasadas
                         </label>

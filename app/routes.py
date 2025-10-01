@@ -3074,30 +3074,30 @@ def editar_tarea(task_id):
     
     if not assistant:
         flash('Tarea no válida', 'danger')
-        return redirect(url_for('routes.ver_tareas'))
+        return redirect(url_for('routes.dashboard'))
 
-    # ✅ Permiso: Dueño (doctor_id) o Asistente Senior asignado
+    # ✅ Permiso: Dueño, Asistente Senior asignado, o creador original (task.created_by)
     puede_editar = (
         current_user.id == assistant.doctor_id or  # Es el Dueño
-        (current_user.id == assistant.user_id and assistant.type == 'general')  # Es Asistente Senior asignado
+        (current_user.id == assistant.user_id and assistant.type == 'general') or  # Es Senior asignado
+        task.created_by == current_user.id  # Es el creador original
     )
 
     if not puede_editar:
         flash('No tienes permiso para editar esta tarea', 'danger')
         return redirect(url_for('routes.dashboard'))
 
-    form = TaskForm(obj=task)  # precargar con los datos actuales
-    form.assistant_id.choices = [(assistant.id, assistant.name)]  # bloqueamos solo su asistente
+    form = TaskForm(obj=task)
+    form.assistant_id.choices = [(assistant.id, assistant.name)]
 
     if form.validate_on_submit():
         task.title = form.title.data
         task.description = form.description.data
         task.due_date = form.due_date.data
         task.status = form.status.data
-
         db.session.commit()
 
-        # 🔔 Notificación como en tu código original
+        # === Notificaciones ===
         if assistant.telegram_id:
             try:
                 mensaje_telegram = (
@@ -3120,7 +3120,6 @@ def editar_tarea(task_id):
                 clean_number = ''.join(c for c in assistant.whatsapp if c.isdigit())
                 if not clean_number.startswith('54'):
                     clean_number = '54' + clean_number
-
                 mensaje_whatsapp = (
                     f"Hola {assistant.name}, tienes una actualización en tu tarea:\n\n"
                     f"📌 *{task.title}*\n"
@@ -3131,14 +3130,13 @@ def editar_tarea(task_id):
                 )
                 url_encoded = urllib.parse.quote(mensaje_whatsapp)
                 whatsapp_url = f"https://wa.me/{clean_number}?text={url_encoded}"
-
                 session['whatsapp_url'] = whatsapp_url
                 flash('✅ Tarea actualizada. Haz clic en el botón para enviar por WhatsApp.', 'success')
                 return redirect(url_for('routes.dashboard'))
             except Exception as e:
                 print(f"Error al generar WhatsApp: {e}")
 
-        flash('✅ Tarea actualizada, pero no se pudo notificar (sin contacto)', 'info')
+        flash('✅ Tarea actualizada', 'success')
         return redirect(url_for('routes.dashboard'))
 
     return render_template('editar_tarea.html', form=form, task=task, assistant=assistant)
@@ -3531,44 +3529,54 @@ def mis_equipos():
 @routes.route('/dashboard')
 @login_required
 def dashboard():
-    # === Determinar doctor_id según rol activo ===
     doctor_id = None
     active_assistant = None
     can_manage_team = False
+    is_junior = False
 
+    # === Determinar contexto según rol activo ===
     if session.get('active_role') == 'asistente':
         assistant_id = session.get('active_assistant_id')
         if assistant_id:
-            # Validar que el asistente pertenece al usuario actual
             active_assistant = Assistant.query.filter_by(
                 id=assistant_id,
                 user_id=current_user.id,
                 is_active=True
             ).first()
-
-        if active_assistant and active_assistant.doctor_id:
+        if active_assistant:
             doctor_id = active_assistant.doctor_id
-            can_manage_team = True
-            
+            can_manage_team = (active_assistant.type == 'general')
+            is_junior = (active_assistant.type == 'common')
     elif current_user.is_professional:
         doctor_id = current_user.id
         can_manage_team = True
 
-    if not doctor_id:
+    # Acceso denegado si no tiene rol válido
+    if not doctor_id and not is_junior:
         flash("Acceso denegado", "danger")
         return redirect(url_for('routes.index'))
 
-    # === Filtros desde GET ===
+    # === Obtener filtros desde la URL ===
     assistant_filter = request.args.get("assistant", type=int)
+    clinic_filter = request.args.get("clinic", type=int)
     status_filter = request.args.get("status")
     date_filter = request.args.get("date")
+    solo_atrasadas = request.args.get("solo_atrasadas")
 
-    # === Base query: tareas del equipo ===
-    query = Task.query.join(Assistant).filter(Assistant.doctor_id == doctor_id)
+    # === Construir consulta base ===
+    if is_junior:
+        # Junior: solo tareas asignadas a él
+        query = Task.query.filter(Task.assistant_id == active_assistant.id)
+    else:
+        # Dueño/Senior: tareas de su equipo (mismo doctor_id)
+        query = Task.query.join(Assistant).filter(Assistant.doctor_id == doctor_id)
 
-    # Aplicar filtros
-    if assistant_filter:
-        query = query.filter(Task.assistant_id == assistant_filter)
+    # === Aplicar filtros (solo si aplica) ===
+    if not is_junior:
+        if assistant_filter:
+            query = query.filter(Task.assistant_id == assistant_filter)
+        if clinic_filter:
+            query = query.filter(Task.clinic_id == clinic_filter)
 
     if status_filter:
         query = query.filter(Task.status == status_filter)
@@ -3578,28 +3586,38 @@ def dashboard():
             date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
             query = query.filter(Task.due_date == date_obj)
         except ValueError:
-            pass
+            pass  # Ignorar fechas mal formateadas
 
-    # Filtro por "solo atrasadas"
-    solo_atrasadas = request.args.get("solo_atrasadas")
-    today = date.today()
     if solo_atrasadas:
+        today = date.today()
         query = query.filter(
             Task.due_date < today,
             Task.status.notin_(['completed', 'cancelled'])
         )
 
-    # obtener las tareas (antes de paginar)
     tasks = query.all()
 
+    # === Preparar listas para filtros ===
+    if is_junior:
+        assistants = [active_assistant] if active_assistant else []
+        clinics = []
+        if active_assistant and active_assistant.clinic_id:
+            clinic = Clinic.query.get(active_assistant.clinic_id)
+            if clinic:
+                clinics = [clinic]
+        elif active_assistant:
+            # Si no tiene clínica asignada, buscar clínicas del doctor
+            clinics = Clinic.query.filter_by(doctor_id=doctor_id).all()
+    else:
+        assistants = Assistant.query.filter_by(doctor_id=doctor_id, is_active=True).all()
+        clinics = Clinic.query.filter_by(doctor_id=doctor_id).all()
+
     # === Agrupar tareas por asistente ===
-    tasks_by_assistant = {}
+    tasks_by_assistant = defaultdict(list)
     for task in tasks:
-        if task.assistant_id not in tasks_by_assistant:
-            tasks_by_assistant[task.assistant_id] = []
         tasks_by_assistant[task.assistant_id].append(task)
 
-    # === Labels para estados ===
+    # === Etiquetas de estado ===
     status_labels = {
         'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
         'in_progress': {'text': 'En progreso', 'class': 'bg-info text-white'},
@@ -3610,40 +3628,28 @@ def dashboard():
     # === KPIs ===
     pending_tasks = sum(1 for t in tasks if t.status in ['pending', 'in_progress'])
     completed_tasks = sum(1 for t in tasks if t.status == 'completed')
-    total_assistants = Assistant.query.filter_by(doctor_id=doctor_id).count()
+    total_assistants = len(assistants)
 
-    # === Datos para gráficos ===
+    # === Datos para gráficos (últimos 30 días) ===
     today = date.today()
-    last_30_days = [
-        (today - timedelta(days=i)).strftime('%d/%m')
-        for i in range(29, -1, -1)
-    ]
-
+    last_30_days = [(today - timedelta(days=i)).strftime('%d/%m') for i in range(29, -1, -1)]
     task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
-    for task in tasks:
-        if not task.created_at:
-            continue
-        day_key = task.created_at.date()
-        if day_key >= today - timedelta(days=29):
-            day_str = day_key.strftime('%d/%m')
-            if task.status == 'pending':
-                task_data[day_str]['Pendientes'] += 1
-            elif task.status == 'in_progress':
-                task_data[day_str]['En progreso'] += 1
-            elif task.status == 'completed':
-                task_data[day_str]['Completadas'] += 1
 
-    data_evolucion = []
-    for fecha in last_30_days:
-        data_evolucion.append({
-            'name': fecha,
-            'Pendientes': task_data[fecha]['Pendientes'],
-            'En progreso': task_data[fecha]['En progreso'],
-            'Completadas': task_data[fecha]['Completadas']
-        })
+    for task in tasks:
+        if task.created_at:
+            day_key = task.created_at.date()
+            if day_key >= today - timedelta(days=29):
+                day_str = day_key.strftime('%d/%m')
+                if task.status == 'pending':
+                    task_data[day_str]['Pendientes'] += 1
+                elif task.status == 'in_progress':
+                    task_data[day_str]['En progreso'] += 1
+                elif task.status == 'completed':
+                    task_data[day_str]['Completadas'] += 1
+
+    data_evolucion = [{'name': d, **task_data[d]} for d in last_30_days]
 
     # Distribución por asistente
-    assistants = Assistant.query.filter_by(doctor_id=doctor_id).all()
     assistants_distribution = []
     for a in assistants:
         count = Task.query.filter_by(assistant_id=a.id).count()
@@ -3664,34 +3670,25 @@ def dashboard():
 
     return render_template(
         'dashboard.html',
-        # Datos principales
         can_manage_team=can_manage_team,
         active_assistant=active_assistant,
-
-        # KPIs
         total_tasks=total_tasks_count,
         pending_tasks=pending_tasks,
         completed_tasks=completed_tasks,
         total_assistants=total_assistants,
-
-        # Listas
         assistants=assistants,
-        tasks=paginated_tasks,  # ✅ SOLO ESTA, LA VERSION PAGINADA
-        tasks_by_assistant=tasks_by_assistant,
+        clinics=clinics,
+        tasks=paginated_tasks,
+        tasks_by_assistant=dict(tasks_by_assistant),
         status_labels=status_labels,
-
-        # Gráficos
         data_evolucion=data_evolucion,
         assistants_distribution=assistants_distribution,
-
-        # Filtros aplicados
         assistant_filter=assistant_filter,
+        clinic_filter=clinic_filter,
         status_filter=status_filter,
         date_filter=date_filter,
         today=today,
         last_30_days=last_30_days,
-
-        # Paginación
         total_pages=total_pages,
         current_page=page,
     )
