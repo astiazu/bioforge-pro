@@ -3854,12 +3854,12 @@ def assistant():
                          assistant=my_assistant,
                          tasks=tasks)
 
-# En routes.py
-@routes.route('/init-db-render')
-def init_db_render():
-    from app import db
-    db.create_all()  # Crea SOLO las tablas que faltan
-    return "✅ Tabla 'visits' creada"
+# # En routes.py
+# @routes.route('/init-db-render')
+# def init_db_render():
+#     from app import db
+#     db.create_all()  # Crea SOLO las tablas que faltan
+#     return "✅ Tabla 'visits' creada"
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):
