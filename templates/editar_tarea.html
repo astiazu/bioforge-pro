@@ -49,7 +49,12 @@
 
                         <div class="alert alert-light small mb-4">
                             <i class="fas fa-info-circle me-2"></i>
-                            Al guardar, se actualizará el estado y se puede volver a notificar si es necesario.
+                            {% if current_user.id == assistant.doctor_id %}
+                                Eres el <strong>Dueño</strong> de esta tarea.
+                            {% else %}
+                                Eres un <strong>Asistente Senior</strong> asignado a esta tarea.
+                            {% endif %}
+                            Al guardar, se actualizará el estado y se notificará al otro participante.
                         </div>
 
                         <!-- Botones -->

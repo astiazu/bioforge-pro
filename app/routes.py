@@ -2604,7 +2604,14 @@ def mis_asistentes():
 
     # Obtener tareas asignadas a estos asistentes
     assistant_ids = [a.id for a in all_assistants]
-    tasks = Task.query.filter(Task.assistant_id.in_(assistant_ids)).all()
+    tasks = Task.query.options(
+        db.joinedload(Task.assistant),
+        db.joinedload(Task.created_by_user)  # Relación con User
+    ).filter(Task.assistant_id.in_(assistant_ids)).all()
+    
+    # Ordenar todas las tareas por fecha de creación (más reciente primero)
+    all_tasks = sorted(tasks, key=lambda x: x.created_at or x.id, reverse=True)
+
     tasks_by_assistant = {}
     for task in tasks:
         if task.assistant_id not in tasks_by_assistant:
@@ -2626,6 +2633,7 @@ def mis_asistentes():
         assistants_by_clinic=assistants_by_clinic,
         all_assistants=all_assistants,
         tasks_by_assistant=tasks_by_assistant,
+        all_tasks=all_tasks,  # ✅ Nueva variable para la tabla unificada
         no_assistants=(len(all_assistants) == 0),
         today=today,
         active_invite_map=active_invite_map
@@ -2774,7 +2782,7 @@ def editar_asistente(assistant_id):
     
     if assistant.doctor_id != current_user.id:
         flash('No puedes editar este asistente', 'danger')
-        return redirect(url_for('routes.mis_asistentes'))
+        return redirect(url_for('routes.dashboard'))
     
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -2832,7 +2840,7 @@ def editar_asistente(assistant_id):
 
                     db.session.commit()
                     flash('✅ Asistente actualizado correctamente', 'success')
-                    return redirect(url_for('routes.mis_asistentes'))
+                    return redirect(url_for('routes.dashboard'))
 
             except Exception as e:
                 db.session.rollback()
@@ -2851,7 +2859,7 @@ def eliminar_asistente(assistant_id):
     # Verificar que pertenece al profesional actual
     if assistant.doctor_id != current_user.id:
         flash('No puedes eliminar este asistente', 'danger')
-        return redirect(url_for('routes.mis_asistentes'))
+        return redirect(url_for('routes.dashboard'))
     
     try:
         # Si el assistant tiene un User vinculado, desvincular
@@ -2875,7 +2883,7 @@ def eliminar_asistente(assistant_id):
         current_app.logger.error(f"Error al eliminar asistente {assistant_id}: {str(e)}", exc_info=True)
         flash('❌ Error al eliminar el asistente. Revisa los logs.', 'danger')
 
-    return redirect(url_for('routes.mis_asistentes'))
+    return redirect(url_for('routes.dashboard'))
 
 @routes.route('/perfil-asistente')
 @login_required
@@ -3018,10 +3026,10 @@ def nueva_tarea():
             # Guardar en sesión para mostrar en ver_tareas
             session['whatsapp_url'] = whatsapp_url
             flash('✅ Tarea creada. Haz clic en el botón para enviar por WhatsApp.', 'success')
-            return redirect(url_for('routes.ver_tareas'))
+            return redirect(url_for('routes.dashboard'))
 
         flash('✅ Tarea creada correctamente', 'success')
-        return redirect(url_for('routes.ver_tareas'))
+        return redirect(url_for('routes.dashboard'))
 
     return render_template(
         'nueva_tarea.html', 
@@ -3062,11 +3070,21 @@ def ver_tareas():
 @login_required
 def editar_tarea(task_id):
     task = Task.query.get_or_404(task_id)
-    assistant = Assistant.query.filter_by(id=task.assistant_id, doctor_id=current_user.id).first()
+    assistant = Assistant.query.get(task.assistant_id)
     
-    if not assistant or not can_manage_tasks(current_user, assistant.doctor_id):
-        flash('No tienes permiso para editar esta tarea', 'danger')
+    if not assistant:
+        flash('Tarea no válida', 'danger')
         return redirect(url_for('routes.ver_tareas'))
+
+    # ✅ Permiso: Dueño (doctor_id) o Asistente Senior asignado
+    puede_editar = (
+        current_user.id == assistant.doctor_id or  # Es el Dueño
+        (current_user.id == assistant.user_id and assistant.type == 'general')  # Es Asistente Senior asignado
+    )
+
+    if not puede_editar:
+        flash('No tienes permiso para editar esta tarea', 'danger')
+        return redirect(url_for('routes.dashboard'))
 
     form = TaskForm(obj=task)  # precargar con los datos actuales
     form.assistant_id.choices = [(assistant.id, assistant.name)]  # bloqueamos solo su asistente
@@ -3093,7 +3111,7 @@ def editar_tarea(task_id):
                 )
                 enviar_notificacion_telegram(mensaje_telegram)
                 flash('✅ Tarea actualizada y notificada por Telegram', 'success')
-                return redirect(url_for('routes.ver_tareas'))
+                return redirect(url_for('routes.dashboard'))
             except Exception as e:
                 print(f"Error al enviar a Telegram: {e}")
 
@@ -3116,14 +3134,14 @@ def editar_tarea(task_id):
 
                 session['whatsapp_url'] = whatsapp_url
                 flash('✅ Tarea actualizada. Haz clic en el botón para enviar por WhatsApp.', 'success')
-                return redirect(url_for('routes.ver_tareas'))
+                return redirect(url_for('routes.dashboard'))
             except Exception as e:
                 print(f"Error al generar WhatsApp: {e}")
 
         flash('✅ Tarea actualizada, pero no se pudo notificar (sin contacto)', 'info')
-        return redirect(url_for('routes.ver_tareas'))
+        return redirect(url_for('routes.dashboard'))
 
-    return render_template('editar_tarea.html', form=form, task=task)
+    return render_template('editar_tarea.html', form=form, task=task, assistant=assistant)
 
 @routes.route('/tarea/<int:task_id>/cambiar-estado', methods=['POST'])
 @login_required

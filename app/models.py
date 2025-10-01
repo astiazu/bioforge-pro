@@ -438,7 +438,6 @@ class Task(db.Model):
     
     doctor_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     assistant_id = db.Column(db.Integer, db.ForeignKey("assistants.id"), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)  # Quién creó la tarea
 
     # ✅ Puede ser NULL si el asistente es general
     clinic_id = db.Column(db.Integer, db.ForeignKey("clinic.id"), nullable=True)

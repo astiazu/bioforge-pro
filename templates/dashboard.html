@@ -169,231 +169,180 @@
             </div>
         </div>
     </div>
-    <!-- ✅ PRIMERO: Últimas Tareas Asignadas -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">📋 Últimas Tareas Asignadas</h5>
-            <div class="d-flex gap-2">
-                <a href="{{ url_for('routes.exportar_tareas_csv') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-file-csv me-1"></i> Exportar CSV
-                </a>
-                {% if can_manage_team %}
-                <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus me-1"></i> Nueva Tarea
-                </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="card-body p-0">
-            {% if tasks %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Título</th>
-                            <th>Asistente</th>
-                            <th>Fecha Límite</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for t in tasks %}
-                    <tr>
-                        <td>{{ t.title[:40] }}{% if t.title|length > 40 %}...{% endif %}</td>
-                        <td>{{ t.assistant.name }}</td>
-                        <td>
-                            {% if t.due_date %}
-                                {{ t.due_date.strftime('%d/%m/%Y') }}
-                                {% if t.due_date < today and t.status not in ['completed', 'cancelled'] %}
-                                    <span class="badge bg-danger ms-2">Atrasada</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="text-muted">Sin fecha</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span class="badge {{ status_labels[t.status].class }}">
-                                {{ status_labels[t.status].text }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <!-- Selector rápido de estado -->
-                                <form method="POST" action="{{ url_for('routes.cambiar_estado_tarea', task_id=t.id) }}" class="d-inline">
-                                    <select name="nuevo_estado" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
-                                        <option value="pending" {% if t.status == 'pending' %}selected{% endif %}>Pendiente</option>
-                                        <option value="in_progress" {% if t.status == 'in_progress' %}selected{% endif %}>En progreso</option>
-                                        <option value="completed" {% if t.status == 'completed' %}selected{% endif %}>Completada</option>
-                                        <option value="cancelled" {% if t.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
-                                    </select>
-                                </form>
-                                <!-- Botón de editar -->
-                                <a href="{{ url_for('routes.editar_tarea', task_id=t.id) }}" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <!-- Paginación -->
-            {% if total_pages > 1 %}
-            <div class="card-footer bg-white border-top">
-                <nav aria-label="Navegación de páginas">
-                    <ul class="pagination justify-content-center mb-0">
-                        <!-- Botón Anterior -->
-                        <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-                            {% if current_page == 1 %}
-                            <span class="page-link">
-                                <i class="fas fa-chevron-left"></i>
-                            </span>
-                            {% else %}
-                            <a class="page-link" href="{{ url_for('routes.dashboard', page=current_page-1, **request.args|without_page) }}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                            {% endif %}
-                        </li>
-                        <!-- Números de página -->
-                        {% for p in range(1, total_pages + 1) %}
-                        <li class="page-item {% if p == current_page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('routes.dashboard', page=p, **request.args|without_page) }}">{{ p }}</a>
-                        </li>
-                        {% endfor %}
-                        <!-- Botón Siguiente -->
-                        <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-                            {% if current_page == total_pages %}
-                            <span class="page-link">
-                                <i class="fas fa-chevron-right"></i>
-                            </span>
-                            {% else %}
-                            <a class="page-link" href="{{ url_for('routes.dashboard', page=current_page+1, **request.args|without_page) }}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                            {% endif %}
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-            {% endif %}
-            {% else %}
-            <div class="text-center py-5">
-                <p class="text-muted">No hay tareas registradas.</p>
-                {% if can_manage_team %}
-                <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-1"></i> Crear Primera Tarea
-                </a>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    <!-- ✅ SEGUNDO: Lista de asistentes -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">👥 Asistentes del Equipo</h5>
+<!-- ✅ PRIMERO: Últimas Tareas Asignadas (CON QUIÉN ASIGNÓ) -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📋 Últimas Tareas Asignadas</h5>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('routes.exportar_tareas_csv') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-file-csv me-1"></i> Exportar CSV
+            </a>
             {% if can_manage_team %}
-            <a href="{{ url_for('routes.nuevo_asistente') }}" class="btn btn-success btn-sm">
-                <i class="fas fa-plus me-1"></i> Nuevo Asistente
+            <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Nueva Tarea
             </a>
             {% endif %}
         </div>
-        <div class="card-body p-0">
-            {% if assistants %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Rol</th>
-                            <th>Consultorio</th>
-                            <th>Tareas</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for a in assistants %}
-                        <tr>
-                            <td>{{ a.name }}</td>
-                            <td>
-                                <span class="badge {% if a.type == 'general' %}bg-primary{% else %}bg-warning{% endif %}">
-                                    {{ 'Senior' if a.type == 'general' else 'Junior' }}
-                                </span>
-                            </td>
-                            <td>{{ a.clinic.name if a.clinic else 'General' }}</td>
-                            <td>{{ tasks_by_assistant.get(a.id, []) | length }}</td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <button class="btn btn-info btn-sm btn-task"
-                                            data-id="{{ a.id }}"
-                                            data-name="{{ a.name }}">
-                                        <i class="fas fa-tasks"></i>
-                                    </button>
-                                    {% if can_manage_team %}
-                                    <a href="{{ url_for('routes.editar_asistente', assistant_id=a.id) }}" 
-                                       class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form method="POST" action="{{ url_for('routes.eliminar_asistente', assistant_id=a.id) }}" class="d-inline eliminar-form">
-                                        <button type="submit" class="btn btn-danger btn-sm"
-                                                onclick="return confirm('¿Eliminar este asistente?')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-5">
-                <p class="text-muted">No hay asistentes en este equipo.</p>
-                {% if can_manage_team %}
-                <a href="{{ url_for('routes.nuevo_asistente') }}" class="btn btn-success btn-sm">
-                    <i class="fas fa-plus me-1"></i> Crear Primer Asistente
-                </a>
-                {% endif %}
-            </div>
+    </div>
+    <div class="card-body p-0">
+        {% if tasks %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Título</th>
+                        <th>Asistente</th>
+                        <th>Asignado por</th>
+                        <th>Fecha Límite</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for t in tasks %}
+                <tr>
+                    <td>{{ t.title[:40] }}{% if t.title|length > 40 %}...{% endif %}</td>
+                    <td>{{ t.assistant.name }}</td>
+                    <td>
+                        {% if t.created_by_user %}
+                            {{ t.created_by_user.username }}
+                        {% elif t.doctor_id == current_user.id %}
+                            Tú
+                        {% else %}
+                            {{ t.doctor.username if t.doctor else 'Sistema' }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if t.due_date %}
+                            {{ t.due_date.strftime('%d/%m/%Y') }}
+                            {% if t.due_date < today and t.status not in ['completed', 'cancelled'] %}
+                                <span class="badge bg-danger ms-2">Atrasada</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">Sin fecha</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {{ status_labels[t.status].class }}">
+                            {{ status_labels[t.status].text }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Selector rápido de estado -->
+                            <form method="POST" action="{{ url_for('routes.cambiar_estado_tarea', task_id=t.id) }}" class="d-inline">
+                                <select name="nuevo_estado" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                                    <option value="pending" {% if t.status == 'pending' %}selected{% endif %}>Pendiente</option>
+                                    <option value="in_progress" {% if t.status == 'in_progress' %}selected{% endif %}>En progreso</option>
+                                    <option value="completed" {% if t.status == 'completed' %}selected{% endif %}>Completada</option>
+                                    <option value="cancelled" {% if t.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                                </select>
+                            </form>
+                            <!-- Botón de editar -->
+                            <a href="{{ url_for('routes.editar_tarea', task_id=t.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Paginación -->
+        {% if total_pages > 1 %}
+        <div class="card-footer bg-white border-top">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination justify-content-center mb-0">
+                    <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                        {% if current_page == 1 %}
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                        {% else %}
+                        <a class="page-link" href="{{ url_for('routes.dashboard', page=current_page-1, **request.args|without_page) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% endif %}
+                    </li>
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {% if p == current_page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('routes.dashboard', page=p, **request.args|without_page) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                        {% if current_page == total_pages %}
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                        {% else %}
+                        <a class="page-link" href="{{ url_for('routes.dashboard', page=current_page+1, **request.args|without_page) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No hay tareas registradas.</p>
+            {% if can_manage_team %}
+            <a href="{{ url_for('routes.nueva_tarea') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Crear Primera Tarea
+            </a>
             {% endif %}
         </div>
+        {% endif %}
     </div>
 </div>
-<!-- Modal para asignar tarea -->
-<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="taskForm" method="POST" action="{{ url_for('routes.nueva_tarea') }}">
-                <div class="modal-header">
-                    <h5 class="modal-title">📋 Asignar Tarea a <strong><span id="assistantName"></span></strong></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="assistant_id" id="assistantId">
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Título *</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Descripción</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="due_date" class="form-label">Fecha Límite</label>
-                        <input type="date" class="form-control" id="due_date" name="due_date">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Asignar Tarea</button>
-                </div>
-            </form>
+
+<!-- ✅ SEGUNDO: Lista de asistentes (SIN ACCIONES) -->
+<div class="card shadow-sm">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">👥 Asistentes del Equipo</h5>
+        {% if can_manage_team %}
+        <a href="{{ url_for('routes.nuevo_asistente') }}" class="btn btn-success btn-sm">
+            <i class="fas fa-plus me-1"></i> Nuevo Asistente
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% if assistants %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Rol</th>
+                        <th>Ubicación</th>
+                        <th>Tareas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assistants %}
+                    <tr>
+                        <td>{{ a.name }}</td>
+                        <td>
+                            <span class="badge {% if a.type == 'general' %}bg-primary{% else %}bg-warning{% endif %}">
+                                {{ 'Senior' if a.type == 'general' else 'Junior' }}
+                            </span>
+                        </td>
+                        <td>{{ a.clinic.name if a.clinic else 'General' }}</td>
+                        <td>{{ tasks_by_assistant.get(a.id, []) | length }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+        {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No hay asistentes en este equipo.</p>
+            {% if can_manage_team %}
+            <a href="{{ url_for('routes.nuevo_asistente') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-plus me-1"></i> Crear Primer Asistente
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
