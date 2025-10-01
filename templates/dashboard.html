@@ -216,8 +216,9 @@
                     <td>{{ t.title[:40] }}{% if t.title|length > 40 %}...{% endif %}</td>
                     <td>{{ t.assistant.name }}</td>
                     <td>
-                        {% if t.created_by_user %}
-                            {{ t.created_by_user.username }}
+                        {% set creator = creators.get(t.created_by) %}
+                        {% if creator %}
+                            {{ creator.username }}
                         {% elif t.doctor_id == current_user.id %}
                             Tú
                         {% else %}

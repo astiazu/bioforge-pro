@@ -3617,6 +3617,9 @@ def dashboard():
     for task in tasks:
         tasks_by_assistant[task.assistant_id].append(task)
 
+    creator_ids = {task.created_by for task in tasks}
+    creators = {u.id: u for u in User.query.filter(User.id.in_(creator_ids)).all()}
+    
     # === Etiquetas de estado ===
     status_labels = {
         'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
@@ -3680,6 +3683,7 @@ def dashboard():
         clinics=clinics,
         tasks=paginated_tasks,
         tasks_by_assistant=dict(tasks_by_assistant),
+        creators=creators,
         status_labels=status_labels,
         data_evolucion=data_evolucion,
         assistants_distribution=assistants_distribution,
@@ -3877,6 +3881,177 @@ def assistant():
 #     return "✅ Tabla 'visits' creada"
 
 # ✅ Mover esta función fuera de cualquier ruta
+
+@routes.route('/admin/export-data')
+@login_required
+def export_data():
+    if not current_user.is_admin:
+        abort(403)
+
+    tables = {
+        'users': User,
+        'assistants': Assistant,
+        'clinic': Clinic,
+        'tasks': Task,
+        'notes': Note,
+        'publications': Publication,
+        'availability': Availability,
+        'appointments': Appointment,
+        'medical_records': MedicalRecord,
+        'schedules': Schedule,
+        'user_roles': UserRole,
+        'subscribers': Subscriber,
+        'company_invites': CompanyInvite,
+        'invitation_logs': InvitationLog,
+        'visits': Visit
+    }
+
+    table_name = request.args.get('table')
+    if not table_name or table_name not in tables:
+        links = "<h2>🔐 Exportar datos (solo admin)</h2><ul>"
+        for name in sorted(tables.keys()):
+            links += f'<li><a href="?table={name}">{name}</a></li>'
+        links += "</ul><p>⚠️ Elimina esta ruta después de usarla.</p>"
+        return links
+
+    model = tables[table_name]
+    columns = [col.name for col in model.__table__.columns]
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(columns)
+
+    for row in model.query.all():
+        writer.writerow([
+            str(getattr(row, col)) if getattr(row, col) is not None else ''
+            for col in columns
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment;filename={table_name}.csv"}
+    )
+    
+@routes.route('/admin/import-data', methods=['GET', 'POST'])
+@login_required
+def import_data():
+    if not current_user.is_admin:
+        abort(403)
+
+    tables = {
+        'users': User,
+        'assistants': Assistant,
+        'clinic': Clinic,
+        'tasks': Task,
+        'notes': Note,
+        'publications': Publication,
+        'availability': Availability,
+        'appointments': Appointment,
+        'medical_records': MedicalRecord,
+        'schedules': Schedule,
+        'user_roles': UserRole,
+        'subscribers': Subscriber,
+        'company_invites': CompanyInvite,
+        'invitation_logs': InvitationLog,
+        'visits': Visit
+    }
+
+    if request.method == 'POST':
+        table = request.form.get('table')
+        csv_file = request.files.get('csv_file')
+        
+        if not csv_file or table not in tables:
+            flash("❌ Tabla o archivo inválido", "danger")
+            return redirect(request.url)
+
+        model = tables[table]
+        try:
+            # Soporta UTF-8 con BOM (común en Excel)
+            stream = StringIO(csv_file.read().decode('utf-8-sig'))
+            reader = csv.DictReader(stream)
+        except Exception as e:
+            flash(f"❌ Error al leer CSV: {e}", "danger")
+            return redirect(request.url)
+
+        success_count = 0
+        try:
+            for row in reader:
+                cleaned = {}
+                for key, value in row.items():
+                    if value == '':
+                        cleaned[key] = None
+                    elif key in ['id', 'user_id', 'doctor_id', 'assistant_id', 'clinic_id', 'patient_id', 'role_id', 'created_by', 'approved_by']:
+                        cleaned[key] = int(value) if value.isdigit() else None
+                    elif key in ['is_active', 'is_admin', 'is_professional', 'is_used', 'success']:
+                        cleaned[key] = value.lower() in ('1', 'true', 't', 'yes', 'on')
+                    elif key in ['created_at', 'updated_at', 'due_date', 'published_at', 'expires_at', 'used_at', 'approved_at']:
+                        if value:
+                            try:
+                                cleaned[key] = date_parser.parse(value)
+                            except:
+                                cleaned[key] = None
+                        else:
+                            cleaned[key] = None
+                    else:
+                        cleaned[key] = value
+
+                # Evitar duplicados por ID
+                if 'id' in cleaned and cleaned['id']:
+                    existing = model.query.get(cleaned['id'])
+                    if existing:
+                        continue  # salta si ya existe
+
+                obj = model(**cleaned)
+                db.session.add(obj)
+                success_count += 1
+
+            db.session.commit()
+            flash(f"✅ Importado: {success_count} registros en '{table}'", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error al importar '{table}': {str(e)}", "danger")
+
+        return redirect(url_for('routes.import_data'))
+
+    # Mostrar formulario
+    options = "".join([f'<option value="{name}">{name}</option>' for name in sorted(tables.keys())])
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Importar datos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h4>📤 Importar datos a Render (solo admin)</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Tabla</label>
+                        <select name="table" class="form-select" required>{options}</select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Archivo CSV</label>
+                        <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Importar</button>
+                    <a href="{{ url_for('routes.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+                <div class="alert alert-warning mt-3">
+                    ⚠️ <strong>Advertencia:</strong> Esta ruta debe eliminarse después de usarla.
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+    </html>
+    '''
+
 def generar_disponibilidad_automatica(schedule, semanas=52):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
     today = datetime.now().date()
