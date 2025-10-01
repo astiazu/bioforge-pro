@@ -49,7 +49,7 @@ from app import db, mail
 from app.models import (
     User, Note, Publication, NoteStatus, Clinic, Availability,
     Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
-    Assistant, Task, TaskStatus, CompanyInvite
+    Assistant, Task, TaskStatus, CompanyInvite, Visit
 )
 
 from app.utils import (
@@ -727,10 +727,47 @@ def admin_panel():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
     
+    # === Estadísticas de visitas (con manejo de errores) ===
+    try:
+        from app.models import Visit
+        total_visits = Visit.query.count()
+        today_visits = Visit.query.filter(
+            db.func.date(Visit.created_at) == datetime.utcnow().date()
+        ).count()
+
+        # Datos para el gráfico: últimas 7 días
+        end_date = datetime.utcnow().date()
+        start_date = end_date - timedelta(days=6)
+        
+        visits_by_day = Visit.query.filter(
+            db.func.date(Visit.created_at) >= start_date,
+            db.func.date(Visit.created_at) <= end_date
+        ).all()
+
+        visit_counts = defaultdict(int)
+        for visit in visits_by_day:
+            visit_counts[visit.created_at.date().isoformat()] += 1
+
+        chart_labels = []
+        chart_data = []
+        for i in range(7):
+            day = (start_date + timedelta(days=i)).isoformat()
+            chart_labels.append((start_date + timedelta(days=i)).strftime('%d/%m'))
+            chart_data.append(visit_counts.get(day, 0))
+    except Exception as e:
+        current_app.logger.error(f"Error en estadísticas de visitas: {e}")
+        total_visits = 0
+        today_visits = 0
+        chart_labels = []
+        chart_data = []
+
+    # === Resto de las estadísticas ===
+    from flask import current_app  # ✅ Correcto
+    
     pending_notes = Note.query.filter_by(status=NoteStatus.PENDING).all()
     published_notes = Note.query.filter_by(status=NoteStatus.PUBLISHED).all()
     all_publications = Publication.query.all()
-    all_roles = UserRole.query.all()  # ✅ Añadido
+    all_roles = UserRole.query.all()
     total_users = User.query.count()
     total_subscribers = Subscriber.query.count()
 
@@ -741,9 +778,13 @@ def admin_panel():
         all_publications=all_publications,
         all_roles=all_roles,
         total_users=total_users,
-        total_subscribers=total_subscribers,  
+        total_subscribers=total_subscribers,
         bio_short=BIO_SHORT,
-        bio_extended=BIO_EXTENDED
+        bio_extended=BIO_EXTENDED,
+        total_visits=total_visits,
+        today_visits=today_visits,
+        chart_labels=chart_labels,
+        chart_data=chart_data
     )
 
 @routes.route('/admin/note/<int:note_id>/approve', methods=['POST'])
@@ -1480,20 +1521,19 @@ def profesionales():
     
     professionals = query.all()
     categories = ["Profesional", "Emprendedor", "PyME"]
-    
-    # Obtener perfiles destacados para el slider (solo profesionales activos con foto)
-    featured_profiles = User.query.filter(
+
+    all_professionals = User.query.filter(
         User.is_professional == True,
         User.profile_photo.isnot(None),
         User.profile_photo != ''
-    ).order_by(db.func.random()).limit(4).all()
+    ).order_by(User.username).all()
 
     return render_template(
         'profesionales.html',
-        professionals=professionals,
+        professionals=professionals,      # para el listado filtrado
+        all_professionals=all_professionals,  # ✅ para el slider
         categories=categories,
-        selected_category=category,
-        featured_profiles=featured_profiles  # ← Pasar al template
+        selected_category=category
     )
 
 # Perfil público más completo
@@ -3813,6 +3853,13 @@ def assistant():
     return render_template('dashboard/assistant.html',
                          assistant=my_assistant,
                          tasks=tasks)
+
+# En routes.py
+@routes.route('/init-db-render')
+def init_db_render():
+    from app import db
+    db.create_all()  # Crea SOLO las tablas que faltan
+    return "✅ Tabla 'visits' creada"
 
 # ✅ Mover esta función fuera de cualquier ruta
 def generar_disponibilidad_automatica(schedule, semanas=52):

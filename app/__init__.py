@@ -1,6 +1,6 @@
 # app/__init__.py
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
@@ -28,7 +28,6 @@ def create_app():
         template_folder="../templates",
         static_folder="../static"
     )
-    # ... resto del código ...
 
     # === Configuración ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
@@ -52,6 +51,10 @@ def create_app():
     app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME") or "astiazu@gmail.com"
     app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
     app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
+
+    # ✅ Variables personalizadas
+    app.config["BIO_SHORT"] = "Breve descripción del sitio"
+    app.config["BIO_EXTENDED"] = "Descripción extendida del sitio BioForge..."
 
     # Telegram
     app.config['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN')
@@ -110,6 +113,13 @@ def create_app():
         @app.template_filter('without_page')
         def without_page(args):
             return {k: v for k, v in args.items() if k != 'page'}
+
+        @app.before_request
+        def log_visit():
+            # No registrar visitas de administrador ni en rutas de auth
+            if request.endpoint and not request.endpoint.startswith('auth'):
+                from app.models import Visit
+                Visit.log_visit(request)
 
         # Configurar Cloudinary
         if cloudinary:

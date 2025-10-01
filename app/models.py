@@ -500,3 +500,23 @@ class InvitationLog(db.Model):
 
     def __repr__(self):
         return f"<InvitationLog {self.invite_code} | {self.email} | {self.method} | {'Éxito' if self.success else 'Fallo'}>"
+    
+class Visit(db.Model):
+    __tablename__ = 'visits'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ip_address = db.Column(db.String(45), nullable=True)  # IPv6 compatible
+    user_agent = db.Column(db.Text, nullable=True)
+    path = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @classmethod
+    def log_visit(cls, request):
+        """Registra una visita desde un request."""
+        visit = cls(
+            ip_address=request.environ.get('HTTP_X_REAL_IP', request.remote_addr),
+            user_agent=request.headers.get('User-Agent'),
+            path=request.path
+        )
+        db.session.add(visit)
+        db.session.commit()

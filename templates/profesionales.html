@@ -48,37 +48,56 @@
     </div>
 </section>
 
-<!-- Slider de perfiles reales (dinámico) -->
-<section class="py-5">
+<!-- Slider de profesionales -->
+<section class="py-4">
     <div class="container">
-        <div class="text-center mb-5">
-            <h3 class="h4">Conocé a quienes ya construyen en BioForge</h3>
-        </div>
-        <div class="row justify-content-center g-4">
-            {% for prof in featured_profiles %}
-            <div class="col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="mx-auto mb-3" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 3px solid #e2e8f0;">
-                        <img src="{{ prof.profile_photo }}" 
-                             alt="{{ prof.username }}"
-                             class="w-100 h-100"
-                             style="object-fit: cover;">
+        <div class="position-relative overflow-hidden" style="height: 320px;">
+            <div id="professionalsSlider" class="d-flex" style="transition: transform 0.6s ease-in-out;">
+                {% for prof in all_professionals %}
+                <div class="slide flex-shrink-0 px-2" style="width: 280px;">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="text-center p-3">
+                            <div style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; margin: 0 auto 12px; border: 3px solid #e2e8f0;">
+                                <img src="{{ prof.profile_photo }}" 
+                                     alt="{{ prof.username }}"
+                                     class="w-100 h-100"
+                                     style="object-fit: cover;">
+                            </div>
+                            <h6 class="mb-1">{{ prof.username }}</h6>
+                            <p class="text-primary fw-bold mb-1">{{ prof.specialty or prof.professional_category or 'Profesional' }}</p>
+                            <p class="text-muted small mb-0">
+                                {% if prof.clinics %}
+                                    {{ prof.clinics[0].name if prof.clinics[0].name else 'PyME' }}
+                                {% else %}
+                                    Emprendedor
+                                {% endif %}
+                            </p>
+                        </div>
                     </div>
-                    <h5 class="mb-1">{{ prof.username }}</h5>
-                    <p class="text-primary fw-bold mb-0">{{ prof.specialty or prof.professional_category or 'Profesional' }}</p>
-                    <p class="text-muted small">
-                        {% if prof.clinics %}
-                            {{ prof.clinics[0].name if prof.clinics[0].name else 'PyME' }}
-                        {% else %}
-                            Emprendedor
-                        {% endif %}
-                    </p>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('professionalsSlider');
+    const slides = slider.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentIndex = 0;
+    const visibleSlides = window.innerWidth < 768 ? 1 : (window.innerWidth < 992 ? 2 : 3);
+    
+    if (totalSlides > visibleSlides) {
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % (totalSlides - visibleSlides + 1);
+            const offset = -currentIndex * 280;
+            slider.style.transform = `translateX(${offset}px)`;
+        }, 4000); // Cambio cada 4 segundos
+    }
+});
+</script>
 
 <!-- Los 3 pilares -->
 <section class="py-5 bg-light">
