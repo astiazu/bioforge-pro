@@ -1769,20 +1769,14 @@ def nuevo_consultorio():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    if request.method == 'POST':
-        # Limpiar y validar entradas
-        name = request.form.get('name', '').strip()
-        address = request.form.get('address', '').strip()
-        phone = request.form.get('phone', '').strip()
-        specialty = request.form.get('specialty', '').strip()
+    # ✅ Siempre crear el formulario (Flask-WTF lo maneja automáticamente)
+    form = ClinicForm()
 
-        # Validar campos obligatorios
-        if not name:
-            flash('El nombre de la ubicación es obligatorio.', 'warning')
-            return render_template('nuevo_consultorio.html')
-        if not address:
-            flash('La dirección es obligatoria.', 'warning')
-            return render_template('nuevo_consultorio.html')
+    if form.validate_on_submit():
+        name = form.name.data.strip()
+        address = form.address.data.strip()
+        phone = form.phone.data.strip()
+        specialty = form.specialty.data.strip()
 
         # Prevenir duplicados: mismo nombre + dirección en el mismo equipo
         existing = Clinic.query.filter_by(
@@ -1792,32 +1786,32 @@ def nuevo_consultorio():
         ).first()
         if existing:
             flash('Ya existe una ubicación con ese nombre y dirección en tu equipo.', 'warning')
-            return render_template('nuevo_consultorio.html')
+        else:
+            # Truncar specialty a 50 caracteres (protección adicional)
+            if len(specialty) > 50:
+                specialty = specialty[:50]
 
-        # Truncar specialty a 50 caracteres (solución inmediata para PostgreSQL)
-        if len(specialty) > 50:
-            specialty = specialty[:50]
+            try:
+                clinic = Clinic(
+                    name=name,
+                    address=address,
+                    phone=phone,
+                    specialty=specialty,
+                    doctor_id=doctor_id,
+                    is_active=True
+                )
+                db.session.add(clinic)
+                db.session.commit()
+                flash('✅ Ubicación creada exitosamente.', 'success')
+                return redirect(url_for('routes.mi_perfil'))
 
-        try:
-            clinic = Clinic(
-                name=name,
-                address=address,
-                phone=phone,
-                specialty=specialty,
-                doctor_id=doctor_id,
-                is_active=True
-            )
-            db.session.add(clinic)
-            db.session.commit()
-            flash('✅ Ubicación creada exitosamente.', 'success')
-            return redirect(url_for('routes.mi_perfil'))  # ← Redirige al perfil donde se ven las ubicaciones
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Error inesperado al crear consultorio: {str(e)}", exc_info=True)
+                flash('❌ Ocurrió un error al guardar la ubicación. Inténtalo nuevamente.', 'danger')
 
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error inesperado al crear consultorio: {str(e)}", exc_info=True)
-            flash('❌ Ocurrió un error al guardar la ubicación. Inténtalo nuevamente.', 'danger')
-
-    return render_template('nuevo_consultorio.html')
+    # ✅ Siempre pasa 'form' al template
+    return render_template('nuevo_consultorio.html', form=form)
 
 @routes.route('/consultorio/<int:clinic_id>/editar', methods=['GET', 'POST'])
 @login_required
