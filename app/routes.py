@@ -1579,27 +1579,29 @@ def mi_perfil():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # ✅ Obtener todas las tareas de mis asistentes
-    from app.models import Task, Assistant
-    all_tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == current_user.id).all()
+    # ✅ Cargar consultorios del profesional actual
+    from app.models import Clinic, Task, Assistant, Appointment, Availability
+    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
 
-    # ✅ Calcular tareas pendientes
+    # ✅ Obtener todas las tareas de mis asistentes
+    all_tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == current_user.id).all()
     pending_tasks_count = sum(1 for task in all_tasks if task.status == 'pending')
 
-    # ✅ Turnos recibidos (como antes)
+    # ✅ Turnos recibidos
     turnos_recibidos = []
-    if hasattr(current_user, 'clinics'):
-        clinicas_ids = [c.id for c in current_user.clinics]
+    clinicas_ids = [c.id for c in clinics]  # ✅ Usa la lista ya cargada
+    if clinicas_ids:
         turnos_recibidos = Appointment.query.join(Availability).filter(
             Availability.clinic_id.in_(clinicas_ids)
         ).order_by(Appointment.created_at.desc()).all()
 
     return render_template(
         'mi_perfil_medico.html',
+        clinics=clinics,  # ← ¡Esto es lo nuevo!
         turnos_recibidos=turnos_recibidos,
         bio_short=BIO_SHORT,
         bio_extended=BIO_EXTENDED,
-        pending_tasks_count=pending_tasks_count,  # ✅ Pasamos el conteo
+        pending_tasks_count=pending_tasks_count,
         total_tasks=len(all_tasks)
     )
 
@@ -1750,7 +1752,7 @@ def nuevo_consultorio():
     doctor_id = None
     active_assistant = None
 
-    # Determinar doctor_id según el rol activo
+    # === Determinar quién es el doctor del equipo ===
     if session.get('active_role') == 'asistente':
         assistant_id = session.get('active_assistant_id')
         if assistant_id:
@@ -1767,27 +1769,55 @@ def nuevo_consultorio():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    form = ClinicForm()
-    if form.validate_on_submit():
+    if request.method == 'POST':
+        # Limpiar y validar entradas
+        name = request.form.get('name', '').strip()
+        address = request.form.get('address', '').strip()
+        phone = request.form.get('phone', '').strip()
+        specialty = request.form.get('specialty', '').strip()
+
+        # Validar campos obligatorios
+        if not name:
+            flash('El nombre de la ubicación es obligatorio.', 'warning')
+            return render_template('nuevo_consultorio.html')
+        if not address:
+            flash('La dirección es obligatoria.', 'warning')
+            return render_template('nuevo_consultorio.html')
+
+        # Prevenir duplicados: mismo nombre + dirección en el mismo equipo
+        existing = Clinic.query.filter_by(
+            doctor_id=doctor_id,
+            name=name,
+            address=address
+        ).first()
+        if existing:
+            flash('Ya existe una ubicación con ese nombre y dirección en tu equipo.', 'warning')
+            return render_template('nuevo_consultorio.html')
+
+        # Truncar specialty a 50 caracteres (solución inmediata para PostgreSQL)
+        if len(specialty) > 50:
+            specialty = specialty[:50]
+
         try:
             clinic = Clinic(
-                name=form.name.data.strip(),
-                address=form.address.data.strip(),
-                phone=form.phone.data.strip(),
-                specialty=form.specialty.data.strip(),  # Ya validado ≤50 chars
+                name=name,
+                address=address,
+                phone=phone,
+                specialty=specialty,
                 doctor_id=doctor_id,
                 is_active=True
             )
             db.session.add(clinic)
             db.session.commit()
-            flash('✅ Consultorio creado exitosamente', 'success')
-            return redirect(url_for('routes.dashboard'))
+            flash('✅ Ubicación creada exitosamente.', 'success')
+            return redirect(url_for('routes.mi_perfil'))  # ← Redirige al perfil donde se ven las ubicaciones
+
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error creando consultorio: {str(e)}", exc_info=True)
-            flash('❌ Error al crear el consultorio. Inténtalo nuevamente.', 'danger')
+            current_app.logger.error(f"Error inesperado al crear consultorio: {str(e)}", exc_info=True)
+            flash('❌ Ocurrió un error al guardar la ubicación. Inténtalo nuevamente.', 'danger')
 
-    return render_template('nuevo_consultorio.html', form=form)
+    return render_template('nuevo_consultorio.html')
 
 @routes.route('/consultorio/<int:clinic_id>/editar', methods=['GET', 'POST'])
 @login_required

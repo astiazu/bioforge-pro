@@ -37,7 +37,7 @@
                         {% if current_user.url_slug %}
                             <a href="{{ url_for('routes.perfil_profesional', url_slug=current_user.url_slug) }}" 
                                class="btn btn-outline-primary btn-sm" target="_blank">
-                                Ver perfil público
+                                Ver perfil público (no veo)
                             </a>
                         {% endif %}
                     </div>
@@ -117,7 +117,57 @@
             </div>
         </div>
     </div>
-
+    <!-- Ubicaciones / Consultorios -->
+    {% if clinics %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4><i class="fas fa-map-marker-alt me-2"></i>Mis Ubicaciones</h4>
+            <div class="table-responsive mt-3">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Especialidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in clinics %}
+                        <tr>
+                            <td>{{ c.name }}</td>
+                            <td>{{ c.address }}</td>
+                            <td>{{ c.phone or '-' }}</td>
+                            <td>{{ c.specialty or '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('routes.editar_consultorio', clinic_id=c.id) }}" 
+                                class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" 
+                                    action="{{ url_for('routes.eliminar_consultorio', clinic_id=c.id) }}" 
+                                    class="d-inline"
+                                    onsubmit="return confirm('¿Eliminar esta ubicación? Se borrarán agendas y turnos asociados.')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-4">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        Aún no tienes ubicaciones registradas. 
+        <a href="{{ url_for('routes.nuevo_consultorio') }}" class="alert-link">Crea tu primera ubicación</a>.
+    </div>
+    {% endif %}
     <!-- Sección: Asistentes y Tareas -->
     <div class="row mt-5 g-4">
         <div class="col-lg-6">
