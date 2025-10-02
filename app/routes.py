@@ -3793,7 +3793,7 @@ def iniciar_como():
 
         session['active_role'] = 'asistente'
         session['active_assistant_id'] = assistant.id
-        return redirect(url_for('routes.ver_tareas'))
+        return redirect(url_for('routes.mi_trabajo'))
 
     # Tipo no reconocido
     else:
