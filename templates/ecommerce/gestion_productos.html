@@ -1,0 +1,55 @@
+<!-- templates/ecommerce/gestion_productos.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Gestión de Productos</h3>
+        <a href="{{ url_for('ecommerce.crear_producto', doctor_id=doctor_id) }}" class="btn btn-success">
+            ➕ Nuevo Producto/Servicio
+        </a>
+    </div>
+
+    {% if products %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Visible</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td>
+                        {{ p.name }}
+                        {% if p.is_service %}<span class="badge bg-info ms-2">Servicio</span>{% endif %}
+                    </td>
+                    <td>${{ "%.2f"|format(p.price) }}</td>
+                    <td>
+                        {% if p.is_service %}—{% else %}{{ p.stock }}{% endif %}
+                        {% if not p.is_service and p.stock == 0 and p.hide_if_out_of_stock %}
+                            <span class="badge bg-warning">Oculto si agotado</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p.is_visible %}✅{% else %}❌{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('ecommerce.editar_producto', product_id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                            Editar
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No tienes productos aún.</div>
+    {% endif %}
+</div>
+{% endblock %}

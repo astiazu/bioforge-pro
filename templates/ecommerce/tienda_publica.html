@@ -1,0 +1,68 @@
+<!-- templates/ecommerce/tienda_publica.html -->
+{% extends "base.html" %}
+
+{% block title %}Tienda de {{ professional.username }} - BioForge{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>🛍️ Tienda de <strong>{{ professional.username }}</strong></h2>
+            <p class="text-muted">Productos y servicios disponibles</p>
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="row g-4">
+        {% for p in products %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ p.name }}</h5>
+                    <p class="card-text text-muted small">{{ p.description|truncate(100) }}</p>
+                    
+                    {% if p.attributes %}
+                        <div class="mb-2">
+                            {% for key, value in p.attributes.items() %}
+                                <span class="badge bg-light text-dark me-1">{{ key }}: {{ value }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 text-primary">${{ "%.2f"|format(p.price) }}</span>
+                            <span class="badge bg-{{ 'info' if p.is_service else 'success' }}">
+                                {{ 'Servicio' if p.is_service else 'Producto' }}
+                            </span>
+                        </div>
+                        
+                        {% if not p.is_service and p.stock == 0 %}
+                            <span class="badge bg-warning mt-2">Agotado</span>
+                        {% endif %}
+
+                        <button class="btn btn-outline-primary btn-sm mt-3 w-100" disabled>
+                            Comprar
+                        </button>
+                        <small class="text-muted d-block mt-1">Próximamente: pago online</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <h4>📦 Esta tienda está vacía por el momento.</h4>
+        <p>El profesional aún no ha agregado productos o servicios.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="{{ url_for('routes.perfil_profesional', url_slug=professional.url_slug) }}" 
+           class="btn btn-secondary">
+            ← Volver al perfil
+        </a>
+    </div>
+</div>
+{% endblock %}

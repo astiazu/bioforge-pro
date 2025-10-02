@@ -499,7 +499,47 @@ class InvitationLog(db.Model):
 
     def __repr__(self):
         return f"<InvitationLog {self.invite_code} | {self.email} | {self.method} | {'Éxito' if self.success else 'Fallo'}>"
+
+class Product(db.Model):
+    __tablename__ = 'product'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    is_service = db.Column(db.Boolean, default=False, nullable=False)
+    stock = db.Column(db.Integer, default=0, nullable=False)
+    category = db.Column(db.String(50))
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    hide_if_out_of_stock = db.Column(db.Boolean, default=False, nullable=False)  # ← NUEVO
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ← Auditoría
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    attributes = db.Column(db.JSON, default=dict)
+
+class Event(db.Model):
+    __tablename__ = 'event'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    start_datetime = db.Column(db.DateTime, nullable=False)
+    end_datetime = db.Column(db.DateTime, nullable=False)
+    location = db.Column(db.String(150))
+    clinic_id = db.Column(db.Integer, db.ForeignKey('clinic.id'), nullable=True)
+    is_public = db.Column(db.Boolean, default=True, nullable=False)
+    max_attendees = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ← Auditoría
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
 class Visit(db.Model):
     __tablename__ = 'visits'
 

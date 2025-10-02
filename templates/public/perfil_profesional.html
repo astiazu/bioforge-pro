@@ -75,6 +75,17 @@
                     {% endfor %}
                 </div>
             </div>
+            <!-- Tienda on-line -->
+            <div class="card mt-4">
+                <div class="card-body text-center">
+                    <a href="{{ url_for('routes.tienda_publica', url_slug=doctor.url_slug) }}" class="btn btn-outline-success">
+                        🛒 Tienda Online
+                    </a>
+                    <a href="{{ url_for('routes.eventos_publicos', url_slug=doctor.url_slug) }}" class="btn btn-outline-info ms-2">
+                        📅 Eventos Próximos
+                    </a>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>

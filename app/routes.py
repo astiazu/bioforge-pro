@@ -147,7 +147,6 @@ def generar_slug_unico(base_slug):
         counter += 1
     return slug
 
-
 def enviar_notificacion_tarea(task):
     """
     Envía notificación de nueva tarea por email y Telegram.
@@ -246,6 +245,22 @@ def validate_mime_type(file):
     except Exception as e:
         print(f"⚠️  Advertencia: libmagic no disponible ({e}). Validando solo por extensión.")
         return True  # fallback: confiamos en la extensión .csv
+
+def check_access(doctor_id):
+    """Permite acceso si es dueño o asistente Senior del equipo"""
+    if current_user.id == doctor_id and current_user.is_professional:
+        return True
+    if session.get('active_role') == 'asistente':
+        assistant_id = session.get('active_assistant_id')
+        if assistant_id:
+            assistant = Assistant.query.filter_by(
+                id=assistant_id,
+                user_id=current_user.id,
+                doctor_id=doctor_id,
+                type='general'
+            ).first()
+            return assistant is not None
+    return False
     
 # ================================
 # RUTAS - ANÁLISIS DE DATOS (CSV + GRÁFICOS)
@@ -4061,6 +4076,139 @@ def assistant():
 #     </html>
 #     '''
 
+# === TIENDA PÚBLICA ===
+@routes.route('/tienda/<string:url_slug>')
+def tienda_publica(url_slug):
+    from app.models import User, Product  # Ajusta según tu estructura
+    professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
+    
+    # Productos visibles y con stock (o servicios)
+    products = Product.query.filter_by(
+        doctor_id=professional.id,
+        is_visible=True
+    ).filter(
+        (Product.is_service == True) | (Product.stock > 0) |
+        ((Product.stock == 0) & (Product.hide_if_out_of_stock == False))
+    ).all()
+    
+    return render_template('ecommerce/tienda_publica.html', professional=professional, products=products)
+
+# === PRODUCTOS ===
+@routes.route('/<int:doctor_id>/productos')
+@login_required
+def gestion_productos(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    products = Product.query.filter_by(doctor_id=doctor_id).order_by(Product.created_at.desc()).all()
+    return render_template('ecommerce/gestion_productos.html', products=products, doctor_id=doctor_id)
+
+@routes.route('/<int:doctor_id>/producto/nuevo', methods=['GET', 'POST'])
+@login_required
+def crear_producto(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if request.method == 'POST':
+        is_service = 'is_service' in request.form
+        stock = 0 if is_service else int(request.form.get('stock', 0))
+        product = Product(
+            name=request.form['name'].strip(),
+            description=request.form.get('description', '').strip(),
+            price=float(request.form['price']),
+            is_service=is_service,
+            stock=stock,
+            category=request.form.get('category', '').strip(),
+            is_visible='is_visible' in request.form,
+            hide_if_out_of_stock='hide_if_out_of_stock' in request.form,
+            doctor_id=doctor_id,
+            created_by=current_user.id
+        )
+        db.session.add(product)
+        db.session.commit()
+        flash('✅ Producto creado', 'success')
+        return redirect(url_for('ecommerce.gestion_productos', doctor_id=doctor_id))
+    
+    return render_template('ecommerce/form_producto.html', doctor_id=doctor_id, product=None)
+
+@routes.route('/producto/<int:product_id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_producto(product_id):
+    product = Product.query.get_or_404(product_id)
+    if not check_access(product.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if request.method == 'POST':
+        product.name = request.form['name'].strip()
+        product.description = request.form.get('description', '').strip()
+        product.price = float(request.form['price'])
+        product.is_service = 'is_service' in request.form
+        product.stock = int(request.form.get('stock', 0)) if not product.is_service else 0
+        product.category = request.form.get('category', '').strip()
+        product.is_visible = 'is_visible' in request.form
+        product.hide_if_out_of_stock = 'hide_if_out_of_stock' in request.form
+        product.updated_by = current_user.id
+        db.session.commit()
+        flash('✅ Producto actualizado', 'success')
+        return redirect(url_for('ecommerce.gestion_productos', doctor_id=product.doctor_id))
+    
+    return render_template('ecommerce/form_producto.html', doctor_id=product.doctor_id, product=product)
+
+# === EVENTOS ===
+@routes.route('/<int:doctor_id>/eventos')
+@login_required
+def gestion_eventos(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    events = Event.query.filter_by(doctor_id=doctor_id).order_by(Event.start_datetime.asc()).all()
+    return render_template('ecommerce/gestion_eventos.html', events=events, doctor_id=doctor_id)
+
+# === CALENDARIO PÚBLICO ===
+@routes.route('/eventos/<string:url_slug>')
+def eventos_publicos(url_slug):
+    professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
+    now = datetime.utcnow()
+    events = Event.query.filter_by(
+        doctor_id=professional.id,
+        is_public=True
+    ).filter(Event.end_datetime >= now).order_by(Event.start_datetime).all()
+    return render_template('ecommerce/eventos_publicos.html', professional=professional, events=events)
+
+# === EVENTOS ===
+@routes.route('/<int:doctor_id>/evento/nuevo', methods=['GET', 'POST'])
+@login_required
+def crear_evento(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    clinics = Clinic.query.filter_by(doctor_id=doctor_id, is_active=True).all()
+    
+    if request.method == 'POST':
+        event = Event(
+            title=request.form['title'].strip(),
+            description=request.form.get('description', '').strip(),
+            start_datetime=datetime.fromisoformat(request.form['start_datetime']),
+            end_datetime=datetime.fromisoformat(request.form['end_datetime']),
+            location=request.form.get('location', '').strip(),
+            clinic_id=request.form.get('clinic_id') or None,
+            is_public='is_public' in request.form,
+            max_attendees=request.form.get('max_attendees') or None,
+            doctor_id=doctor_id,
+            created_by=current_user.id
+        )
+        db.session.add(event)
+        db.session.commit()
+        flash('✅ Evento creado', 'success')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    return render_template('ecommerce/form_evento.html', doctor_id=doctor_id, clinics=clinics)
+
+# === RUTAS ADMINISTRADOR ===
 def generar_disponibilidad_automatica(schedule, semanas=52):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
     today = datetime.now().date()
