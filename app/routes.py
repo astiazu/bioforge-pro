@@ -2606,7 +2606,7 @@ def mis_asistentes():
     assistant_ids = [a.id for a in all_assistants]
     tasks = Task.query.options(
         db.joinedload(Task.assistant),
-        db.joinedload(Task.created_by_user)  # Relación con User
+        db.joinedload(Task.creator)  # Relación con User
     ).filter(Task.assistant_id.in_(assistant_ids)).all()
     
     # Ordenar todas las tareas por fecha de creación (más reciente primero)
