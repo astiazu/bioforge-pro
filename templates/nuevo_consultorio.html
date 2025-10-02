@@ -11,27 +11,60 @@
             <p class="text-light">Completa los datos de la nueva ubicación</p>
 
             <form method="POST">
+                {{ form.hidden_tag() }} <!-- ¡Incluye el token CSRF! -->
+
                 <div class="mb-3">
-                    <label for="name" class="form-label">Nombre de la Nueva Ubicación *</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    {{ form.name.label(class="form-label") }} *
+                    {{ form.name(class="form-control", required=True) }}
+                    {% if form.name.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.name.errors %}
+                                <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="mb-3">
-                    <label for="address" class="form-label">Dirección *</label>
-                    <input type="text" class="form-control" id="address" name="address" required>
+                    {{ form.address.label(class="form-label") }} *
+                    {{ form.address(class="form-control", required=True) }}
+                    {% if form.address.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.address.errors %}
+                                <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="mb-3">
-                    <label for="phone" class="form-label">Teléfono</label>
-                    <input type="text" class="form-control" id="phone" name="phone">
+                    {{ form.phone.label(class="form-label") }}
+                    {{ form.phone(class="form-control") }}
+                    {% if form.phone.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.phone.errors %}
+                                <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="mb-3">
-                    <label for="specialty" class="form-label">Especialidad</label>
-                    <input type="text" class="form-control" id="specialty" name="specialty" 
-                           placeholder="Ej: Arquitectura, Tecnologia, Consultoría, Ginecología, Cardiología">
+                    {{ form.specialty.label(class="form-label") }}
+                    {{ form.specialty(class="form-control", placeholder="Ej: Arquitectura, Tecnologia, Consultoría, Ginecología, Cardiología") }}
+                    {% if form.specialty.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.specialty.errors %}
+                                <small>{{ error }}</small><br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
+
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Crear Nueva Ubicación</button>
+                    {{ form.submit(class="btn btn-primary") }}
                     <a href="{{ url_for('routes.mi_perfil', doctor_id=current_user.id) }}" class="btn btn-secondary">
-                        Cancelar aca
+                        Cancelar
                     </a>
                 </div>
             </form>

@@ -48,7 +48,9 @@ class ClinicForm(FlaskForm):
     name = StringField('Nombre', validators=[DataRequired()])
     address = StringField('Dirección')
     phone = StringField('Teléfono')
-    specialty = StringField('Especialidad')
+    specialty = StringField('Especialidad', validators=[
+        Length(max=50, message="La especialidad no puede superar los 50 caracteres.")
+    ])
     submit = SubmitField('Guardar')
 
 class AssistantForm(FlaskForm):

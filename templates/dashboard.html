@@ -223,7 +223,7 @@
                         {% if creator %}
                             {{ creator.username }}
                         {% elif t.doctor_id == current_user.id %}
-                            Tú
+                            {{ creators.get(t.doctor_id).username }}
                         {% else %}
                             {{ t.doctor.username if t.doctor else 'Sistema' }}
                         {% endif %}

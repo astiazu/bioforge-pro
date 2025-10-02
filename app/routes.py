@@ -1747,10 +1747,10 @@ def enviar_mensaje(user_id):
 @routes.route('/consultorio/nuevo', methods=['GET', 'POST'])
 @login_required
 def nuevo_consultorio():
-    # === Determinar doctor_id según rol activo ===
     doctor_id = None
     active_assistant = None
 
+    # Determinar doctor_id según el rol activo
     if session.get('active_role') == 'asistente':
         assistant_id = session.get('active_assistant_id')
         if assistant_id:
@@ -1758,7 +1758,6 @@ def nuevo_consultorio():
                 id=assistant_id,
                 user_id=current_user.id
             ).first()
-
         if active_assistant and active_assistant.doctor_id:
             doctor_id = active_assistant.doctor_id
     elif current_user.is_professional:
@@ -1768,42 +1767,27 @@ def nuevo_consultorio():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        address = request.form.get('address', '').strip()
-        phone = request.form.get('phone', '').strip()
-        specialty = request.form.get('specialty', '').strip()
-
-        if not name or not address:
-            flash('Nombre y dirección son obligatorios', 'error')
-            return render_template('nuevo_consultorio.html')
-
+    form = ClinicForm()
+    if form.validate_on_submit():
         try:
             clinic = Clinic(
-                name=name,
-                address=address,
-                phone=phone,
-                specialty=specialty,
-                doctor_id=doctor_id,  # ✅ Usa el doctor_id del equipo
+                name=form.name.data.strip(),
+                address=form.address.data.strip(),
+                phone=form.phone.data.strip(),
+                specialty=form.specialty.data.strip(),  # Ya validado ≤50 chars
+                doctor_id=doctor_id,
                 is_active=True
             )
             db.session.add(clinic)
-            db.session.flush()  # Para obtener clinic.id
-
-            # ✅ Generar disponibilidad para todas las agendas del doctor
-            for schedule in Schedule.query.filter_by(doctor_id=doctor_id).all():
-                generar_disponibilidad_automatica(schedule, semanas=52)
-
             db.session.commit()
-            flash('✅ Consultorio creado y disponibilidad actualizada', 'success')
+            flash('✅ Consultorio creado exitosamente', 'success')
             return redirect(url_for('routes.dashboard'))
-
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creando consultorio: {str(e)}", exc_info=True)
-            flash('❌ Error al crear el consultorio', 'danger')
+            flash('❌ Error al crear el consultorio. Inténtalo nuevamente.', 'danger')
 
-    return render_template('nuevo_consultorio.html')
+    return render_template('nuevo_consultorio.html', form=form)
 
 @routes.route('/consultorio/<int:clinic_id>/editar', methods=['GET', 'POST'])
 @login_required
