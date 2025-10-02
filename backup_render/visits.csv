@@ -1,0 +1,609 @@
+id,ip_address,user_agent,path,created_at
+1,127.0.0.1,Go-http-client/1.1,/,2025-10-01 12:29:33.061651
+2,127.0.0.1,Go-http-client/2.0,/,2025-10-01 12:29:36.810437
+3,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/profesional/astiazu-joseluis,2025-10-01 12:32:10.929736
+4,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:32:11.471267
+5,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:32:11.828808
+6,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/profesional/astiazu-joseluis,2025-10-01 12:32:13.638834
+7,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:32:14.054712
+8,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:32:14.530701
+9,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/profesionales,2025-10-01 12:32:21.947306
+10,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:32:22.469920
+11,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:32:22.474005
+12,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/profesional/astiazu-joseluis,2025-10-01 12:32:56.219205
+13,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:32:56.645827
+14,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:32:56.678392
+15,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:32:56.698789
+16,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:32:56.772748
+17,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/profesionales,2025-10-01 12:33:09.591836
+18,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:33:09.949860
+19,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:33:09.991375
+20,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/,2025-10-01 12:33:45.462295
+21,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:33:45.781308
+22,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:33:45.814986
+23,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:33:51.157479
+24,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:33:51.162289
+25,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin/dashboard,2025-10-01 12:34:10.621107
+26,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:34:10.995044
+27,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:34:11.028161
+28,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 12:34:21.611596
+29,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:34:22.793373
+30,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:34:22.826565
+31,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 12:35:06.116329
+32,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:35:06.460722
+33,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:35:06.661733
+34,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 12:36:02.302666
+35,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:36:02.713042
+36,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:36:02.745810
+37,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/portfolio,2025-10-01 12:36:10.530912
+38,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:36:10.907692
+39,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:36:10.963148
+40,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/portfolio,2025-10-01 12:40:51.185755
+41,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:40:51.556547
+42,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:40:51.915033
+43,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/,2025-10-01 12:41:52.656265
+44,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:41:53.045808
+45,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:41:53.392915
+46,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:41:53.426487
+47,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:41:53.440781
+48,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/profesional/2/contactar,2025-10-01 12:48:54.032501
+49,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:48:54.375425
+50,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:48:54.380732
+51,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/favicon-32x32.png,2025-10-01 12:48:55.794871
+52,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/favicon-16x16.png,2025-10-01 12:48:56.007213
+53,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:49:05.697905
+54,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:49:05.703026
+55,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:49:42.879879
+56,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:49:42.884367
+57,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:50:12.471954
+58,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:50:12.863627
+59,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:50:12.948593
+60,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-agenda,2025-10-01 12:51:06.841830
+61,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:51:07.765449
+62,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:51:07.770392
+63,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 12:52:27.888942
+64,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 12:52:28.996659
+65,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:52:29.731896
+66,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:52:30.453967
+67,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:52:30.467437
+68,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 12:52:36.248594
+69,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 12:52:36.982026
+70,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:52:37.730926
+71,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:52:38.482786
+72,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:52:38.491012
+73,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 12:53:18.140009
+74,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 12:53:19.266493
+75,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:53:20.504004
+76,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:53:21.686856
+77,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:53:21.691131
+78,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/asistentes,2025-10-01 12:53:36.544035
+79,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/default-assistant.png,2025-10-01 12:53:38.332286
+80,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:53:38.338875
+81,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:53:38.783458
+82,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/profesional/salvador,2025-10-01 12:58:49.350643
+83,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:58:50.309796
+84,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:58:51.263592
+85,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:58:51.271196
+86,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 12:59:01.656661
+87,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/,2025-10-01 12:59:01.787578
+88,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:59:02.232562
+89,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:59:02.296204
+90,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 12:59:02.621751
+91,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/og-image-datosconsultora.jpg,2025-10-01 12:59:03.490154
+92,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/favicon-32x32.png,2025-10-01 12:59:03.494229
+93,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:59:03.579519
+94,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/favicon-16x16.png,2025-10-01 12:59:03.939915
+95,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/apple-touch-icon.png,2025-10-01 12:59:03.951653
+96,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:59:04.548359
+97,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:59:04.559774
+98,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:59:06.495420
+99,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:59:06.526043
+100,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 12:59:09.458112
+101,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 12:59:10.423446
+102,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 12:59:11.392562
+103,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 12:59:12.356392
+104,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 12:59:12.802943
+105,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/seleccionar-perfil,2025-10-01 12:59:42.224873
+106,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:59:42.618700
+107,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:59:42.623339
+108,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/iniciar-como,2025-10-01 12:59:45.841674
+109,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/ver-tareas,2025-10-01 12:59:46.193461
+110,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:59:46.601413
+111,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:59:46.607438
+112,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 12:59:58.524418
+113,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 12:59:59.133179
+114,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 12:59:59.153660
+115,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 13:00:23.898983
+116,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 13:00:24.441100
+117,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 13:00:24.445937
+118,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil/editar,2025-10-01 13:08:08.296036
+119,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 13:08:09.306391
+120,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 13:08:09.310757
+121,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/consultorio/nuevo,2025-10-01 13:08:15.627213
+122,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 13:08:17.104167
+123,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 13:08:17.117504
+124,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/ver-tareas,2025-10-01 13:08:32.142706
+125,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/seleccionar-perfil,2025-10-01 13:08:33.114212
+126,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/mi-perfil,2025-10-01 13:08:34.074099
+127,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 13:08:35.030931
+128,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 13:08:35.036490
+129,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/asistentes,2025-10-01 13:08:46.593737
+130,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/css/datosconsultora.css,2025-10-01 13:08:48.076971
+131,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/logo-datos.gif,2025-10-01 13:08:48.081116
+132,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",/static/img/default-assistant.png,2025-10-01 13:08:48.084651
+133,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/profesionales,2025-10-01 13:11:39.797801
+134,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:11:40.310420
+135,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:11:40.659710
+136,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/profesionales,2025-10-01 13:12:06.980262
+137,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:12:07.373115
+138,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:12:07.377081
+139,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 13:12:17.455253
+140,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:12:17.960693
+141,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:12:17.967360
+142,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 13:12:28.137171
+143,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:12:28.799746
+144,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:12:28.853903
+145,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:12:36.009633
+146,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:12:36.051511
+147,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 13:13:29.251724
+148,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:13:29.897493
+149,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:13:29.943469
+150,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/profesional/2/contactar,2025-10-01 13:15:57.525010
+151,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:15:58.422535
+152,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:15:59.503837
+153,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/favicon-32x32.png,2025-10-01 13:16:06.362555
+154,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/favicon-16x16.png,2025-10-01 13:16:07.312085
+155,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:16:12.345910
+156,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:16:12.350102
+157,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 13:16:56.097561
+158,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:16:57.058162
+159,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:16:57.062968
+160,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 13:17:35.055953
+161,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:17:36.119529
+162,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:17:36.128967
+163,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 13:19:17.218515
+164,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:19:18.023072
+165,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:19:18.180345
+166,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:19:28.370246
+167,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:19:28.377858
+168,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 13:20:27.929213
+169,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:20:28.432061
+170,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:20:28.836489
+171,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/iniciar-como,2025-10-01 13:20:36.365667
+172,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 13:20:36.673522
+173,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:20:37.008661
+174,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:20:37.038307
+175,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 13:20:46.081765
+176,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:20:46.518558
+177,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:20:46.542051
+178,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/8/editar,2025-10-01 13:20:58.698904
+179,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 13:20:59.136903
+180,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:20:59.504305
+181,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/default-assistant.png,2025-10-01 13:20:59.508715
+182,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:20:59.903661
+183,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 13:22:06.516459
+184,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:22:07.061648
+185,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:22:07.067243
+186,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 13:23:06.604733
+187,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:23:06.994052
+188,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:23:06.999495
+189,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:23:20.163272
+190,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:23:20.577141
+191,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 13:23:51.964749
+192,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:23:52.382105
+193,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:23:52.390511
+194,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 13:24:06.771328
+195,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 13:24:07.075936
+196,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 13:24:07.498323
+197,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:24:07.873107
+198,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:24:07.913518
+199,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 13:24:16.568492
+200,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:24:17.046921
+201,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:24:17.067746
+202,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/8/editar,2025-10-01 13:24:39.768026
+203,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:24:40.191715
+204,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:24:40.224517
+205,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 13:24:56.147473
+206,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:24:56.510256
+207,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:24:56.514736
+208,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 13:25:00.823309
+209,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:25:01.387433
+210,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/default-assistant.png,2025-10-01 13:25:01.446980
+211,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:25:01.452286
+212,127.0.0.1,Go-http-client/1.1,/,2025-10-01 13:32:26.895261
+213,127.0.0.1,Go-http-client/2.0,/,2025-10-01 13:32:35.983090
+214,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 13:43:27.380438
+215,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 13:43:28.172172
+216,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/default-assistant.png,2025-10-01 13:43:28.192633
+217,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 13:43:28.548673
+218,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.049089
+219,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.648800
+220,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.673341
+221,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.759784
+222,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.859590
+223,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:17.959804
+224,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.057881
+225,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.154782
+226,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.250344
+227,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.269190
+228,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.366176
+229,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.464399
+230,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.559770
+231,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:05:18.653289
+232,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 14:11:35.556307
+233,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 14:11:35.987264
+234,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 14:11:36.008920
+235,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:43.998825
+236,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.389057
+237,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.397806
+238,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.405657
+239,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.487983
+240,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.499294
+241,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.507556
+242,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.592853
+243,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.602837
+244,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.611099
+245,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.692927
+246,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.703657
+247,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:44.711886
+248,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:45.452005
+249,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:06:45.718683
+250,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:06:46.052477
+251,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:06:46.073163
+252,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 15:07:14.824564
+253,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:07:15.573972
+254,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:07:15.580997
+255,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 15:07:49.683432
+256,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:07:50.303501
+257,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:07:50.308432
+258,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/default-assistant.png,2025-10-01 15:07:50.312933
+259,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:07:55.574189
+260,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:07:56.737639
+261,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:07:56.744274
+262,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 15:08:35.276692
+263,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 15:08:36.368920
+264,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/default-assistant.png,2025-10-01 15:08:36.855948
+265,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:08:37.273472
+266,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:08:37.278408
+267,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 15:08:47.811037
+268,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:08:48.146242
+269,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:08:48.185790
+270,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:08:54.231072
+271,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:08:54.267989
+272,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:09:12.925020
+273,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:09:12.967799
+274,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:10:11.884684
+275,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:10:11.893209
+276,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/dashboard,2025-10-01 15:10:34.116904
+277,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:10:35.023964
+278,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:10:35.076047
+279,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin,2025-10-01 15:10:45.526804
+280,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:10:46.900112
+281,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:10:46.935969
+282,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/users,2025-10-01 15:10:51.198463
+283,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:10:51.711063
+284,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:10:51.763181
+285,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/users/19/edit,2025-10-01 15:11:02.899552
+286,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:11:03.577655
+287,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:11:03.584857
+288,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/users/19/edit,2025-10-01 15:11:16.065095
+289,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/users,2025-10-01 15:11:17.059035
+290,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:11:17.410860
+291,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:11:17.425099
+292,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 15:11:26.474214
+293,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:11:27.107884
+294,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:11:27.113642
+295,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:11:39.999466
+296,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:11:40.092758
+297,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 15:11:57.225745
+298,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 15:11:57.499116
+299,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 15:11:57.949086
+300,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:11:58.395987
+301,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:11:58.430255
+302,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 15:12:15.878532
+303,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:12:16.523772
+304,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:12:16.562631
+305,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/nueva,2025-10-01 15:12:27.963599
+306,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:12:28.385990
+307,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:12:28.405525
+308,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/nueva,2025-10-01 15:13:14.858089
+309,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 15:13:15.221849
+310,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:13:15.698584
+311,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:13:15.751317
+312,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 15:13:31.694580
+313,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 15:13:32.361522
+314,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 15:13:32.792683
+315,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:24.915916
+316,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:25.516729
+317,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:25.620584
+318,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:25.718331
+319,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:25.818704
+320,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:25.915404
+321,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.008049
+322,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.103019
+323,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.121753
+324,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.213880
+325,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.309461
+326,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.403709
+327,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.423265
+328,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.515320
+329,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:26.606628
+330,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:31:26.995864
+331,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:31:27.005269
+332,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:31:28.410154
+333,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:31:28.825323
+334,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:31:28.831438
+335,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/,2025-10-01 15:31:38.435779
+336,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:31:38.852888
+337,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:31:38.858257
+338,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/og-image-datosconsultora.jpg,2025-10-01 15:31:39.468196
+339,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/apple-touch-icon.png,2025-10-01 15:31:39.473225
+340,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/favicon-32x32.png,2025-10-01 15:31:39.487594
+341,127.0.0.1,NetworkingExtension/8621.3.11.10.3 Network/4277.140.33 iOS/18.6.2,/static/img/favicon-16x16.png,2025-10-01 15:31:39.508321
+342,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:31:45.431256
+343,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:31:45.437627
+344,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/seleccionar-perfil,2025-10-01 15:32:21.495417
+345,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:32:21.929842
+346,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:32:21.987518
+347,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/iniciar-como,2025-10-01 15:32:30.366725
+348,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/ver-tareas,2025-10-01 15:32:30.702217
+349,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:32:31.085197
+350,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:32:31.096040
+351,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/,2025-10-01 15:32:36.803672
+352,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:32:37.394233
+353,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:32:37.406658
+354,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:32:37.414465
+355,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:32:37.425890
+356,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/portfolio,2025-10-01 15:33:19.682240
+357,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:33:20.081800
+358,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:33:20.091082
+359,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/servicios/inteligencia-comercial,2025-10-01 15:33:39.033998
+360,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:33:39.374176
+361,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:33:39.415883
+362,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:33:39.431303
+363,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:33:39.441752
+364,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 15:34:15.188440
+365,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:34:15.957229
+366,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:34:16.026540
+367,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 15:39:24.894856
+368,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 15:39:26.212188
+369,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 15:39:26.219598
+370,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:50.077618
+371,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:50.694932
+372,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:50.879231
+373,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:51.004195
+374,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:51.783876
+375,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:51.907861
+376,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:52.010072
+377,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/admin,2025-10-01 16:21:52.495281
+378,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 16:21:53.046753
+379,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 16:21:53.538406
+380,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 16:22:07.857677
+381,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 16:22:08.572088
+382,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 16:22:08.594139
+383,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 16:22:59.573567
+384,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 16:23:00.160223
+385,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 16:23:00.164522
+386,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/favicon-32x32.png,2025-10-01 16:23:05.411775
+387,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/favicon-16x16.png,2025-10-01 16:23:05.743072
+388,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/apple-touch-icon.png,2025-10-01 16:23:05.789271
+389,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/perfil-equipo,2025-10-01 16:23:43.196807
+390,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 16:23:43.620078
+391,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 16:23:43.657519
+392,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/dashboard,2025-10-01 16:24:01.342928
+393,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/css/datosconsultora.css,2025-10-01 16:24:01.795029
+394,127.0.0.1,"Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",/static/img/logo-datos.gif,2025-10-01 16:24:01.837668
+395,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/favicon-32x32.png,2025-10-01 16:26:49.863737
+396,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/apple-touch-icon.png,2025-10-01 16:26:50.234750
+397,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/130.0.0.0 Mobile Safari/537.36",/static/img/favicon-16x16.png,2025-10-01 16:26:52.698753
+398,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/profesional/2/contactar,2025-10-01 17:43:46.554851
+399,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:43:47.087224
+400,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:43:47.102798
+401,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/favicon-32x32.png,2025-10-01 17:43:48.032797
+402,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/favicon-16x16.png,2025-10-01 17:43:48.414622
+403,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/profesional/2/contactar,2025-10-01 17:43:51.814903
+404,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:43:52.286702
+405,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:43:52.294712
+406,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:44:12.962275
+407,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:44:13.046819
+408,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:44:18.675577
+409,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:44:18.775583
+410,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:44:43.806533
+411,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:44:43.873617
+412,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:45:03.004142
+413,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:45:03.017084
+414,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",/static/img/favicon-32x32.png,2025-10-01 17:45:06.680192
+415,127.0.0.1,"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",/static/img/favicon-16x16.png,2025-10-01 17:45:07.158832
+416,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 17:45:11.581503
+417,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 17:45:12.769760
+418,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 17:45:14.091212
+419,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:45:15.374877
+420,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:45:15.381856
+421,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/seleccionar-perfil,2025-10-01 17:45:19.059293
+422,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:45:20.314175
+423,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:45:20.337769
+424,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:49:03.578654
+425,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:49:05.092310
+426,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:49:05.144032
+427,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/nueva,2025-10-01 17:49:43.908401
+428,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:49:45.051993
+429,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:49:45.111970
+430,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/nueva,2025-10-01 17:51:20.494478
+431,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 17:51:21.577284
+432,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:51:22.588505
+433,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:51:22.637640
+434,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:51:29.024221
+435,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:51:30.131821
+436,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:51:30.179073
+437,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 17:52:17.742569
+438,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:52:18.832892
+439,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:52:19.230530
+440,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistente/nuevo,2025-10-01 17:53:46.238722
+441,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/asistentes,2025-10-01 17:53:47.942186
+442,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 17:53:48.990911
+443,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:53:49.991640
+444,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:53:50.006692
+445,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:53:55.368017
+446,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",/,2025-10-01 17:53:56.489323
+447,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:53:56.638380
+448,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:53:56.691571
+449,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:53:57.040522
+450,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:53:57.056123
+451,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 17:54:03.575741
+452,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 17:54:04.602698
+453,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:54:05.606526
+454,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:54:05.661323
+455,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:54:54.325525
+456,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:54:55.487988
+457,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:54:55.493087
+458,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 17:55:06.077709
+459,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 17:55:07.069192
+460,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:55:08.082064
+461,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:55:08.144799
+462,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:59:02.780239
+463,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:59:03.275512
+464,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:59:03.305652
+465,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 17:59:28.198719
+466,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 17:59:28.977832
+467,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 17:59:29.016996
+468,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:00:50.523842
+469,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:00:51.742666
+470,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:00:51.748452
+471,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/perfil-equipo,2025-10-01 18:01:00.389241
+472,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:01:00.831673
+473,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:01:00.871261
+474,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mis-equipos,2025-10-01 18:01:21.794503
+475,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:01:23.183682
+476,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:01:23.248218
+477,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:01:40.994927
+478,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:01:41.395813
+479,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:01:41.425989
+480,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 18:01:58.925427
+481,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 18:01:59.252625
+482,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:01:59.688687
+483,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:01:59.714225
+484,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 18:02:29.231622
+485,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:02:29.740214
+486,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:02:29.744827
+487,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:02:36.353452
+488,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:02:36.763193
+489,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/mi-perfil,2025-10-01 18:02:56.908749
+490,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:02:57.437412
+491,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:02:57.442808
+492,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:03:03.896877
+493,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:03:05.064469
+494,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:03:05.081982
+495,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 18:03:11.726710
+496,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:03:12.107400
+497,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:03:12.145391
+498,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 18:04:36.443155
+499,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:04:36.950637
+500,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:04:36.963480
+501,127.0.0.1,Go-http-client/1.1,/,2025-10-01 18:17:24.190295
+502,127.0.0.1,Go-http-client/2.0,/,2025-10-01 18:17:32.700604
+503,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 18:18:25.637010
+504,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:18:26.241748
+505,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:18:26.253134
+506,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:18:38.533140
+507,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:18:38.589342
+508,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 18:18:55.320726
+509,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:18:55.870851
+510,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:18:55.884065
+511,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:19:07.246872
+512,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:19:07.940202
+513,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:19:08.001264
+514,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 18:19:26.447644
+515,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:19:27.209254
+516,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:19:28.097845
+517,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:19:28.165427
+518,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 18:20:06.965653
+519,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:20:07.434423
+520,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:20:07.460552
+521,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 18:21:44.193559
+522,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 18:21:44.912982
+523,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 18:21:44.955259
+524,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 20:37:47.893171
+525,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 20:37:49.019177
+526,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 20:37:49.028195
+527,127.0.0.1,Go-http-client/1.1,/,2025-10-01 20:40:43.782799
+528,127.0.0.1,Go-http-client/2.0,/,2025-10-01 20:40:46.269537
+529,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 20:41:02.319357
+530,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 20:41:03.165907
+531,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 20:41:03.176396
+532,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 20:41:34.863509
+533,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 20:41:35.530857
+534,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 20:41:35.551231
+535,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 20:42:20.257959
+536,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 20:42:20.722220
+537,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 20:42:20.811222
+538,127.0.0.1,Go-http-client/1.1,/,2025-10-01 21:58:16.264980
+539,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:06:59.552946
+540,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:07:01.235319
+541,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:07:01.268495
+542,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:08:13.813441
+543,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:08:14.466396
+544,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:08:14.864650
+545,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/59/editar,2025-10-01 22:09:14.790282
+546,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:09:15.325108
+547,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:09:15.332272
+548,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/59/editar,2025-10-01 22:09:28.700753
+549,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:09:29.031626
+550,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:09:29.487980
+551,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:09:29.615045
+552,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:09:54.139498
+553,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:09:54.477156
+554,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:09:54.549692
+555,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:02.819777
+556,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:03.264320
+557,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:03.271079
+558,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:13.734459
+559,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:14.400941
+560,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:14.788767
+561,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:33.104200
+562,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:33.587251
+563,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:33.602193
+564,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:40.337449
+565,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:40.839606
+566,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:40.851200
+567,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:48.518276
+568,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:49.161207
+569,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:49.197799
+570,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:10:56.235884
+571,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:10:56.853119
+572,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:10:56.861146
+573,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/tarea/60/editar,2025-10-01 22:11:10.403414
+574,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:11:10.792684
+575,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:11:10.798644
+576,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/ver-tareas,2025-10-01 22:12:28.794241
+577,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:12:29.338702
+578,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:12:29.343628
+579,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:12:45.371606
+580,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:12:45.957048
+581,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:12:45.970768
+582,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/dashboard,2025-10-01 22:13:08.684206
+583,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:13:09.476532
+584,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:13:09.503660
+585,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/,2025-10-01 22:14:09.720386
+586,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:14:10.303457
+587,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:14:10.381653
+588,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:14:21.203075
+589,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:14:21.208800
+590,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/dashboard,2025-10-01 22:14:37.468230
+591,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/img/logo-datos.gif,2025-10-01 22:14:38.016813
+592,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/static/css/datosconsultora.css,2025-10-01 22:14:38.030466
+593,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:16:01.335005
+594,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:18:19.482272
+595,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:18:43.639972
+596,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:18:51.231704
+597,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:18:59.861747
+598,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:06.621258
+599,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:14.607533
+600,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:20.083468
+601,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:27.311409
+602,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:33.278713
+603,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:41.066361
+604,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:48.582280
+605,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:19:54.832513
+606,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:20:02.016771
+607,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:20:08.499430
+608,127.0.0.1,"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",/admin/export-data,2025-10-01 22:20:14.757329

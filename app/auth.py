@@ -53,7 +53,7 @@ def login():
                     return redirect(url_for('routes.mi_perfil'))
                 elif es_asistente:
                     session['active_role'] = 'asistente'
-                    return redirect(url_for('routes.ver_tareas'))
+                    return redirect(url_for('routes.mi_trabajo'))
             else:
                 # Múltiples roles → usar selector (¡incluso si es admin!)
                 return redirect(url_for('routes.seleccionar_perfil'))

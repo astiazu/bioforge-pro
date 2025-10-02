@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Mi Trabajo - {{ assistant.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 mt-4">
+    <!-- Encabezado -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <div>
+            <h6></h6>
+            <h2 class="text-primary mb-0">👷 Mi Trabajo</h2>
+            <span class="badge bg-{{ 'success' if assistant.type == 'general' else 'secondary' }} mt-1">
+                {{ 'Senior' if assistant.type == 'general' else 'Junior' }}
+            </span>
+            <small class="d-block text-muted">Asistente de: {{ assistant.doctor.username }}</small>
+        </div>
+        <a href="{{ url_for('routes.dashboard') }}" class="btn btn-outline-primary">
+            <i class="fas fa-tachometer-alt me-1"></i> Ir al Dashboard
+        </a>
+    </div>
+
+    <!-- Mis tareas asignadas -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-tasks me-2 text-primary"></i>
+                Mis tareas asignadas ({{ mis_tareas|length }})
+            </h5>
+            {% if assistant.type == 'common' %}
+            <span class="badge bg-warning text-dark">Solo puedes marcar como completada</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if mis_tareas %}
+            <div class="row g-4">
+                {% for task in mis_tareas %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title">{{ task.title }}</h6>
+                            <p class="card-text text-muted small flex-grow-1">
+                                {{ task.description or "Sin descripción" }}
+                            </p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">
+                                        📅 {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha' }}
+                                    </small>
+                                    <span class="badge {{ status_badge_class(task.status) }}">
+                                        {{ task.status.replace('_', ' ').title() }}
+                                    </span>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    {% if assistant.type == 'common' %}
+                                    <a href="#" class="btn btn-sm btn-success">✅ Completar</a>
+                                    {% else %}
+                                    <a href="#" class="btn btn-sm btn-warning">🔄 En progreso</a>
+                                    <a href="#" class="btn btn-sm btn-success">✅ Completar</a>
+                                    <a href="#" class="btn btn-sm btn-outline-secondary">✏️ Editar</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">No tienes tareas asignadas.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tareas que asigné (solo Senior) -->
+    {% if assistant.type == 'general' and tareas_asignadas_por_mi %}
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <i class="fas fa-share-square me-2 text-success"></i>
+                Tareas que asigné ({{ tareas_asignadas_por_mi|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                {% for task in tareas_asignadas_por_mi %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-left border-success border-3">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ task.title }}</h6>
+                            <p class="text-muted small">
+                                👤 Asignado a: <strong>{{ task.assistant.name }}</strong>
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <small class="text-muted">
+                                    📅 {{ task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha' }}
+                                </small>
+                                <span class="badge {{ status_badge_class(task.status) }}">
+                                    {{ task.status.replace('_', ' ').title() }}
+                                </span>
+                            </div>
+                            <!-- <div class="mt-3 d-grid">
+                                <a href="{{ url_for('routes.editar_tarea', task_id=task.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit me-1"></i> Editar asignación
+                                </a>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Botón flotante al dashboard (opcional) -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+    <a href="{{ url_for('routes.dashboard') }}" class="btn btn-primary rounded-circle shadow">
+        <i class="fas fa-home"></i>
+    </a>
+</div>
+
+<style>
+.badge {
+    font-weight: 500;
+}
+.border-left {
+    border-left-width: 4px !important;
+}
+</style>
+
+{% endblock %}
+
+<!-- Helper para clases de estado -->
+{% macro status_badge_class(status) -%}
+    {%- if status == 'pending' -%} bg-warning text-dark
+    {%- elif status == 'in_progress' -%} bg-info text-white
+    {%- elif status == 'completed' -%} bg-success
+    {%- elif status == 'cancelled' -%} bg-danger
+    {%- else -%} bg-secondary
+    {%- endif -%}
+{%- endmacro %}

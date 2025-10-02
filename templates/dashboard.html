@@ -93,30 +93,33 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" class="row g-3 align-items-end">
-                <!-- Asistente -->
-                <div class="col-md-3">
-                    <label for="assistant" class="form-label">Filtrar por asistente</label>
-                    <select id="assistant" name="assistant" class="form-select">
-                        <option value="">Todos</option>
-                        {% for a in assistants %}
-                        <option value="{{ a.id }}" {% if assistant_filter == a.id %}selected{% endif %}>
-                            {{ a.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <!-- Ubicación (Clínica) -->
-                <div class="col-md-3">
-                    <label for="clinic" class="form-label">Filtrar por ubicación</label>
-                    <select id="clinic" name="clinic" class="form-select">
-                        <option value="">Todas</option>
-                        {% for c in clinics %}
-                        <option value="{{ c.id }}" {% if clinic_filter == c.id %}selected{% endif %}>
-                            {{ c.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+                {% if is_owner %}
+                    <!-- Asistente -->
+                    <div class="col-md-3">
+                        <label for="assistant" class="form-label">Filtrar por asistente</label>
+                        <select id="assistant" name="assistant" class="form-select">
+                            <option value="">Todos</option>
+                            {% for a in assistants %}
+                            <option value="{{ a.id }}" {% if assistant_filter == a.id %}selected{% endif %}>
+                                {{ a.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Ubicación (Clínica) -->
+                    <div class="col-md-3">
+                        <label for="clinic" class="form-label">Filtrar por ubicación</label>
+                        <select id="clinic" name="clinic" class="form-select">
+                            <option value="">Todas</option>
+                            {% for c in clinics %}
+                            <option value="{{ c.id }}" {% if clinic_filter == c.id %}selected{% endif %}>
+                                {{ c.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
                 <!-- Estado -->
                 <div class="col-md-3">
                     <label for="status" class="form-label">Filtrar por estado</label>

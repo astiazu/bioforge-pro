@@ -29,10 +29,13 @@
                             {{ form.description(class="form-control", rows="4") }}
                         </div>
 
-                        <!-- Asistente (solo lectura) -->
+                        <!-- Asistente (editable) -->
                         <div class="mb-3">
-                            <label class="form-label">Asignado a</label>
-                            <input type="text" class="form-control" value="{{ task.assistant.name }}" readonly>
+                            {{ form.assistant_id.label(class="form-label") }}
+                            {{ form.assistant_id(class="form-select") }}
+                            {% if form.assistant_id.errors %}
+                                <div class="text-danger small">{{ form.assistant_id.errors[0] }}</div>
+                            {% endif %}
                         </div>
 
                         <!-- Fecha límite -->

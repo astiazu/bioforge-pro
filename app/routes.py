@@ -3038,30 +3038,34 @@ def nueva_tarea():
         active_assistant=active_assistant  # ✅ Pasamos al template
     )
 
-@routes.route('/ver-tareas')
+@routes.route('/mi-trabajo')
 @login_required
-def ver_tareas():
+def mi_trabajo():
     if session.get('active_role') != 'asistente':
-        flash('Acceso denegado', 'danger')
-        return redirect(url_for('routes.seleccionar_perfil'))
+        flash("Acceso no permitido", "danger")
+        return redirect(url_for('routes.dashboard'))
 
     assistant_id = session.get('active_assistant_id')
-    my_assistant = Assistant.query.get(assistant_id)
-    if not my_assistant or my_assistant.user_id != current_user.id:
-        flash('Asistente no válido', 'danger')
-        return redirect(url_for('routes.seleccionar_perfil'))
+    if not assistant_id:
+        flash("Asistente no válido", "danger")
+        return redirect(url_for('routes.index'))
 
-    # Tareas asignadas a mí
-    mis_tareas = Task.query.filter_by(assistant_id=assistant_id).all()
+    assistant = Assistant.query.get_or_404(assistant_id)
+    if assistant.user_id != current_user.id:
+        flash("Acceso denegado", "danger")
+        return redirect(url_for('routes.index'))
 
-    # Tareas que yo asigné (solo si soy Senior)
+    # Mis tareas (asignadas a mí)
+    mis_tareas = Task.query.filter_by(assistant_id=assistant.id).order_by(Task.due_date).all()
+
+    # Tareas que asigné (solo si soy Senior)
     tareas_asignadas_por_mi = []
-    if my_assistant.type == 'general':
-        tareas_asignadas_por_mi = Task.query.filter_by(created_by=current_user.id).all()
+    if assistant.type == 'general':
+        tareas_asignadas_por_mi = Task.query.filter_by(created_by=current_user.id).order_by(Task.created_at.desc()).all()
 
     return render_template(
-        'dashboard/assistant.html',
-        assistant=my_assistant,
+        'dashboard/mi_trabajo.html',
+        assistant=assistant,
         mis_tareas=mis_tareas,
         tareas_asignadas_por_mi=tareas_asignadas_por_mi
     )
@@ -3076,33 +3080,42 @@ def editar_tarea(task_id):
         flash('Tarea no válida', 'danger')
         return redirect(url_for('routes.dashboard'))
 
-    # ✅ Permiso: Dueño, Asistente Senior asignado, o creador original (task.created_by)
+    # ✅ Permiso: Dueño, Asistente Senior asignado, o creador original
     puede_editar = (
-        current_user.id == assistant.doctor_id or  # Es el Dueño
-        (current_user.id == assistant.user_id and assistant.type == 'general') or  # Es Senior asignado
-        task.created_by == current_user.id  # Es el creador original
+        current_user.id == assistant.doctor_id or
+        (current_user.id == assistant.user_id and assistant.type == 'general') or
+        task.created_by == current_user.id
     )
 
     if not puede_editar:
         flash('No tienes permiso para editar esta tarea', 'danger')
         return redirect(url_for('routes.dashboard'))
 
+    # ✅ Cargar TODOS los asistentes del mismo doctor (equipo)
+    doctor_id = task.doctor_id
+    all_assistants = Assistant.query.filter_by(
+        doctor_id=doctor_id,
+        is_active=True
+    ).all()
+
     form = TaskForm(obj=task)
-    form.assistant_id.choices = [(assistant.id, assistant.name)]
+    form.assistant_id.choices = [(a.id, a.name) for a in all_assistants]  # ←←← Esto es clave
 
     if form.validate_on_submit():
         task.title = form.title.data
         task.description = form.description.data
         task.due_date = form.due_date.data
         task.status = form.status.data
+        task.assistant_id = form.assistant_id.data  # ←←← permite reasignar
         db.session.commit()
 
-        # === Notificaciones ===
-        if assistant.telegram_id:
+        # === Notificaciones (tu lógica original) ===
+        new_assistant = Assistant.query.get(task.assistant_id)
+        if new_assistant and new_assistant.telegram_id:
             try:
                 mensaje_telegram = (
                     f"📋 *Tarea Actualizada*\n\n"
-                    f"*Asistente:* {assistant.name}\n"
+                    f"*Asistente:* {new_assistant.name}\n"
                     f"*Título:* {task.title}\n"
                     f"*Descripción:* {task.description or 'No especificada'}\n"
                     f"*Fecha Límite:* {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'Sin fecha límite'}\n"
@@ -3115,13 +3128,13 @@ def editar_tarea(task_id):
             except Exception as e:
                 print(f"Error al enviar a Telegram: {e}")
 
-        if assistant.whatsapp:
+        if new_assistant and new_assistant.whatsapp:
             try:
-                clean_number = ''.join(c for c in assistant.whatsapp if c.isdigit())
+                clean_number = ''.join(c for c in new_assistant.whatsapp if c.isdigit())
                 if not clean_number.startswith('54'):
                     clean_number = '54' + clean_number
                 mensaje_whatsapp = (
-                    f"Hola {assistant.name}, tienes una actualización en tu tarea:\n\n"
+                    f"Hola {new_assistant.name}, tienes una actualización en tu tarea:\n\n"
                     f"📌 *{task.title}*\n"
                     f"{task.description or 'Sin descripción'}\n"
                     f"📅 Fecha límite: {task.due_date.strftime('%d/%m/%Y') if task.due_date else 'No especificada'}\n"
@@ -3529,12 +3542,12 @@ def mis_equipos():
 @routes.route('/dashboard')
 @login_required
 def dashboard():
-    doctor_id = None
+    # === Contexto del usuario ===
     active_assistant = None
-    can_manage_team = False
-    is_junior = False
+    is_senior = False
+    is_owner = False
+    doctor_id = None
 
-    # === Determinar contexto según rol activo ===
     if session.get('active_role') == 'asistente':
         assistant_id = session.get('active_assistant_id')
         if assistant_id:
@@ -3543,36 +3556,38 @@ def dashboard():
                 user_id=current_user.id,
                 is_active=True
             ).first()
-        if active_assistant:
+        if active_assistant and active_assistant.type == 'general':
+            is_senior = True
             doctor_id = active_assistant.doctor_id
-            can_manage_team = (active_assistant.type == 'general')
-            is_junior = (active_assistant.type == 'common')
     elif current_user.is_professional:
+        is_owner = True
         doctor_id = current_user.id
-        can_manage_team = True
 
-    # Acceso denegado si no tiene rol válido
-    if not doctor_id and not is_junior:
+    if not doctor_id:
         flash("Acceso denegado", "danger")
         return redirect(url_for('routes.index'))
 
-    # === Obtener filtros desde la URL ===
+    # === Filtros ===
     assistant_filter = request.args.get("assistant", type=int)
     clinic_filter = request.args.get("clinic", type=int)
     status_filter = request.args.get("status")
     date_filter = request.args.get("date")
     solo_atrasadas = request.args.get("solo_atrasadas")
 
-    # === Construir consulta base ===
-    if is_junior:
-        # Junior: solo tareas asignadas a él
-        query = Task.query.filter(Task.assistant_id == active_assistant.id)
-    else:
-        # Dueño/Senior: tareas de su equipo (mismo doctor_id)
+    # === Base query ===
+    if is_owner:
+        # Dueño: todas las tareas de su equipo
         query = Task.query.join(Assistant).filter(Assistant.doctor_id == doctor_id)
+    elif is_senior:
+        # Senior: solo tareas que él creó
+        query = Task.query.filter(Task.created_by == current_user.id)
+    else:
+        # Junior: no debería llegar aquí, pero por seguridad
+        flash("Acceso no permitido", "danger")
+        return redirect(url_for('routes.index'))
 
-    # === Aplicar filtros (solo si aplica) ===
-    if not is_junior:
+    # === Aplicar filtros (solo para dueño; senior ya está filtrado por created_by) ===
+    if is_owner:
         if assistant_filter:
             query = query.filter(Task.assistant_id == assistant_filter)
         if clinic_filter:
@@ -3580,14 +3595,12 @@ def dashboard():
 
     if status_filter:
         query = query.filter(Task.status == status_filter)
-
     if date_filter:
         try:
             date_obj = datetime.strptime(date_filter, "%Y-%m-%d").date()
             query = query.filter(Task.due_date == date_obj)
         except ValueError:
-            pass  # Ignorar fechas mal formateadas
-
+            pass
     if solo_atrasadas:
         today = date.today()
         query = query.filter(
@@ -3597,29 +3610,16 @@ def dashboard():
 
     tasks = query.all()
 
-    # === Preparar listas para filtros ===
-    if is_junior:
-        assistants = [active_assistant] if active_assistant else []
-        clinics = []
-        if active_assistant and active_assistant.clinic_id:
-            clinic = Clinic.query.get(active_assistant.clinic_id)
-            if clinic:
-                clinics = [clinic]
-        elif active_assistant:
-            # Si no tiene clínica asignada, buscar clínicas del doctor
-            clinics = Clinic.query.filter_by(doctor_id=doctor_id).all()
-    else:
-        assistants = Assistant.query.filter_by(doctor_id=doctor_id, is_active=True).all()
-        clinics = Clinic.query.filter_by(doctor_id=doctor_id).all()
+    # === Datos para filtros 
+    # ✅ AHORA: Tanto Dueño como Senior ven los mismos asistentes y clínicas
+    assistants = Assistant.query.filter_by(doctor_id=doctor_id, is_active=True).all()
+    clinics = Clinic.query.filter_by(doctor_id=doctor_id).all()
 
-    # === Agrupar tareas por asistente ===
-    tasks_by_assistant = defaultdict(list)
+    # === Agrupar tareas por asistente (para mostrar en tabla) ===
+    tasks_by_assistant = {}
     for task in tasks:
-        tasks_by_assistant[task.assistant_id].append(task)
+        tasks_by_assistant.setdefault(task.assistant_id, []).append(task)
 
-    creator_ids = {task.created_by for task in tasks}
-    creators = {u.id: u for u in User.query.filter(User.id.in_(creator_ids)).all()}
-    
     # === Etiquetas de estado ===
     status_labels = {
         'pending': {'text': 'Pendiente', 'class': 'bg-warning text-dark'},
@@ -3631,13 +3631,12 @@ def dashboard():
     # === KPIs ===
     pending_tasks = sum(1 for t in tasks if t.status in ['pending', 'in_progress'])
     completed_tasks = sum(1 for t in tasks if t.status == 'completed')
-    total_assistants = len(assistants)
+    total_assistants = len(assistants) if is_owner else 0
 
-    # === Datos para gráficos (últimos 30 días) ===
+    # === Gráficos (últimos 30 días) ===
     today = date.today()
     last_30_days = [(today - timedelta(days=i)).strftime('%d/%m') for i in range(29, -1, -1)]
     task_data = defaultdict(lambda: {'Pendientes': 0, 'En progreso': 0, 'Completadas': 0})
-
     for task in tasks:
         if task.created_at:
             day_key = task.created_at.date()
@@ -3651,16 +3650,12 @@ def dashboard():
                     task_data[day_str]['Completadas'] += 1
 
     data_evolucion = [{'name': d, **task_data[d]} for d in last_30_days]
-
-    # Distribución por asistente
     assistants_distribution = []
-    for a in assistants:
-        count = Task.query.filter_by(assistant_id=a.id).count()
-        if count > 0:
-            assistants_distribution.append({
-                'name': a.name,
-                'task_count': count
-            })
+    if is_owner:
+        for a in assistants:
+            count = Task.query.filter_by(assistant_id=a.id).count()
+            if count > 0:
+                assistants_distribution.append({'name': a.name, 'task_count': count})
 
     # === Paginación ===
     total_tasks_count = len(tasks)
@@ -3671,19 +3666,25 @@ def dashboard():
     end = start + per_page
     paginated_tasks = tasks[start:end]
 
+    # === Precargar creadores para mostrar en el dashboard ===
+    creator_ids = {task.created_by for task in tasks if task.created_by is not None}
+    creators = {u.id: u for u in User.query.filter(User.id.in_(creator_ids)).all()}
+
     return render_template(
         'dashboard.html',
-        can_manage_team=can_manage_team,
+        is_owner=is_owner,
+        is_senior=is_senior,
         active_assistant=active_assistant,
+        can_manage_team=is_owner or is_senior,
         total_tasks=total_tasks_count,
         pending_tasks=pending_tasks,
         completed_tasks=completed_tasks,
         total_assistants=total_assistants,
         assistants=assistants,
+        creators=creators,
         clinics=clinics,
         tasks=paginated_tasks,
-        tasks_by_assistant=dict(tasks_by_assistant),
-        creators=creators,
+        tasks_by_assistant=tasks_by_assistant,
         status_labels=status_labels,
         data_evolucion=data_evolucion,
         assistants_distribution=assistants_distribution,
@@ -3882,175 +3883,175 @@ def assistant():
 
 # ✅ Mover esta función fuera de cualquier ruta
 
-@routes.route('/admin/export-data')
-@login_required
-def export_data():
-    if not current_user.is_admin:
-        abort(403)
+# @routes.route('/admin/export-data')
+# @login_required
+# def export_data():
+#     if not current_user.is_admin:
+#         abort(403)
 
-    tables = {
-        'users': User,
-        'assistants': Assistant,
-        'clinic': Clinic,
-        'tasks': Task,
-        'notes': Note,
-        'publications': Publication,
-        'availability': Availability,
-        'appointments': Appointment,
-        'medical_records': MedicalRecord,
-        'schedules': Schedule,
-        'user_roles': UserRole,
-        'subscribers': Subscriber,
-        'company_invites': CompanyInvite,
-        'invitation_logs': InvitationLog,
-        'visits': Visit
-    }
+#     tables = {
+#         'users': User,
+#         'assistants': Assistant,
+#         'clinic': Clinic,
+#         'tasks': Task,
+#         'notes': Note,
+#         'publications': Publication,
+#         'availability': Availability,
+#         'appointments': Appointment,
+#         'medical_records': MedicalRecord,
+#         'schedules': Schedule,
+#         'user_roles': UserRole,
+#         'subscribers': Subscriber,
+#         'company_invites': CompanyInvite,
+#         'invitation_logs': InvitationLog,
+#         'visits': Visit
+#     }
 
-    table_name = request.args.get('table')
-    if not table_name or table_name not in tables:
-        links = "<h2>🔐 Exportar datos (solo admin)</h2><ul>"
-        for name in sorted(tables.keys()):
-            links += f'<li><a href="?table={name}">{name}</a></li>'
-        links += "</ul><p>⚠️ Elimina esta ruta después de usarla.</p>"
-        return links
+#     table_name = request.args.get('table')
+#     if not table_name or table_name not in tables:
+#         links = "<h2>🔐 Exportar datos (solo admin)</h2><ul>"
+#         for name in sorted(tables.keys()):
+#             links += f'<li><a href="?table={name}">{name}</a></li>'
+#         links += "</ul><p>⚠️ Elimina esta ruta después de usarla.</p>"
+#         return links
 
-    model = tables[table_name]
-    columns = [col.name for col in model.__table__.columns]
+#     model = tables[table_name]
+#     columns = [col.name for col in model.__table__.columns]
 
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(columns)
+#     output = StringIO()
+#     writer = csv.writer(output)
+#     writer.writerow(columns)
 
-    for row in model.query.all():
-        writer.writerow([
-            str(getattr(row, col)) if getattr(row, col) is not None else ''
-            for col in columns
-        ])
+#     for row in model.query.all():
+#         writer.writerow([
+#             str(getattr(row, col)) if getattr(row, col) is not None else ''
+#             for col in columns
+#         ])
 
-    output.seek(0)
-    return Response(
-        output.getvalue(),
-        mimetype="text/csv",
-        headers={"Content-Disposition": f"attachment;filename={table_name}.csv"}
-    )
+#     output.seek(0)
+#     return Response(
+#         output.getvalue(),
+#         mimetype="text/csv",
+#         headers={"Content-Disposition": f"attachment;filename={table_name}.csv"}
+#     )
     
-@routes.route('/admin/import-data', methods=['GET', 'POST'])
-@login_required
-def import_data():
-    if not current_user.is_admin:
-        abort(403)
+# @routes.route('/admin/import-data', methods=['GET', 'POST'])
+# @login_required
+# def import_data():
+#     if not current_user.is_admin:
+#         abort(403)
 
-    tables = {
-        'users': User,
-        'assistants': Assistant,
-        'clinic': Clinic,
-        'tasks': Task,
-        'notes': Note,
-        'publications': Publication,
-        'availability': Availability,
-        'appointments': Appointment,
-        'medical_records': MedicalRecord,
-        'schedules': Schedule,
-        'user_roles': UserRole,
-        'subscribers': Subscriber,
-        'company_invites': CompanyInvite,
-        'invitation_logs': InvitationLog,
-        'visits': Visit
-    }
+#     tables = {
+#         'users': User,
+#         'assistants': Assistant,
+#         'clinic': Clinic,
+#         'tasks': Task,
+#         'notes': Note,
+#         'publications': Publication,
+#         'availability': Availability,
+#         'appointments': Appointment,
+#         'medical_records': MedicalRecord,
+#         'schedules': Schedule,
+#         'user_roles': UserRole,
+#         'subscribers': Subscriber,
+#         'company_invites': CompanyInvite,
+#         'invitation_logs': InvitationLog,
+#         'visits': Visit
+#     }
 
-    if request.method == 'POST':
-        table = request.form.get('table')
-        csv_file = request.files.get('csv_file')
+#     if request.method == 'POST':
+#         table = request.form.get('table')
+#         csv_file = request.files.get('csv_file')
         
-        if not csv_file or table not in tables:
-            flash("❌ Tabla o archivo inválido", "danger")
-            return redirect(request.url)
+#         if not csv_file or table not in tables:
+#             flash("❌ Tabla o archivo inválido", "danger")
+#             return redirect(request.url)
 
-        model = tables[table]
-        try:
-            # Soporta UTF-8 con BOM (común en Excel)
-            stream = StringIO(csv_file.read().decode('utf-8-sig'))
-            reader = csv.DictReader(stream)
-        except Exception as e:
-            flash(f"❌ Error al leer CSV: {e}", "danger")
-            return redirect(request.url)
+#         model = tables[table]
+#         try:
+#             # Soporta UTF-8 con BOM (común en Excel)
+#             stream = StringIO(csv_file.read().decode('utf-8-sig'))
+#             reader = csv.DictReader(stream)
+#         except Exception as e:
+#             flash(f"❌ Error al leer CSV: {e}", "danger")
+#             return redirect(request.url)
 
-        success_count = 0
-        try:
-            for row in reader:
-                cleaned = {}
-                for key, value in row.items():
-                    if value == '':
-                        cleaned[key] = None
-                    elif key in ['id', 'user_id', 'doctor_id', 'assistant_id', 'clinic_id', 'patient_id', 'role_id', 'created_by', 'approved_by']:
-                        cleaned[key] = int(value) if value.isdigit() else None
-                    elif key in ['is_active', 'is_admin', 'is_professional', 'is_used', 'success']:
-                        cleaned[key] = value.lower() in ('1', 'true', 't', 'yes', 'on')
-                    elif key in ['created_at', 'updated_at', 'due_date', 'published_at', 'expires_at', 'used_at', 'approved_at']:
-                        if value:
-                            try:
-                                cleaned[key] = date_parser.parse(value)
-                            except:
-                                cleaned[key] = None
-                        else:
-                            cleaned[key] = None
-                    else:
-                        cleaned[key] = value
+#         success_count = 0
+#         try:
+#             for row in reader:
+#                 cleaned = {}
+#                 for key, value in row.items():
+#                     if value == '':
+#                         cleaned[key] = None
+#                     elif key in ['id', 'user_id', 'doctor_id', 'assistant_id', 'clinic_id', 'patient_id', 'role_id', 'created_by', 'approved_by']:
+#                         cleaned[key] = int(value) if value.isdigit() else None
+#                     elif key in ['is_active', 'is_admin', 'is_professional', 'is_used', 'success']:
+#                         cleaned[key] = value.lower() in ('1', 'true', 't', 'yes', 'on')
+#                     elif key in ['created_at', 'updated_at', 'due_date', 'published_at', 'expires_at', 'used_at', 'approved_at']:
+#                         if value:
+#                             try:
+#                                 cleaned[key] = date_parser.parse(value)
+#                             except:
+#                                 cleaned[key] = None
+#                         else:
+#                             cleaned[key] = None
+#                     else:
+#                         cleaned[key] = value
 
-                # Evitar duplicados por ID
-                if 'id' in cleaned and cleaned['id']:
-                    existing = model.query.get(cleaned['id'])
-                    if existing:
-                        continue  # salta si ya existe
+#                 # Evitar duplicados por ID
+#                 if 'id' in cleaned and cleaned['id']:
+#                     existing = model.query.get(cleaned['id'])
+#                     if existing:
+#                         continue  # salta si ya existe
 
-                obj = model(**cleaned)
-                db.session.add(obj)
-                success_count += 1
+#                 obj = model(**cleaned)
+#                 db.session.add(obj)
+#                 success_count += 1
 
-            db.session.commit()
-            flash(f"✅ Importado: {success_count} registros en '{table}'", "success")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"❌ Error al importar '{table}': {str(e)}", "danger")
+#             db.session.commit()
+#             flash(f"✅ Importado: {success_count} registros en '{table}'", "success")
+#         except Exception as e:
+#             db.session.rollback()
+#             flash(f"❌ Error al importar '{table}': {str(e)}", "danger")
 
-        return redirect(url_for('routes.import_data'))
+#         return redirect(url_for('routes.import_data'))
 
-    # Mostrar formulario
-    options = "".join([f'<option value="{name}">{name}</option>' for name in sorted(tables.keys())])
-    return f'''
-    <!DOCTYPE html>
-    <html>
-    <head><title>Importar datos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-light">
-    <div class="container mt-5">
-        <div class="card">
-            <div class="card-header">
-                <h4>📤 Importar datos a Render (solo admin)</h4>
-            </div>
-            <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label class="form-label">Tabla</label>
-                        <select name="table" class="form-select" required>{options}</select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Archivo CSV</label>
-                        <input type="file" name="csv_file" accept=".csv" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-success">Importar</button>
-                    <a href="{{ url_for('routes.dashboard') }}" class="btn btn-secondary">Cancelar</a>
-                </form>
-                <div class="alert alert-warning mt-3">
-                    ⚠️ <strong>Advertencia:</strong> Esta ruta debe eliminarse después de usarla.
-                </div>
-            </div>
-        </div>
-    </div>
-    </body>
-    </html>
-    '''
+#     # Mostrar formulario
+#     options = "".join([f'<option value="{name}">{name}</option>' for name in sorted(tables.keys())])
+#     return f'''
+#     <!DOCTYPE html>
+#     <html>
+#     <head><title>Importar datos</title>
+#     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+#     </head>
+#     <body class="bg-light">
+#     <div class="container mt-5">
+#         <div class="card">
+#             <div class="card-header">
+#                 <h4>📤 Importar datos a Render (solo admin)</h4>
+#             </div>
+#             <div class="card-body">
+#                 <form method="post" enctype="multipart/form-data">
+#                     <div class="mb-3">
+#                         <label class="form-label">Tabla</label>
+#                         <select name="table" class="form-select" required>{options}</select>
+#                     </div>
+#                     <div class="mb-3">
+#                         <label class="form-label">Archivo CSV</label>
+#                         <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+#                     </div>
+#                     <button type="submit" class="btn btn-success">Importar</button>
+#                     <a href="{{ url_for('routes.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+#                 </form>
+#                 <div class="alert alert-warning mt-3">
+#                     ⚠️ <strong>Advertencia:</strong> Esta ruta debe eliminarse después de usarla.
+#                 </div>
+#             </div>
+#         </div>
+#     </div>
+#     </body>
+#     </html>
+#     '''
 
 def generar_disponibilidad_automatica(schedule, semanas=52):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
