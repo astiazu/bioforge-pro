@@ -40,17 +40,17 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from sqlalchemy import or_, and_, func, text
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
+from urllib.parse import urlparse
+
+import cloudinary
+import cloudinary.uploader
 
 # ================================
 # IMPORTS - LOCALES (TU APP)
 # ================================
 from flask import current_app
 from app import db, mail
-from app.models import (
-    User, Note, Publication, NoteStatus, Clinic, Availability,
-    Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
-    Assistant, Task, TaskStatus, CompanyInvite, Visit
-)
 
 from app.utils import (
     upload_to_cloudinary, send_telegram_message, generate_invite_token,
@@ -62,8 +62,9 @@ from app.utils import (
 from app.models import (
     User, Note, Publication, NoteStatus, Clinic, Availability,
     Appointment, MedicalRecord, Schedule, UserRole, Subscriber,
-    Assistant, Task, TaskStatus, CompanyInvite, db
+    Assistant, Task, TaskStatus, CompanyInvite, Visit, ProductCategory, db
 )
+
 from app.forms import (
     NoteForm, PublicationForm, ClinicForm, AssistantForm,
     TaskAssignmentForm, AppointmentForm, MedicalRecordForm,
@@ -94,6 +95,23 @@ ALLOWED_MIME_TYPES = {
 # FUNCIONES UTILITARIAS
 # ================================
 
+def extract_public_id_from_url(cloudinary_url):
+    """
+    Extrae el public_id de una URL de Cloudinary.
+    Ej: https://res.cloudinary.com/<cloud_name>/image/upload/v123456789/producto_1_1.jpg
+    → producto_1_1
+    """
+    try:
+        path = urlparse(cloudinary_url).path
+        # Eliminar prefijo y extensión
+        if path.startswith('/image/upload/'):
+            filename = path.split('/')[-1]
+            public_id = filename.split('.')[0]  # Quita la extensión
+            return public_id
+        return None
+    except Exception:
+        return None
+    
 def escape_markdown(text):
     """Escapa caracteres especiales de Markdown en Telegram."""
     if not text:
@@ -4091,7 +4109,11 @@ def tienda_publica(url_slug):
         ((Product.stock == 0) & (Product.hide_if_out_of_stock == False))
     ).all()
     
-    return render_template('ecommerce/tienda_publica.html', professional=professional, products=products)
+    return render_template('ecommerce/tienda_publica.html', 
+                           professional=professional, 
+                           products=products,
+                           now=datetime.utcnow
+                           ) 
 
 # === PRODUCTOS ===
 @routes.route('/<int:doctor_id>/productos')
@@ -4101,7 +4123,11 @@ def gestion_productos(doctor_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
     products = Product.query.filter_by(doctor_id=doctor_id).order_by(Product.created_at.desc()).all()
-    return render_template('ecommerce/gestion_productos.html', products=products, doctor_id=doctor_id)
+    return render_template('ecommerce/gestion_productos.html', 
+                            products=products, 
+                            doctor_id=doctor_id, 
+                            now=datetime.now
+                            )
 
 @routes.route('/<int:doctor_id>/producto/nuevo', methods=['GET', 'POST'])
 @login_required
@@ -4110,27 +4136,97 @@ def crear_producto(doctor_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
     
+    # Cargar SOLO categorías activas del profesional
+    from app.models import ProductCategory
+    categories = ProductCategory.query.filter_by(
+        doctor_id=doctor_id,
+        is_active=True
+    ).order_by(ProductCategory.name).all()
+
     if request.method == 'POST':
-        is_service = 'is_service' in request.form
-        stock = 0 if is_service else int(request.form.get('stock', 0))
-        product = Product(
-            name=request.form['name'].strip(),
-            description=request.form.get('description', '').strip(),
-            price=float(request.form['price']),
-            is_service=is_service,
-            stock=stock,
-            category=request.form.get('category', '').strip(),
-            is_visible='is_visible' in request.form,
-            hide_if_out_of_stock='hide_if_out_of_stock' in request.form,
-            doctor_id=doctor_id,
-            created_by=current_user.id
-        )
-        db.session.add(product)
-        db.session.commit()
-        flash('✅ Producto creado', 'success')
-        return redirect(url_for('ecommerce.gestion_productos', doctor_id=doctor_id))
+        try:
+            # Determinar si es servicio
+            is_service = 'is_service' in request.form
+            stock = 0 if is_service else max(0, int(request.form.get('stock', 0)))
+            
+            # Precios e impuestos
+            base_price = float(request.form['base_price'])
+            tax_rate = float(request.form.get('tax_rate', 0.0))
+            has_tax_included = 'has_tax_included' in request.form
+            
+            # Promociones
+            is_on_promotion = 'is_on_promotion' in request.form
+            promotion_discount = float(request.form.get('promotion_discount', 0.0)) if is_on_promotion else 0.0
+            promotion_end_date = None
+            if is_on_promotion and request.form.get('promotion_end_date'):
+                promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
+            
+            # Imágenes: asume que vienen como JSON (desde un campo oculto o AJAX)
+            image_urls = []
+            if request.form.get('image_urls'):
+                import json
+                try:
+                    image_urls = json.loads(request.form['image_urls'])
+                    # Asegurar que sea una lista y no más de 3 imágenes
+                    if isinstance(image_urls, list):
+                        image_urls = image_urls[:3]
+                    else:
+                        image_urls = []
+                except (json.JSONDecodeError, TypeError):
+                    image_urls = []
+            
+            # Categoría (solo si es válida, activa y del mismo profesional)
+            category_id = request.form.get('category_id')
+            if category_id and category_id.isdigit():
+                category = ProductCategory.query.filter_by(
+                    id=int(category_id),
+                    doctor_id=doctor_id,
+                    is_active=True
+                ).first()
+                category_id = category.id if category else None
+            else:
+                category_id = None
+
+            # Crear producto
+            product = Product(
+                name=request.form['name'].strip(),
+                description=request.form.get('description', '').strip(),
+                base_price=base_price,
+                tax_rate=tax_rate,
+                has_tax_included=has_tax_included,
+                is_on_promotion=is_on_promotion,
+                promotion_discount=promotion_discount,
+                promotion_end_date=promotion_end_date,
+                image_urls=image_urls,
+                is_service=is_service,
+                stock=stock,
+                is_visible='is_visible' in request.form,
+                hide_if_out_of_stock='hide_if_out_of_stock' in request.form,
+                category_id=category_id,
+                doctor_id=doctor_id,
+                created_by=current_user.id,
+                updated_by=current_user.id
+            )
+            
+            db.session.add(product)
+            db.session.commit()
+            flash('✅ Producto creado exitosamente', 'success')
+            return redirect(url_for('routes.gestion_productos', doctor_id=doctor_id))
+        
+        except (ValueError, KeyError) as e:
+            flash('❌ Error: verifica que todos los campos numéricos sean válidos.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash('❌ Error interno al crear el producto.', 'danger')
+            print(f"Error en crear_producto: {e}")
     
-    return render_template('ecommerce/form_producto.html', doctor_id=doctor_id, product=None)
+    return render_template(
+        'ecommerce/form_producto.html',
+        doctor_id=doctor_id,
+        product=None,
+        categories=categories,
+        now=datetime.now
+    )
 
 @routes.route('/producto/<int:product_id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -4140,21 +4236,160 @@ def editar_producto(product_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
     
+    # Cargar SOLO categorías activas del profesional
+    from app.models import ProductCategory
+    categories = ProductCategory.query.filter_by(
+        doctor_id=product.doctor_id,
+        is_active=True
+    ).order_by(ProductCategory.name).all()
+
     if request.method == 'POST':
-        product.name = request.form['name'].strip()
-        product.description = request.form.get('description', '').strip()
-        product.price = float(request.form['price'])
-        product.is_service = 'is_service' in request.form
-        product.stock = int(request.form.get('stock', 0)) if not product.is_service else 0
-        product.category = request.form.get('category', '').strip()
-        product.is_visible = 'is_visible' in request.form
-        product.hide_if_out_of_stock = 'hide_if_out_of_stock' in request.form
-        product.updated_by = current_user.id
-        db.session.commit()
-        flash('✅ Producto actualizado', 'success')
-        return redirect(url_for('ecommerce.gestion_productos', doctor_id=product.doctor_id))
+        try:
+            product.name = request.form['name'].strip()
+            product.description = request.form.get('description', '').strip()
+            
+            product.base_price = float(request.form['base_price'])
+            product.tax_rate = float(request.form.get('tax_rate', 0.0))
+            product.has_tax_included = 'has_tax_included' in request.form
+            
+            product.is_on_promotion = 'is_on_promotion' in request.form
+            product.promotion_discount = float(request.form.get('promotion_discount', 0.0)) if product.is_on_promotion else 0.0
+            
+            if product.is_on_promotion and request.form.get('promotion_end_date'):
+                product.promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
+            else:
+                product.promotion_end_date = None
+            
+            product.is_service = 'is_service' in request.form
+            product.stock = 0 if product.is_service else max(0, int(request.form.get('stock', 0)))
+            
+            # Validar categoría: debe pertenecer al profesional y estar activa
+            category_id = request.form.get('category_id')
+            if category_id and category_id.isdigit():
+                category = ProductCategory.query.filter_by(
+                    id=int(category_id),
+                    doctor_id=product.doctor_id,
+                    is_active=True
+                ).first()
+                product.category_id = category.id if category else None
+            else:
+                product.category_id = None
+            
+            product.is_visible = 'is_visible' in request.form
+            product.hide_if_out_of_stock = 'hide_if_out_of_stock' in request.form
+            product.updated_by = current_user.id
+            
+            db.session.commit()
+            flash('✅ Producto actualizado', 'success')
+            return redirect(url_for('routes.gestion_productos', doctor_id=product.doctor_id))
+        
+        except (ValueError, KeyError) as e:
+            flash('❌ Error: verifica los campos numéricos y fechas.', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash('❌ Error al actualizar el producto.', 'danger')
+            print(f"Error en editar_producto: {e}")
     
-    return render_template('ecommerce/form_producto.html', doctor_id=product.doctor_id, product=product)
+  
+    return render_template(
+        'ecommerce/form_producto.html',
+        doctor_id=product.doctor_id,
+        product=product,
+        categories=categories,
+        now=datetime.now
+    )
+
+@routes.route('/producto/<int:product_id>/subir-imagen', methods=['POST'])
+@login_required
+def subir_imagen_producto(product_id):
+    product = Product.query.get_or_404(product_id)
+    if not check_access(product.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if 'image' not in request.files:
+        flash('❌ No se seleccionó ninguna imagen.', 'danger')
+        return redirect(url_for('routes.editar_producto', product_id=product_id))
+    
+    image_file = request.files['image']
+    if image_file.filename == '':
+        flash('❌ El archivo no tiene nombre.', 'danger')
+        return redirect(url_for('routes.editar_producto', product_id=product_id))
+    
+    try:
+        upload_result = cloudinary.uploader.upload(
+            image_file,
+            folder=f"bioforge/productos/{product.doctor_id}",
+            public_id=f"producto_{product.id}_{len(product.image_urls) + 1}",
+            overwrite=False,
+            resource_type="image"
+        )
+        
+        if len(product.image_urls) < 3:
+            # ✅ Hacer una copia para evitar problemas de mutabilidad
+            new_urls = product.image_urls.copy()
+            new_urls.append(upload_result['secure_url'])
+            
+            # ✅ Asignar la nueva lista
+            product.image_urls = new_urls
+            
+            # ✅ ¡Notificar a SQLAlchemy que el campo cambió!
+            flag_modified(product, "image_urls")
+            
+            db.session.commit()
+            flash('✅ Imagen subida correctamente', 'success')
+        else:
+            flash('⚠️ Máximo 3 imágenes permitidas.', 'warning')
+            
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error Cloudinary: {str(e)}")
+        flash('❌ Error al subir la imagen.', 'danger')
+    
+    return redirect(url_for('routes.editar_producto', product_id=product_id))
+
+@routes.route('/producto/<int:product_id>/imagen/<int:index>/eliminar', methods=['POST'])
+@login_required
+def eliminar_imagen_producto(product_id, index):
+    product = Product.query.get_or_404(product_id)
+    if not check_access(product.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if index < 0 or index >= len(product.image_urls):
+        flash('❌ Índice de imagen inválido.', 'danger')
+        return redirect(url_for('routes.editar_producto', product_id=product_id))
+    
+    try:
+        # Obtener la URL a eliminar
+        url_to_remove = product.image_urls[index]
+        public_id = extract_public_id_from_url(url_to_remove)
+        
+        # Eliminar de Cloudinary (si se puede extraer el public_id)
+        if public_id:
+            try:
+                destroy_result = cloudinary.uploader.destroy(public_id)
+                if destroy_result.get('result') != 'ok':
+                    current_app.logger.warning(f"Cloudinary no eliminó {public_id}: {destroy_result}")
+            except Exception as e:
+                current_app.logger.error(f"Error al destruir en Cloudinary: {str(e)}")
+                # No fallamos si Cloudinary falla; seguimos eliminando de la DB
+        
+        # Eliminar de la lista en la base de datos
+        new_urls = product.image_urls.copy()
+        new_urls.pop(index)
+        product.image_urls = new_urls
+        flag_modified(product, "image_urls")
+        db.session.commit()
+        
+        flash('✅ Imagen eliminada correctamente', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error al eliminar imagen del producto: {str(e)}")
+        flash('❌ Error al eliminar la imagen.', 'danger')
+    
+    return redirect(url_for('routes.editar_producto', product_id=product_id))
 
 # === EVENTOS ===
 @routes.route('/<int:doctor_id>/eventos')
@@ -4208,6 +4443,122 @@ def crear_evento(doctor_id):
     
     return render_template('ecommerce/form_evento.html', doctor_id=doctor_id, clinics=clinics)
 
+@routes.route('/<int:doctor_id>/categorias')
+@login_required
+def gestion_categorias(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    categories = ProductCategory.query.filter_by(
+        doctor_id=doctor_id, 
+        parent_id=None
+    ).order_by(ProductCategory.name).all()
+    
+    return render_template('ecommerce/gestion_categorias.html', doctor_id=doctor_id, categories=categories)
+
+@routes.route('/<int:doctor_id>/categoria/nueva', methods=['GET', 'POST'])
+@login_required
+def crear_categoria(doctor_id):
+    if not check_access(doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if request.method == 'POST':
+        try:
+            name = request.form['name'].strip()
+            if not name:
+                flash('El nombre de la categoría es obligatorio.', 'danger')
+                return redirect(request.url)
+            
+            parent_id = request.form.get('parent_id')
+            parent_id = int(parent_id) if parent_id and parent_id.isdigit() else None
+            
+            # Verificar que la categoría padre pertenezca al mismo profesional
+            if parent_id:
+                parent = ProductCategory.query.filter_by(
+                    id=parent_id,
+                    doctor_id=doctor_id
+                ).first()
+                if not parent:
+                    flash('Categoría padre inválida.', 'danger')
+                    return redirect(request.url)
+            
+            category = ProductCategory(
+                name=name,
+                description=request.form.get('description', '').strip(),
+                parent_id=parent_id,
+                doctor_id=doctor_id,
+                is_active=True  # Nueva categoría siempre activa
+            )
+            db.session.add(category)
+            db.session.commit()
+            flash('✅ Categoría creada exitosamente', 'success')
+            return redirect(url_for('routes.gestion_categorias', doctor_id=doctor_id))
+        
+        except Exception as e:
+            db.session.rollback()
+            flash('❌ Error al crear la categoría. Inténtalo nuevamente.', 'danger')
+            print(f"Error: {e}")
+    
+    # Cargar solo categorías raíz (sin padre) y activas del profesional
+    root_categories = ProductCategory.query.filter_by(
+        doctor_id=doctor_id,
+        parent_id=None,
+        is_active=True
+    ).order_by(ProductCategory.name).all()
+    
+    return render_template(
+        'ecommerce/form_categoria.html',
+        doctor_id=doctor_id,
+        category=None,
+        root_categories=root_categories
+    )
+
+@routes.route('/categoria/<int:category_id>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_categoria(category_id):
+    category = ProductCategory.query.get_or_404(category_id)
+    if not check_access(category.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    if request.method == 'POST':
+        category.name = request.form['name'].strip()
+        category.description = request.form.get('description', '').strip()
+        
+        parent_id = request.form.get('parent_id')
+        category.parent_id = int(parent_id) if parent_id and parent_id.isdigit() else None
+        
+        db.session.commit()
+        flash('✅ Categoría actualizada', 'success')
+        return redirect(url_for('routes.gestion_categorias', doctor_id=category.doctor_id))
+    
+    root_categories = ProductCategory.query.filter_by(
+        doctor_id=category.doctor_id, 
+        parent_id=None
+    ).filter(ProductCategory.id != category_id).order_by(ProductCategory.name).all()
+    
+    return render_template('ecommerce/form_categoria.html', doctor_id=category.doctor_id, category=category, root_categories=root_categories)
+
+@routes.route('/categoria/<int:category_id>/toggle-estado', methods=['POST'])
+@login_required
+def toggle_categoria_estado(category_id):
+    category = ProductCategory.query.get_or_404(category_id)
+    
+    if not check_access(category.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+    
+    # Alternar estado
+    category.is_active = not category.is_active
+    db.session.commit()
+    
+    estado = "activada" if category.is_active else "desactivada"
+    flash(f'✅ Categoría "{category.name}" {estado} correctamente.', 'success')
+    
+    return redirect(url_for('routes.gestion_categorias', doctor_id=category.doctor_id))
+
 # === RUTAS ADMINISTRADOR ===
 def generar_disponibilidad_automatica(schedule, semanas=52):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
@@ -4233,6 +4584,7 @@ def generar_disponibilidad_automatica(schedule, semanas=52):
                 )
                 db.session.add(avail)
             current += timedelta(minutes=30)  # Duración del turno
+
 
 @routes.route('/fix-view-count')
 @login_required

@@ -4,11 +4,13 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
+from flask_migrate import Migrate  # ← IMPORTADO
 
 # Instancias globales
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
+migrate = Migrate()  # ← INSTANCIA GLOBAL DE MIGRATE
 
 # Cloudinary (opcional)
 try:
@@ -62,6 +64,7 @@ def create_app():
 
     # === Inicializar extensiones ===
     db.init_app(app)
+    migrate.init_app(app, db)  # ← ¡REGISTRADO!
     login_manager.init_app(app)
     mail.init_app(app)
     login_manager.login_view = "auth.login"
@@ -77,23 +80,8 @@ def create_app():
         # Importar todos los modelos para que SQLAlchemy los registre
         from app import models
         
-        # Crear todas las tablas
-        db.create_all()
-
-        # ❌ TEMPORALMENTE COMENTADO: no crear admin automáticamente
-        # Esto permite que el endpoint /init-db-render cargue datos limpios
-        # from app.models import User
-        # if not User.query.filter_by(is_admin=True).first():
-        #     admin = User(
-        #         username='admin',
-        #         email='admin@bioforge.com',
-        #         is_admin=True,
-        #         is_professional=False,
-        #         role_name='admin'
-        #     )
-        #     admin.set_password('temporal123')
-        #     db.session.add(admin)
-        #     db.session.commit()
+        # ❌ ¡ELIMINADO! No usar db.create_all() con Flask-Migrate
+        # db.create_all()
 
         # Registrar Blueprints
         from app.routes import routes

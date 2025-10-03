@@ -1,55 +1,136 @@
 <!-- templates/ecommerce/gestion_productos.html -->
 {% extends "base.html" %}
+
+{% block title %}Gestión de Productos - BioForge{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3>Gestión de Productos</h3>
-        <a href="{{ url_for('ecommerce.crear_producto', doctor_id=doctor_id) }}" class="btn btn-success">
-            ➕ Nuevo Producto/Servicio
+<div class="container py-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5">
+        <div>
+            <h2 class="h3 mb-1"><i class="fas fa-store me-2 text-primary"></i>Gestión de Productos</h2>
+            <p class="text-muted small">Administra tu catálogo de productos y servicios</p>
+        </div>
+        <a href="{{ url_for('routes.crear_producto', doctor_id=doctor_id) }}" 
+           class="btn btn-success mt-2 mt-md-0">
+            <i class="fas fa-plus me-1"></i> Nuevo Producto/Servicio
         </a>
     </div>
 
     {% if products %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Precio</th>
-                    <th>Stock</th>
-                    <th>Visible</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in products %}
-                <tr>
-                    <td>
-                        {{ p.name }}
-                        {% if p.is_service %}<span class="badge bg-info ms-2">Servicio</span>{% endif %}
-                    </td>
-                    <td>${{ "%.2f"|format(p.price) }}</td>
-                    <td>
-                        {% if p.is_service %}—{% else %}{{ p.stock }}{% endif %}
-                        {% if not p.is_service and p.stock == 0 and p.hide_if_out_of_stock %}
-                            <span class="badge bg-warning">Oculto si agotado</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if p.is_visible %}✅{% else %}❌{% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('ecommerce.editar_producto', product_id=p.id) }}" class="btn btn-sm btn-outline-primary">
-                            Editar
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">Imagen</th>
+                        <th>Producto</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Visibilidad</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <!-- Imagen -->
+                        <td>
+                            <div class="d-flex justify-content-center">
+                                {% if p.image_urls and p.image_urls|length > 0 %}
+                                    <div style="width: 60px; height: 60px; background-color: #f8f9fa;"
+                                         class="rounded d-flex align-items-center justify-content-center">
+                                        <img src="{{ p.image_urls[0] }}"
+                                             alt="{{ p.name }}"
+                                             style="width: 100%; height: 100%; object-fit: contain;">
+                                    </div>
+                                {% else %}
+                                    <div style="width: 60px; height: 60px;"
+                                         class="d-flex align-items-center justify-content-center text-muted">
+                                        <i class="fas fa-box-open"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Nombre y tipo -->
+                        <td>
+                            <div class="fw-medium">{{ p.name }}</div>
+                            <div class="small text-muted mt-1">
+                                {% if p.is_service %}
+                                    <span class="badge bg-info">Servicio</span>
+                                {% else %}
+                                    <span class="badge bg-success">Producto</span>
+                                {% endif %}
+                                {% if not p.is_visible %}
+                                    <span class="badge bg-light text-dark">Oculto</span>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <!-- Precio -->
+                        <td class="text-end">
+                            {% if p.is_on_promotion and p.promotion_discount > 0 and (not p.promotion_end_date or p.promotion_end_date > now()) %}
+                                <div>
+                                    <span class="text-success fw-bold">${{ "%.2f"|format(p.final_price) }}</span>
+                                </div>
+                                <div class="small text-muted text-decoration-line-through">
+                                    ${{ "%.2f"|format(p.list_price) }}
+                                </div>
+                            {% else %}
+                                <span class="text-primary fw-bold">${{ "%.2f"|format(p.final_price) }}</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Stock -->
+                        <td class="text-center">
+                            {% if p.is_service %}
+                                <span class="text-muted">—</span>
+                            {% else %}
+                                {% if p.stock == 0 %}
+                                    <span class="badge bg-warning text-dark">Agotado</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ p.stock }}</span>
+                                {% endif %}
+                                {% if p.hide_if_out_of_stock and p.stock == 0 %}
+                                    <div class="small text-muted mt-1">Oculto si agotado</div>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+
+                        <!-- Visibilidad -->
+                        <td class="text-center">
+                            {% if p.is_visible %}
+                                <span class="text-success">✅ Visible</span>
+                            {% else %}
+                                <span class="text-muted">❌ Oculto</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Acciones -->
+                        <td class="text-end">
+                            <a href="{{ url_for('routes.editar_producto', product_id=p.id) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i> Editar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% else %}
-    <div class="alert alert-info">No tienes productos aún.</div>
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-store fa-3x text-muted"></i>
+        </div>
+        <h4 class="text-muted mb-3">No tienes productos aún</h4>
+        <p class="text-muted mb-4">Crea tu primer producto o servicio para comenzar a vender.</p>
+        <a href="{{ url_for('routes.crear_producto', doctor_id=doctor_id) }}" 
+           class="btn btn-success px-4">
+            <i class="fas fa-plus me-1"></i> Crear Producto
+        </a>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

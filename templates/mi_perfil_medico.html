@@ -218,13 +218,59 @@
     </div>
 
     <!-- Tienda Online (opcional) -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <h6 class="alert-heading"><i class="fas fa-store me-2"></i>Tienda Online</h6>
-                <p class="mb-0">Próximamente podrás crear tu propia tienda online desde aquí.</p>
-                <button type="button" class="btn btn-outline-secondary btn-sm mt-2">Solicitar acceso</button>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Sección: Tienda Online y Eventos Públicos -->
+    <div class="row mt-5 g-4">
+        <!-- Tarjeta: Gestión de Tienda -->
+        <div class="col-lg-6">
+            <div class="card border-left-primary shadow h-100 py-3 border-start border-4 border-primary">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-uppercase text-muted small mb-1">Tienda Online</div>
+                            <div class="h5 mb-0 text-gray-800">Gestiona productos y categorías</div>
+                            <p class="small text-muted mt-2 mb-0">
+                                Organiza tu catálogo con categorías y subcategorías.
+                            </p>
+                            <div class="d-flex gap-2 mt-3">
+                                <a href="{{ url_for('routes.gestion_categorias', doctor_id=current_user.id) }}" 
+                                class="btn btn-outline-primary btn-sm">
+                                    🗂️ Categorías
+                                </a>
+                                <a href="{{ url_for('routes.gestion_productos', doctor_id=current_user.id) }}" 
+                                class="btn btn-primary btn-sm">
+                                    🛒 Productos
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-store fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta: Gestión de Eventos -->
+        <div class="col-lg-6">
+            <div class="card border-left-success shadow h-100 py-3 border-start border-4 border-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-uppercase text-muted small mb-1">Eventos Públicos</div>
+                            <div class="h5 mb-0 text-gray-800">Organiza charlas y talleres</div>
+                            <p class="small text-muted mt-2 mb-0">
+                                Programa, promociona y gestiona tus eventos públicos.
+                            </p>
+                            <a href="{{ url_for('routes.gestion_eventos', doctor_id=current_user.id) }}" 
+                            class="btn btn-success btn-sm mt-3">
+                                📅 Gestionar Eventos
+                            </a>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

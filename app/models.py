@@ -76,7 +76,10 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     url_slug = db.Column(db.String(100), unique=True, nullable=True)
-    
+   
+    # 👇 NUEVO CAMPO: permite al admin del sitio activar/desactivar tiendas
+    store_enabled = db.Column(db.Boolean, default=True, nullable=False)
+
     # ✅ Campos para perfil profesional
     professional_category = db.Column(db.String(50))
     specialty = db.Column(db.String(100))
@@ -125,6 +128,8 @@ class User(UserMixin, db.Model):
     # ✅ Relación con UserRole
     role_obj = db.relationship("UserRole", back_populates="users")
 
+    # ✅ Relación con ProductCategory
+    product_categories = db.relationship('ProductCategory', back_populates='doctor', lazy='select')
     # ✅ PROPIEDADES NUEVAS PARA ASISTENTES
     @property
     def is_general_assistant(self):
@@ -506,20 +511,73 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    price = db.Column(db.Numeric(10, 2), nullable=False)
-    is_service = db.Column(db.Boolean, default=False, nullable=False)
-    stock = db.Column(db.Integer, default=0, nullable=False)
-    category = db.Column(db.String(50))
-    is_visible = db.Column(db.Boolean, default=True, nullable=False)
-    hide_if_out_of_stock = db.Column(db.Boolean, default=False, nullable=False)  # ← NUEVO
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Precios
+    base_price = db.Column(db.Numeric(10, 2), nullable=False)
+    tax_rate = db.Column(db.Numeric(5, 2), default=0.00)
+    has_tax_included = db.Column(db.Boolean, default=False)
+    
+    # Promociones
+    is_on_promotion = db.Column(db.Boolean, default=False)
+    promotion_discount = db.Column(db.Numeric(5, 2), default=0.00)
+    promotion_end_date = db.Column(db.DateTime)
+    
+    # Imágenes (hasta 3)
+    image_urls = db.Column(db.JSON, default=list)  # Lista de URLs de Cloudinary
+    
+    # Stock y visibilidad
+    is_service = db.Column(db.Boolean, default=False)
+    stock = db.Column(db.Integer, default=0)
+    is_visible = db.Column(db.Boolean, default=True)
+    hide_if_out_of_stock = db.Column(db.Boolean, default=False)
+    
+    # Relaciones
+    category_id = db.Column(db.Integer, db.ForeignKey('product_category.id'), nullable=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ← Auditoría
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-
-    attributes = db.Column(db.JSON, default=dict)
+    # Relaciones
+    category = db.relationship('ProductCategory', backref='products')
+    doctor = db.relationship('User', foreign_keys=[doctor_id])
+    creator = db.relationship('User', foreign_keys=[created_by])
+    
+    # Métodos útiles
+    @property
+    def final_price(self):
+        if self.has_tax_included:
+            price_with_tax = self.base_price
+        else:
+            price_with_tax = self.base_price * (1 + self.tax_rate / 100)
+        if self.is_on_promotion and self.promotion_discount > 0:
+            if not self.promotion_end_date or self.promotion_end_date > datetime.utcnow():
+                return round(price_with_tax * (1 - self.promotion_discount / 100), 2)
+        return round(price_with_tax, 2)
+    
+    @property
+    def list_price(self):
+        if self.has_tax_included:
+            return self.base_price
+        return round(self.base_price * (1 + self.tax_rate / 100), 2)
+    
+class ProductCategory(db.Model):
+    __tablename__ = 'product_category'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # ← Eliminado unique=True
+    description = db.Column(db.Text)
+    parent_id = db.Column(db.Integer, db.ForeignKey('product_category.id'), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ← NUEVO
+    
+    # Relación recursiva para subcategorías
+    parent = db.relationship('ProductCategory', remote_side=[id], backref='subcategories')
+    
+    # Relación con el profesional
+    doctor = db.relationship('User', back_populates='product_categories')
 
 class Event(db.Model):
     __tablename__ = 'event'

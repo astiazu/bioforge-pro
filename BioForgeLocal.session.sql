@@ -1,3 +1,3 @@
-SELECT id, name, user_id, is_active
-FROM assistants
-WHERE user_id = 36;
+SELECT id, name, image_urls 
+FROM product 
+WHERE doctor_id = '38';
