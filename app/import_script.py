@@ -3,6 +3,7 @@ import csv
 from datetime import datetime
 from dateutil import parser as date_parser
 from sqlalchemy import inspect
+from sqlalchemy.exc import IntegrityError, DataError
 from app import db
 from app.models import (
     User, Assistant, Clinic, Task, Note, Publication, Availability,
@@ -11,56 +12,54 @@ from app.models import (
 )
 
 # === Configuración del Directorio de CSV ===
-IMPORT_DIR = "BioForge/exported_data"
+IMPORT_DIR = "exported_data"
 
 def import_csv_to_model(csv_path, model, skip_id=False):
     if not os.path.exists(csv_path):
-        print(f"⚠️  No encontrado: {csv_path}")
+        print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
         return
 
     with open(csv_path, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         count = 0
         for row in reader:
-            cleaned = {}
-            for key, value in row.items():
-                if key == "id" and skip_id:
-                    continue  # Saltar el ID si se especifica
-                if value == "" or value is None:
-                    cleaned[key] = None
-                elif key in ["id", "user_id", "doctor_id", "assistant_id", "clinic_id", "patient_id", "role_id"]:
-                    cleaned[key] = int(value) if str(value).isdigit() else None
-                elif key in ["is_active", "is_admin", "is_professional", "success"]:
-                    cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
-                elif key in ["created_at", "updated_at", "due_date", "published_at", "expires_at", "used_at", "approved_at"]:
-                    cleaned[key] = date_parser.parse(value) if value else None
-                else:
-                    cleaned[key] = value
-
             try:
+                cleaned = {}
+                for key, value in row.items():
+                    if key == "id" and skip_id:
+                        continue  # Saltar el ID si se especifica
+                    if value == "" or value is None:
+                        cleaned[key] = None
+                    elif key in ["id", "user_id", "doctor_id", "assistant_id", "clinic_id", "patient_id", "role_id"]:
+                        cleaned[key] = int(value) if str(value).isdigit() else None
+                    elif key in ["is_active", "is_admin", "is_professional", "success"]:
+                        cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
+                    else:
+                        cleaned[key] = value
+
                 obj = model(**cleaned)
                 db.session.add(obj)
                 count += 1
-            except Exception as e:
-                print(f"❌ Error en {model.__tablename__}, fila {count + 1}: {e}")
+            except (ValueError, IntegrityError, DataError) as e:
+                print(f"❌ Error al procesar fila {count + 1} en {csv_path}: {e}")
+                db.session.rollback()
                 continue
 
         db.session.commit()
         print(f"✅ Importado: {count} registros en {model.__tablename__}")
 
-
 def import_csv_to_render_db():
-    inspector = inspect(db.engine)  # Inspector para verificar tablas
-    existing_tables = inspector.get_table_names()  # Lista de tablas existentes
+    print("🗑️ Vaciamos todas las tablas para sincronización limpia...")
+    inspector = inspect(db.engine)
+    existing_tables = inspector.get_table_names()
 
-    print("🗑️  Vaciamos todas las tablas para sincronización limpia...")
     for table in reversed(db.metadata.sorted_tables):
         if table.name in existing_tables:
             print(f"  → Eliminando {table.name}...")
             db.session.execute(table.delete())
         else:
             print(f"  ⚠️ Tabla {table.name} no existe. Creándola...")
-            table.create(bind=db.engine)  # Crea la tabla si no existe
+            table.create(bind=db.engine)
     db.session.commit()
     print("✅ Todas las tablas vaciadas.")
 
