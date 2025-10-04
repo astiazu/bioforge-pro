@@ -4561,7 +4561,7 @@ def toggle_categoria_estado(category_id):
     
     return redirect(url_for('routes.gestion_categorias', doctor_id=category.doctor_id))
 
-@routes.route("/admin/import-data", methods=['POST']) 
+@routes.route("/admin/import-data", methods=['GET', 'POST']) 
 @login_required  # Asegúrate de que el usuario esté autenticado
 def import_data():
     # Verifica si el usuario es administrador
