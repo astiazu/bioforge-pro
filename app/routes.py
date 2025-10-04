@@ -43,6 +43,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urlparse
 
+
 import cloudinary
 import cloudinary.uploader
 
@@ -51,6 +52,7 @@ import cloudinary.uploader
 # ================================
 from flask import current_app
 from app import db, mail
+from app.import_script import import_csv_to_render_db  # Importa el script de importación
 
 from app.utils import (
     upload_to_cloudinary, send_telegram_message, generate_invite_token,
@@ -4559,6 +4561,22 @@ def toggle_categoria_estado(category_id):
     
     return redirect(url_for('routes.gestion_categorias', doctor_id=category.doctor_id))
 
+@routes.route("/admin/import-data", methods=["POST"])
+@login_required  # Asegúrate de que el usuario esté autenticado
+def import_data():
+    # Verifica si el usuario es administrador
+    if not current_user.is_admin:
+        return jsonify({"error": "Acceso denegado. Se requiere rol de administrador."}), 403
+
+    try:
+        # Llama al script de importación
+        import_csv_to_render_db()
+        return jsonify({"message": "Datos importados exitosamente."}), 200
+    except Exception as e:
+        # Maneja errores durante la importación
+        current_app.logger.error(f"Error al importar datos: {e}")
+        return jsonify({"error": f"Error al importar datos: {str(e)}"}), 500
+    
 # === RUTAS ADMINISTRADOR ===
 def generar_disponibilidad_automatica(schedule, semanas=52):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
