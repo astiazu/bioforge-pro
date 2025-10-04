@@ -2,6 +2,7 @@ import os
 import csv
 from datetime import datetime
 from dateutil import parser as date_parser
+from sqlalchemy import inspect
 from app import db
 from app.models import (
     User, Assistant, Clinic, Task, Note, Publication, Availability,
@@ -47,11 +48,19 @@ def import_csv_to_model(csv_path, model, skip_id=False):
         db.session.commit()
         print(f"✅ Importado: {count} registros en {model.__tablename__}")
 
+
 def import_csv_to_render_db():
+    inspector = inspect(db.engine)  # Inspector para verificar tablas
+    existing_tables = inspector.get_table_names()  # Lista de tablas existentes
+
     print("🗑️  Vaciamos todas las tablas para sincronización limpia...")
     for table in reversed(db.metadata.sorted_tables):
-        print(f"  → Eliminando {table.name}...")
-        db.session.execute(table.delete())
+        if table.name in existing_tables:
+            print(f"  → Eliminando {table.name}...")
+            db.session.execute(table.delete())
+        else:
+            print(f"  ⚠️ Tabla {table.name} no existe. Creándola...")
+            table.create(bind=db.engine)  # Crea la tabla si no existe
     db.session.commit()
     print("✅ Todas las tablas vaciadas.")
 
@@ -77,6 +86,15 @@ def import_csv_to_render_db():
 
     for table in TARGET_TABLES:
         csv_path = os.path.join(IMPORT_DIR, f"{table}.csv")
-        import_csv_to_model(csv_path, globals()[table.capitalize()], skip_id=(table in ["invitation_logs", "visits"]))
+        if not os.path.exists(csv_path):
+            print(f"  ⚠️ Archivo CSV para {table} no encontrado. Saltando...")
+            continue
+
+        model_class = globals().get(table.capitalize())
+        if not model_class:
+            print(f"  ⚠️ Modelo para {table} no encontrado. Saltando...")
+            continue
+
+        import_csv_to_model(csv_path, model_class, skip_id=(table in ["invitation_logs", "visits"]))
 
     print("🎉 Sincronización completada exitosamente.")
