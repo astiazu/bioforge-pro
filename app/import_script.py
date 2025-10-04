@@ -30,9 +30,9 @@ def import_csv_to_model(csv_path, model, skip_id=False):
                         continue  # Saltar el ID si se especifica
                     if value == "" or value is None:
                         cleaned[key] = None
-                    elif key in ["id", "user_id", "doctor_id", "assistant_id", "clinic_id", "patient_id", "role_id"]:
+                    elif key.endswith("_id"):  # Claves foráneas
                         cleaned[key] = int(value) if str(value).isdigit() else None
-                    elif key in ["is_active", "is_admin", "is_professional", "success"]:
+                    elif key.startswith("is_"):  # Campos booleanos
                         cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
                     else:
                         cleaned[key] = value
@@ -40,14 +40,14 @@ def import_csv_to_model(csv_path, model, skip_id=False):
                 obj = model(**cleaned)
                 db.session.add(obj)
                 count += 1
-            except (ValueError, IntegrityError, DataError) as e:
+            except Exception as e:
                 print(f"❌ Error al procesar fila {count + 1} en {csv_path}: {e}")
                 db.session.rollback()
                 continue
 
         db.session.commit()
         print(f"✅ Importado: {count} registros en {model.__tablename__}")
-
+        
 def import_csv_to_render_db():
     print("🗑️ Vaciamos todas las tablas para sincronización limpia...")
     inspector = inspect(db.engine)
@@ -64,23 +64,23 @@ def import_csv_to_render_db():
     print("✅ Todas las tablas vaciadas.")
 
     TARGET_TABLES = [
-        "users",
-        "assistants",
-        "clinic",
-        "tasks",
-        "notes",
-        "publications",
-        "schedules",
-        "availability",
-        "appointments",
-        "medical_records",
-        "subscribers",
-        "company_invites",
-        "invitation_logs",
-        "visits",
-        "product",
-        "product_category",
-        "event"
+        "users",            # 1. Tabla independiente
+        "user_roles",       # 2. Tabla independiente
+        "clinic",           # 3. Depende de users
+        "product_category", # 4. Depende de users
+        "assistants",       # 5. Depende de users y clinic
+        "tasks",            # 6. Depende de users y assistants
+        "availability",     # 7. Depende de clinic
+        "appointments",     # 8. Depende de users y availability
+        "medical_records",  # 9. Depende de users y appointments
+        "publications",     # 10. Depende de users
+        "notes",            # 11. Depende de users
+        "event",            # 12. Depende de users y clinic
+        "subscribers",      # 13. Tabla independiente
+        "company_invites",  # 14. Depende de users y clinic
+        "invitation_logs",  # 15. Depende de users
+        "visits",           # 16. Tabla independiente
+        "product"           # 17. Depende de product_category y users
     ]
 
     for table in TARGET_TABLES:
