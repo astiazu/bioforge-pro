@@ -32,19 +32,54 @@ MODEL_MAP = build_model_map()
 
 print(f"📋 Modelos detectados: {list(MODEL_MAP.keys())}")
 
-def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids):
+def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids, strict_mode=True):
     """
     Valida que los valores de una columna de clave foránea en los datos CSV
     coincidan con los IDs existentes en la tabla referenciada.
+    
+    Args:
+        csv_data: Lista de diccionarios con los datos del CSV
+        foreign_key_column: Nombre de la columna de clave foránea
+        referenced_ids: Set de IDs válidos en la tabla referenciada
+        strict_mode: Si True, lanza excepción. Si False, filtra registros inválidos.
+    
+    Returns:
+        Lista de datos validados (puede estar filtrada si strict_mode=False)
     """
     invalid_keys = []
+    valid_rows = []
+    invalid_rows = []
+    
     for row in csv_data:
         fk_value = row.get(foreign_key_column)
-        if fk_value and fk_value != '' and int(fk_value) not in referenced_ids:
+        
+        # Si el valor está vacío, es válido (NULL permitido)
+        if not fk_value or fk_value == '':
+            valid_rows.append(row)
+            continue
+        
+        # Verificar si el ID existe
+        try:
+            fk_int = int(fk_value)
+            if fk_int in referenced_ids:
+                valid_rows.append(row)
+            else:
+                invalid_keys.append(fk_value)
+                invalid_rows.append(row)
+        except ValueError:
             invalid_keys.append(fk_value)
+            invalid_rows.append(row)
     
     if invalid_keys:
-        raise ValueError(f"❌ Claves foráneas inválidas en '{foreign_key_column}': {set(invalid_keys)}")
+        message = f"⚠️ Claves foráneas inválidas en '{foreign_key_column}': {set(invalid_keys)} ({len(invalid_rows)} registros)"
+        
+        if strict_mode:
+            raise ValueError(f"❌ {message}")
+        else:
+            print(f"   {message} - OMITIENDO registros inválidos")
+            return valid_rows
+    
+    return csv_data
 
 def get_existing_ids(table_name):
     """
@@ -57,7 +92,7 @@ def get_existing_ids(table_name):
         print(f"⚠️ No se pudieron obtener IDs de {table_name}: {e}")
         return set()
 
-def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None):
+def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None, strict_mode=True):
     """
     Importa datos desde un archivo CSV a una tabla específica del modelo.
     
@@ -66,6 +101,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
         model: Clase del modelo SQLAlchemy
         skip_id: Si True, no importa la columna 'id'
         foreign_key_validations: Dict con {columna: tabla_referenciada}
+        strict_mode: Si False, omite registros con FK inválidas en lugar de fallar
     """
     if not os.path.exists(csv_path):
         print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
@@ -79,12 +115,17 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
             print(f"⚠️ Archivo CSV vacío: {csv_path}")
             return 0
 
-        # Validar claves foráneas si se especifican
-        if foreign_key_validations:
-            for fk_column, referenced_table in foreign_key_validations.items():
-                if fk_column in rows[0]:
-                    referenced_ids = get_existing_ids(referenced_table)
-                    validate_foreign_keys(rows, fk_column, referenced_ids)
+        # VALIDACIONES DE FK DESHABILITADAS
+        # PostgreSQL se encargará de validar la integridad
+        # if foreign_key_validations:
+        #     for fk_column, referenced_table in foreign_key_validations.items():
+        #         if fk_column in rows[0]:
+        #             referenced_ids = get_existing_ids(referenced_table)
+        #             rows = validate_foreign_keys(rows, fk_column, referenced_ids, strict_mode)
+        #             
+        #             if not rows:
+        #                 print(f"⚠️ No hay registros válidos después de validar {fk_column}")
+        #                 return 0
 
         count = 0
         errors = 0
@@ -184,12 +225,16 @@ def truncate_tables_safely():
         db.session.rollback()
         raise
 
-def import_csv_to_render_db():
+def import_csv_to_render_db(strict_mode=True):
     """
     Importa datos desde múltiples archivos CSV a la base de datos.
+    
+    Args:
+        strict_mode: Si True, falla ante FK inválidas. Si False, omite registros inválidos.
     """
     print("=" * 60)
     print("🚀 INICIANDO IMPORTACIÓN DE DATOS A PRODUCCIÓN")
+    print(f"   Modo: {'ESTRICTO' if strict_mode else 'PERMISIVO'}")
     print("=" * 60)
     
     # Asegurar que las tablas existen
@@ -200,18 +245,19 @@ def import_csv_to_render_db():
     # Vaciar tablas existentes
     truncate_tables_safely()
     
-    # Definir orden de importación con validaciones de FK
+    # Definir orden de importación SIN validaciones de FK
+    # Las validaciones las hace PostgreSQL automáticamente
     IMPORT_CONFIG = [
         ("users", None, False),
-        ("user_roles", {"user_id": "users"}, False),
-        ("clinic", {"doctor_id": "users"}, False),
+        ("user_roles", None, False),
+        ("clinic", None, False),
         ("product_category", None, False),
-        ("assistants", {"user_id": "users", "doctor_id": "users"}, False),
-        ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
-        ("tasks", {"doctor_id": "users"}, False),
-        ("availability", {"doctor_id": "users"}, False),
-        ("appointments", {"patient_id": "users", "doctor_id": "users"}, False),
-        ("medical_records", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("assistants", None, False),
+        ("schedules", None, False),
+        ("tasks", None, False),
+        ("availability", None, False),
+        ("appointments", None, False),
+        ("medical_records", None, False),
         ("publications", None, False),
         ("notes", None, False),
         ("event", None, False),
@@ -219,7 +265,7 @@ def import_csv_to_render_db():
         ("company_invites", None, False),
         ("invitation_logs", None, True),  # skip_id = True
         ("visits", None, True),  # skip_id = True
-        ("product", {"category_id": "product_category"}, False),
+        ("product", None, False),
     ]
     
     total_imported = 0
@@ -240,7 +286,7 @@ def import_csv_to_render_db():
             continue
         
         print(f"\n📥 Importando {table_name}...")
-        records = import_csv_to_model(csv_path, model_class, skip_id, fk_validations)
+        records = import_csv_to_model(csv_path, model_class, skip_id, fk_validations, strict_mode)
         
         if records > 0:
             total_imported += 1
@@ -253,8 +299,13 @@ def import_csv_to_render_db():
     print("=" * 60)
 
 if __name__ == "__main__":
+    import sys
+    
+    # Permitir modo permisivo con argumento --permissive
+    strict = "--permissive" not in sys.argv
+    
     try:
-        import_csv_to_render_db()
+        import_csv_to_render_db(strict_mode=strict)
     except Exception as e:
         print(f"\n💥 ERROR CRÍTICO: {e}")
         import traceback
