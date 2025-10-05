@@ -1,3 +1,20 @@
+import os
+import csv
+from sqlalchemy.exc import IntegrityError, DataError
+from app.models import db  # Asegúrate de importar tu instancia de SQLAlchemy
+from sqlalchemy import inspect
+
+import os
+from sqlalchemy import inspect
+from app.models import db  # Asegúrate de importar tu instancia de SQLAlchemy
+
+# Define la ruta del directorio de importación
+IMPORT_DIR = "exported_data"  # Reemplaza con la ruta correcta
+
+# Verifica que el directorio exista
+if not os.path.exists(IMPORT_DIR):
+    raise FileNotFoundError(f"El directorio de importación no existe: {IMPORT_DIR}")
+
 def validate_foreign_keys(csv_data, foreign_key_column, referenced_table):
     """
     Valida que los valores de una columna de clave foránea en los datos CSV
