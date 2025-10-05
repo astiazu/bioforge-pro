@@ -4,14 +4,13 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
-from flask_migrate import Migrate
-from time import sleep
+from flask_migrate import Migrate  # ← IMPORTADO
 
-# === Instancias globales ===
+# Instancias globales
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
-migrate = Migrate()
+migrate = Migrate()  # ← INSTANCIA GLOBAL DE MIGRATE
 
 # Cloudinary (opcional)
 try:
@@ -19,10 +18,8 @@ try:
 except ImportError:
     cloudinary = None
 
-
-def create_app(strict_mode=False):
-    """Crea e inicializa la aplicación Flask (compatible con Render y local)."""
-    # Cargar variables locales (solo en desarrollo)
+def create_app():
+    # ✅ Cargar variables de entorno desde .env (solo en desarrollo)
     if os.environ.get("FLASK_ENV") != "production":
         from dotenv import load_dotenv
         load_dotenv()
@@ -34,10 +31,10 @@ def create_app(strict_mode=False):
         static_folder="../static"
     )
 
-    # === Configuración general ===
+    # === Configuración ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
-
-    # --- Base de datos ---
+    
+    # Base de datos
     if os.environ.get('DATABASE_URL'):
         database_url = os.environ.get('DATABASE_URL')
         if database_url.startswith("postgres://"):
@@ -46,16 +43,10 @@ def create_app(strict_mode=False):
     else:
         os.makedirs(app.instance_path, exist_ok=True)
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
-
+    
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {"sslmode": "require"} if "postgresql" in app.config["SQLALCHEMY_DATABASE_URI"] else {},
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
-        "execution_options": {"strict_mode": strict_mode},
-    }
 
-    # --- Configuración de Email ---
+    # Email (Gmail)
     app.config["MAIL_SERVER"] = "smtp.gmail.com"
     app.config["MAIL_PORT"] = 587
     app.config["MAIL_USE_TLS"] = True
@@ -63,20 +54,22 @@ def create_app(strict_mode=False):
     app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
     app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
 
-    # --- Variables adicionales ---
+    # ✅ Variables personalizadas
     app.config["BIO_SHORT"] = "Breve descripción del sitio"
     app.config["BIO_EXTENDED"] = "Descripción extendida del sitio BioForge..."
+
+    # Telegram
     app.config['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN')
     app.config['TELEGRAM_CHAT_ID'] = os.environ.get('TELEGRAM_CHAT_ID')
 
     # === Inicializar extensiones ===
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db)  # ← ¡REGISTRADO!
     login_manager.init_app(app)
     mail.init_app(app)
     login_manager.login_view = "auth.login"
 
-    # === User Loader ===
+    # ✅ USER_LOADER: debe estar aquí, fuera de app_context
     from app.models import User
     @login_manager.user_loader
     def load_user(user_id):
@@ -84,34 +77,39 @@ def create_app(strict_mode=False):
 
     # === Contexto de la aplicación ===
     with app.app_context():
+        # Importar todos los modelos para que SQLAlchemy los registre
         from app import models
-        from datetime import datetime
+        
+        # ❌ ¡ELIMINADO! No usar db.create_all() con Flask-Migrate
+        # db.create_all()
 
-        # --- Blueprints ---
+        # Registrar Blueprints
         from app.routes import routes
         from app.auth import auth
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
-        # --- Filtros personalizados ---
+        # Filtros personalizados
+        from datetime import datetime
+
         @app.template_filter('sort_by_due_date')
         def sort_by_due_date(tasks):
             def sort_key(task):
-                return task.due_date if task.due_date else datetime.max.date()
+                return task.due_date if task.due_date is not None else datetime.max.date()
             return sorted(tasks, key=sort_key)
 
         @app.template_filter('without_page')
         def without_page(args):
             return {k: v for k, v in args.items() if k != 'page'}
 
-        # --- Registro de visitas ---
         @app.before_request
         def log_visit():
+            # No registrar visitas de administrador ni en rutas de auth
             if request.endpoint and not request.endpoint.startswith('auth'):
                 from app.models import Visit
                 Visit.log_visit(request)
 
-        # --- Configuración de Cloudinary ---
+        # Configurar Cloudinary
         if cloudinary:
             cloudinary.config(
                 cloud_name=os.environ.get("CLOUD_NAME"),
@@ -119,34 +117,10 @@ def create_app(strict_mode=False):
                 api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
                 secure=True
             )
-
-        # --- Creación robusta de tablas (Render Safe) ---
-        create_tables_with_retry(app)
-
-        # --- Registrar comandos CLI ---
+        
         register_cli_commands(app)
-
-        # 🔹 Importación automática deshabilitada (Render la ejecuta por separado)
-        # from scripts.import_script import run_import
-        # run_import()
-
+        
     return app
-
-
-# === Función auxiliar: creación robusta de tablas ===
-def create_tables_with_retry(app, retries=5):
-    """Evita fallas por hibernación o latencia de Render al inicializar la BD."""
-    for attempt in range(retries):
-        try:
-            with app.app_context():
-                db.create_all()
-                print("✅ Tablas creadas o ya existentes.")
-                return
-        except Exception as e:
-            print(f"⚠️ Intento {attempt + 1}/{retries} fallido: {e}")
-            sleep(3)
-    print("💥 No se pudieron crear las tablas tras varios intentos.")
-
 
 # === Comandos CLI personalizados ===
 def register_cli_commands(app):
@@ -156,6 +130,5 @@ def register_cli_commands(app):
         from scripts.sync_sequences import sync_all_sequences
         sync_all_sequences()
 
-
-# === Instancia global para Gunicorn (Render) ===
+# ✅ Instancia para gunicorn (Render)
 app = create_app()

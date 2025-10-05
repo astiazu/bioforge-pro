@@ -52,7 +52,7 @@ import cloudinary.uploader
 # ================================
 from flask import current_app
 from app import db, mail
-from app.import_script import import_csv_to_render_db  # Importa el script de importación
+from scripts.import_script import import_csv_to_render_db  # Importa el script de importación
 
 from app.utils import (
     upload_to_cloudinary, send_telegram_message, generate_invite_token,

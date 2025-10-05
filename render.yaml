@@ -3,8 +3,9 @@ services:
     name: bioforge
     env: python
     region: oregon
+    plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "flask db upgrade && gunicorn 'app:create_app()'"
+    startCommand: "python import_script.py && gunicorn 'app:create_app()'"
     envVars:
       - key: SECRET_KEY
         generateValue: true
