@@ -39,7 +39,7 @@ def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids, strict_m
     coincidan con los IDs existentes en la tabla referenciada.
     
     Args:
-        csv_data: Lista de diccionarios con los datos del CSV
+        csv_ Lista de diccionarios con los datos del CSV
         foreign_key_column: Nombre de la columna de clave foránea
         referenced_ids: Set de IDs válidos en la tabla referenciada
         strict_mode: Si True, lanza excepción. Si False, filtra registros inválidos.
