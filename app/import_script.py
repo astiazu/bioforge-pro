@@ -124,27 +124,12 @@ def get_existing_ids(table_name):
         print(f"⚠️ No se pudieron obtener IDs de {table_name}: {e}")
         return set()
 
-def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None, strict_mode=True):
-    """
-    Importa datos desde un archivo CSV a una tabla específica del modelo.
-    
-    Args:
-        csv_path: Ruta al archivo CSV
-        model: Clase del modelo SQLAlchemy
-        skip_id: Si True, no importa la columna 'id'
-        foreign_key_validations: Dict con {columna: tabla_referenciada}
-        strict_mode: Si False, omite registros con FK inválidas en lugar de fallar
-    """
-    if not os.path.exists(csv_path):
-        print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
-        return 0
-
-    # Leer y mostrar el contenido del CSV antes de importar
+def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None, strict_mode=False):
     rows = preview_csv_contents(csv_path)
     if not rows:
         return 0
 
-    # Validaciones de claves foráneas
+    # Validar claves foráneas
     if foreign_key_validations:
         for fk_column, referenced_table in foreign_key_validations.items():
             if fk_column in rows[0]:
@@ -155,73 +140,58 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                     print(f"⚠️ No hay registros válidos después de validar {fk_column}")
                     return 0
 
+    def clean_value(key, value):
+        if isinstance(value, str):
+            value = value.strip()
+            if value.lower() == 'none' or value == '':
+                return None
+        elif key.endswith("_id"):
+            return int(value) if str(value).strip().isdigit() else None
+        elif key.startswith("is_") or key.endswith("_enabled"):
+            return str(value).strip().lower() in ("true", "1", "yes")
+        elif key in ["created_at", "updated_at"]:
+            try:
+                return datetime.strptime(value, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return None
+        return value.strip() if isinstance(value, str) else value
+
     count = 0
-    errors = 0
-    
-    for idx, row in enumerate(rows, 1):
+    failed_rows = []
+    for row in rows:
         try:
             cleaned = {}
             for key, value in row.items():
-                # Saltar ID si se especifica
                 if key == "id" and skip_id:
                     continue
-                
-                # Normalizar el valor (convertir string "None" a None real)
-                if isinstance(value, str):
-                    value = value.strip()
-                    if value.lower() == 'none' or value == '':
-                        value = None
-                
-                # Claves foráneas
-                elif key.endswith("_id"):
-                    cleaned[key] = int(value) if str(value).strip().isdigit() else None
-                # Campos booleanos (TODOS los casos posibles)
-                elif (key.startswith("is_") or 
-                      key.endswith("_enabled") or 
-                      key.endswith("_included") or
-                      key in ["active", "enabled", "verified", "has_tax_included", "store_enabled"]):
-                    cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si", "false", "f", "no", "off")
-                # Campos numéricos
-                elif key in ["day_of_week", "duration", "amount", "price", "stock", "view_count"]:
-                    cleaned[key] = int(value) if str(value).strip().isdigit() else None
-                # Campos decimales
-                elif key in ["base_price", "tax_rate", "promotion_discount"]:
-                    try:
-                        cleaned[key] = float(value) if value else None
-                    except (ValueError, TypeError):
-                        cleaned[key] = None
-                # Campos JSON (como image_urls)
-                elif key == "image_urls" and value:
-                    # Ya viene como string JSON del CSV, mantenerlo así
-                    cleaned[key] = value
-                else:
-                    cleaned[key] = value.strip() if isinstance(value, str) else value
+                cleaned[key] = clean_value(key, value)
+
+                # Validar campos obligatorios
+                if key in ["name", "email"] and not cleaned[key]:
+                    raise ValueError(f"❌ Campo obligatorio '{key}' está vacío en la fila: {row}")
 
             obj = model(**cleaned)
             db.session.add(obj)
             count += 1
-            
-            # Commit cada 100 registros para evitar problemas de memoria
+
+            # Commit cada 100 registros
             if count % 100 == 0:
                 db.session.commit()
                 print(f"  → Procesados {count} registros...")
-                
-        except (ValueError, IntegrityError, DataError) as e:
-            errors += 1
-            print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:150]}")
+        except Exception as e:
+            failed_rows.append(row)
+            print(f"❌ Error al procesar fila {row}: {str(e)[:150]}")
             db.session.rollback()
             continue
 
-    # Commit final
-    try:
-        db.session.commit()
-        print(f"✅ Importado: {count} registros en {model.__tablename__} (Errores: {errors})")
-        return count
-    except Exception as e:
-        print(f"❌ Error al hacer commit final en {model.__tablename__}: {e}")
-        db.session.rollback()
-        return 0
+    # Commit final para los registros restantes
+    db.session.commit()
+    print(f"✅ Importación completada para {model.__tablename__} ({count} registros)")
 
+    if failed_rows:
+        print(f"⚠️ Filas fallidas: {len(failed_rows)}")
+        # Guardar las filas fallidas en un archivo o log para revisión posterior
+        
 def truncate_tables_safely():
     """
     Vacía las tablas de forma segura deshabilitando temporalmente las foreign keys.
