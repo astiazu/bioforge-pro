@@ -138,18 +138,37 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                     if key == "id" and skip_id:
                         continue
                     
+                    # Normalizar el valor (convertir string "None" a None real)
+                    if isinstance(value, str):
+                        value = value.strip()
+                        if value.lower() == 'none' or value == '':
+                            value = None
+                    
                     # Valores vacíos
-                    if value == "" or value is None:
+                    if value is None:
                         cleaned[key] = None
                     # Claves foráneas
                     elif key.endswith("_id"):
                         cleaned[key] = int(value) if str(value).strip().isdigit() else None
-                    # Campos booleanos
-                    elif key.startswith("is_") or key in ["active", "enabled", "verified"]:
+                    # Campos booleanos (TODOS los casos posibles)
+                    elif (key.startswith("is_") or 
+                          key.endswith("_enabled") or 
+                          key.endswith("_included") or
+                          key in ["active", "enabled", "verified", "has_tax_included", "store_enabled"]):
                         cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
                     # Campos numéricos
-                    elif key in ["day_of_week", "duration", "amount", "price", "stock"]:
+                    elif key in ["day_of_week", "duration", "amount", "price", "stock", "view_count"]:
                         cleaned[key] = int(value) if str(value).strip().isdigit() else None
+                    # Campos decimales
+                    elif key in ["base_price", "tax_rate", "promotion_discount"]:
+                        try:
+                            cleaned[key] = float(value) if value else None
+                        except (ValueError, TypeError):
+                            cleaned[key] = None
+                    # Campos JSON (como image_urls)
+                    elif key == "image_urls" and value:
+                        # Ya viene como string JSON del CSV, mantenerlo así
+                        cleaned[key] = value
                     else:
                         cleaned[key] = value.strip() if isinstance(value, str) else value
 
