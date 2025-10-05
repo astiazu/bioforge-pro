@@ -143,9 +143,6 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                         if value.lower() == 'none' or value == '':
                             value = None
                     
-                    # Valores vacíos
-                    if value is None:
-                        cleaned[key] = None
                     # Claves foráneas
                     elif key.endswith("_id"):
                         cleaned[key] = int(value) if str(value).strip().isdigit() else None
@@ -271,9 +268,7 @@ def import_csv_to_render_db(strict_mode=True):
         ("product_category", {"doctor_id": "users"}, False),
         ("assistants", {"user_id": "users", "doctor_id": "users"}, False),
         ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
-        ("tasks", {"doctor_id": "users"}, False),
-        ("availability", None, False),
-        ("appointments", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("tasks", {"doctor_id": "users", "assistant_id": "assistants"}, False),
         ("medical_records", {"patient_id": "users", "doctor_id": "users"}, False),
         ("publications", {"user_id": "users"}, False),
         ("notes", None, False),
