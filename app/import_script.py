@@ -1,4 +1,6 @@
 # app/import_script.py
+# Nueva copia del archivo app/import_script.py
+
 import os
 import csv
 from datetime import datetime
@@ -8,7 +10,6 @@ from app.models import db
 
 # Define la ruta del directorio de importación
 IMPORT_DIR = "exported_data"
-
 # Verifica que el directorio exista
 if not os.path.exists(IMPORT_DIR):
     raise FileNotFoundError(f"El directorio de importación no existe: {IMPORT_DIR}")
