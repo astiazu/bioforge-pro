@@ -11,6 +11,26 @@ IMPORT_DIR = "exported_data"
 if not os.path.exists(IMPORT_DIR):
     raise FileNotFoundError(f"El directorio de importación no existe: {IMPORT_DIR}")
 
+# ⭐ CONSTRUIR MAPEO AUTOMÁTICAMENTE
+def build_model_map():
+    """
+    Construye un mapeo de nombres de tabla a clases de modelo automáticamente.
+    """
+    model_map = {}
+    
+    # Iterar sobre todas las tablas registradas en SQLAlchemy
+    for table_name, table in db.metadata.tables.items():
+        # Buscar la clase de modelo correspondiente
+        for mapper in db.Model.registry.mappers:
+            if mapper.mapped_table.name == table_name:
+                model_map[table_name] = mapper.class_
+                break
+    
+    return model_map
+
+MODEL_MAP = build_model_map()
+
+print(f"📋 Modelos detectados: {list(MODEL_MAP.keys())}")
 
 def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids):
     """
@@ -22,23 +42,20 @@ def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids):
         fk_value = row.get(foreign_key_column)
         if fk_value and fk_value != '' and int(fk_value) not in referenced_ids:
             invalid_keys.append(fk_value)
-
+    
     if invalid_keys:
         raise ValueError(f"❌ Claves foráneas inválidas en '{foreign_key_column}': {set(invalid_keys)}")
-
 
 def get_existing_ids(table_name):
     """
     Obtiene todos los IDs existentes de una tabla.
     """
     try:
-        # Usa SQLAlchemy para generar consultas seguras
-        result = db.session.execute(text("SELECT id FROM :table"), {"table": table_name})
+        result = db.session.execute(text(f"SELECT id FROM {table_name}"))
         return {row[0] for row in result}
     except Exception as e:
         print(f"⚠️ No se pudieron obtener IDs de {table_name}: {e}")
         return set()
-
 
 def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None):
     """
@@ -52,7 +69,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
     """
     if not os.path.exists(csv_path):
         print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
-        return
+        return 0
 
     with open(csv_path, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -60,7 +77,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
 
         if not rows:
             print(f"⚠️ Archivo CSV vacío: {csv_path}")
-            return
+            return 0
 
         # Validar claves foráneas si se especifican
         if foreign_key_validations:
@@ -71,7 +88,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
 
         count = 0
         errors = 0
-
+        
         for idx, row in enumerate(rows, 1):
             try:
                 cleaned = {}
@@ -79,7 +96,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                     # Saltar ID si se especifica
                     if key == "id" and skip_id:
                         continue
-
+                    
                     # Valores vacíos
                     if value == "" or value is None:
                         cleaned[key] = None
@@ -98,15 +115,15 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                 obj = model(**cleaned)
                 db.session.add(obj)
                 count += 1
-
+                
                 # Commit cada 100 registros para evitar problemas de memoria
                 if count % 100 == 0:
                     db.session.commit()
                     print(f"  → Procesados {count} registros...")
-
+                    
             except (ValueError, IntegrityError, DataError) as e:
                 errors += 1
-                print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:100]}")
+                print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:150]}")
                 db.session.rollback()
                 continue
 
@@ -114,17 +131,18 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
         try:
             db.session.commit()
             print(f"✅ Importado: {count} registros en {model.__tablename__} (Errores: {errors})")
+            return count
         except Exception as e:
             print(f"❌ Error al hacer commit final en {model.__tablename__}: {e}")
             db.session.rollback()
-
+            return 0
 
 def truncate_tables_safely():
     """
     Vacía las tablas de forma segura deshabilitando temporalmente las foreign keys.
     """
     print("🗑️ Vaciando tablas...")
-
+    
     # Orden inverso para respetar dependencias
     TABLES_TO_CLEAR = [
         "event",
@@ -133,7 +151,7 @@ def truncate_tables_safely():
         "medical_records",
         "appointments",
         "availability",
-        "schedules",  # ← AGREGADA
+        "schedules",
         "tasks",
         "assistants",
         "product",
@@ -144,27 +162,27 @@ def truncate_tables_safely():
         "invitation_logs",
         "company_invites",
         "subscribers",
+        "users",  # Usuario al final
     ]
-
+    
     try:
         # Deshabilitar temporalmente las foreign keys (PostgreSQL)
         db.session.execute(text("SET CONSTRAINTS ALL DEFERRED;"))
-
+        
         for table in TABLES_TO_CLEAR:
             try:
                 db.session.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"))
                 print(f"  ✓ Tabla {table} vaciada")
             except Exception as e:
                 print(f"  ⚠️ No se pudo vaciar {table}: {str(e)[:80]}")
-
+        
         db.session.commit()
         print("✅ Tablas vaciadas exitosamente")
-
+        
     except Exception as e:
         print(f"❌ Error al vaciar tablas: {e}")
         db.session.rollback()
         raise
-
 
 def import_csv_to_render_db():
     """
@@ -173,15 +191,15 @@ def import_csv_to_render_db():
     print("=" * 60)
     print("🚀 INICIANDO IMPORTACIÓN DE DATOS A PRODUCCIÓN")
     print("=" * 60)
-
-    # Asegurar que las tablas existen (sin intentar crearlas manualmente)
+    
+    # Asegurar que las tablas existen
     print("📋 Verificando estructura de base de datos...")
     db.create_all()
     print("✅ Estructura verificada")
-
+    
     # Vaciar tablas existentes
     truncate_tables_safely()
-
+    
     # Definir orden de importación con validaciones de FK
     IMPORT_CONFIG = [
         ("users", None, False),
@@ -203,44 +221,36 @@ def import_csv_to_render_db():
         ("visits", None, True),  # skip_id = True
         ("product", {"category_id": "product_category"}, False),
     ]
-
+    
     total_imported = 0
-
+    total_records = 0
+    
     for table_name, fk_validations, skip_id in IMPORT_CONFIG:
         csv_path = os.path.join(IMPORT_DIR, f"{table_name}.csv")
-
+        
         if not os.path.exists(csv_path):
             print(f"\n⚠️ CSV no encontrado: {table_name}.csv - Saltando...")
             continue
-
-        # Obtener el modelo dinámicamente
-        model_class = None
-        for key in dir(db.Model):
-            obj = getattr(db.Model, key)
-            if hasattr(obj, '__tablename__') and obj.__tablename__ == table_name:
-                model_class = obj
-                break
-
-        if not model_class:
-            # Intento alternativo: buscar en app.models
-            try:
-                from app import models
-                model_class = getattr(models, table_name.capitalize(), None)
-            except:
-                pass
-
+        
+        # Obtener el modelo del mapeo
+        model_class = MODEL_MAP.get(table_name)
+        
         if not model_class:
             print(f"\n⚠️ Modelo no encontrado para tabla '{table_name}' - Saltando...")
             continue
-
+        
         print(f"\n📥 Importando {table_name}...")
-        import_csv_to_model(csv_path, model_class, skip_id, fk_validations)
-        total_imported += 1
-
+        records = import_csv_to_model(csv_path, model_class, skip_id, fk_validations)
+        
+        if records > 0:
+            total_imported += 1
+            total_records += records
+    
     print("\n" + "=" * 60)
-    print(f"🎉 IMPORTACIÓN COMPLETADA: {total_imported} tablas procesadas")
+    print(f"🎉 IMPORTACIÓN COMPLETADA")
+    print(f"   • Tablas procesadas: {total_imported}")
+    print(f"   • Registros importados: {total_records}")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     try:
