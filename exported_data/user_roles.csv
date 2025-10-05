@@ -1,0 +1,5 @@
+id,name,description,is_active,created_at
+1,admin,Rol de administrador del sistema,True,2025-09-01 00:00:00
+3,user,Rol de usuario estándar,True,2025-09-01 00:00:00
+5,senior_assistant,Rol de asistente senior,True,2025-09-01 00:00:00
+6,professional,Rol de profesional,True,2025-09-01 00:00:00

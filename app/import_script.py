@@ -1,5 +1,6 @@
 import os
 import csv
+from datetime import datetime
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy import inspect, text
 from app.models import db
@@ -262,13 +263,12 @@ def import_csv_to_render_db(strict_mode=True):
     
     # Definir orden de importación con validaciones de FK
     IMPORT_CONFIG = [
+        ("user_roles", None, False),  # Importar primero user_roles
         ("users", {"role_id": "user_roles"}, False),
-        ("user_roles", None, False),
         ("clinic", {"doctor_id": "users"}, False),
-        ("product_category", {"doctor_id": "users"}, False),
         ("assistants", {"user_id": "users", "doctor_id": "users"}, False),
-        ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
         ("tasks", {"doctor_id": "users", "assistant_id": "assistants"}, False),
+        ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
         ("medical_records", {"patient_id": "users", "doctor_id": "users"}, False),
         ("publications", {"user_id": "users"}, False),
         ("notes", None, False),
