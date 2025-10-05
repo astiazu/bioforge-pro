@@ -1,5 +1,7 @@
 id,name,description,is_active,created_at
-1,admin,Rol de administrador del sistema,True,2025-09-01 00:00:00
-3,user,Rol de usuario estándar,True,2025-09-01 00:00:00
-5,senior_assistant,Rol de asistente senior,True,2025-09-01 00:00:00
-6,professional,Rol de profesional,True,2025-09-01 00:00:00
+1,Profesional,Profesional de la salud,True,2025-09-15 12:49:15.089596
+2,Tienda,Tienda de productos,True,2025-09-15 12:49:15.149453
+3,Visitante,Usuario visitante,True,2025-09-15 12:49:15.207350
+4,Paciente,Paciente,True,2025-09-15 12:49:15.261005
+5,Usuario,Usuario general del sistema,True,2025-09-29 22:57:09.602066
+6,PyME,Pequeña y mediana empresa hasta 10 empleados,True,2025-09-29 22:57:54.084654

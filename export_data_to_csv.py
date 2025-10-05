@@ -1,4 +1,3 @@
-
 import os
 import csv
 from sqlalchemy import create_engine, MetaData, Table
@@ -22,24 +21,39 @@ EXPORT_DIR = "exported_data"
 os.makedirs(EXPORT_DIR, exist_ok=True)
 
 def export_table_to_csv(table_name):
-    table = metadata.tables[table_name]
-    result = session.execute(table.select())
-    columns = table.columns.keys()
+    """
+    Exporta una tabla específica a un archivo CSV.
+    """
+    try:
+        # Obtener la tabla del objeto metadata
+        table = metadata.tables[table_name]
+        
+        # Ejecutar consulta para obtener todos los registros
+        result = session.execute(table.select())
+        columns = table.columns.keys()
 
-    file_path = os.path.join(EXPORT_DIR, f"{table_name}.csv")
-    with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=columns)
-        writer.writeheader()
-        for row in result:
-            # Convertir explícitamente la fila a un diccionario
-            row_dict = {column: getattr(row, column) for column in columns}
-            writer.writerow(row_dict)
+        # Crear el archivo CSV
+        file_path = os.path.join(EXPORT_DIR, f"{table_name}.csv")
+        with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=columns)
+            writer.writeheader()
+            
+            # Escribir cada fila en el archivo CSV
+            for row in result:
+                row_dict = {column: getattr(row, column) for column in columns}
+                writer.writerow(row_dict)
 
-    print(f"✅ Exportado: {table_name} → {file_path}")
+        print(f"✅ Exportado: {table_name} → {file_path}")
+    
+    except KeyError:
+        print(f"⚠️ Tabla no encontrada: {table_name}")
+    except Exception as e:
+        print(f"❌ Error al exportar {table_name}: {str(e)}")
 
 # === Tablas a Exportar ===
 TARGET_TABLES = [
     "users",
+    "user_roles",  # Añadida la tabla user_roles
     "assistants",
     "clinic",
     "tasks",
