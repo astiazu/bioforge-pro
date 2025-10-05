@@ -34,13 +34,42 @@ MODEL_MAP = build_model_map()
 
 print(f"📋 Modelos detectados: {list(MODEL_MAP.keys())}")
 
+def preview_csv_contents(csv_path):
+    """
+    Muestra una vista previa del contenido de un archivo CSV.
+    """
+    if not os.path.exists(csv_path):
+        print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
+        return []
+    
+    try:
+        with open(csv_path, "r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            rows = list(reader)
+            
+            if not rows:
+                print(f"⚠️ Archivo CSV vacío: {csv_path}")
+                return []
+            
+            print(f"\n📋 Contenido del archivo: {csv_path}")
+            print(f"   • Columnas: {reader.fieldnames}")
+            print(f"   • Total de registros: {len(rows)}")
+            print("   • Primeras 5 filas:")
+            for i, row in enumerate(rows[:5], 1):
+                print(f"     {i}: {row}")
+            
+            return rows
+    except Exception as e:
+        print(f"❌ Error al leer el archivo CSV: {e}")
+        return []
+
 def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids, strict_mode=True):
     """
     Valida que los valores de una columna de clave foránea en los datos CSV
     coincidan con los IDs existentes en la tabla referenciada.
     
     Args:
-        csv_ Lista de diccionarios con los datos del CSV
+        csv_data: Lista de diccionarios con los datos del CSV
         foreign_key_column: Nombre de la columna de clave foránea
         referenced_ids: Set de IDs válidos en la tabla referenciada
         strict_mode: Si True, lanza excepción. Si False, filtra registros inválidos.
@@ -109,91 +138,88 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
         print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
         return 0
 
-    with open(csv_path, "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        rows = list(reader)
+    # Leer y mostrar el contenido del CSV antes de importar
+    rows = preview_csv_contents(csv_path)
+    if not rows:
+        return 0
 
-        if not rows:
-            print(f"⚠️ Archivo CSV vacío: {csv_path}")
-            return 0
-
-        # Validaciones de claves foráneas
-        if foreign_key_validations:
-            for fk_column, referenced_table in foreign_key_validations.items():
-                if fk_column in rows[0]:
-                    referenced_ids = get_existing_ids(referenced_table)
-                    rows = validate_foreign_keys(rows, fk_column, referenced_ids, strict_mode)
-                    
-                    if not rows:
-                        print(f"⚠️ No hay registros válidos después de validar {fk_column}")
-                        return 0
-
-        count = 0
-        errors = 0
-        
-        for idx, row in enumerate(rows, 1):
-            try:
-                cleaned = {}
-                for key, value in row.items():
-                    # Saltar ID si se especifica
-                    if key == "id" and skip_id:
-                        continue
-                    
-                    # Normalizar el valor (convertir string "None" a None real)
-                    if isinstance(value, str):
-                        value = value.strip()
-                        if value.lower() == 'none' or value == '':
-                            value = None
-                    
-                    # Claves foráneas
-                    elif key.endswith("_id"):
-                        cleaned[key] = int(value) if str(value).strip().isdigit() else None
-                    # Campos booleanos (TODOS los casos posibles)
-                    elif (key.startswith("is_") or 
-                          key.endswith("_enabled") or 
-                          key.endswith("_included") or
-                          key in ["active", "enabled", "verified", "has_tax_included", "store_enabled"]):
-                        cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si", "false", "f", "no", "off")
-                    # Campos numéricos
-                    elif key in ["day_of_week", "duration", "amount", "price", "stock", "view_count"]:
-                        cleaned[key] = int(value) if str(value).strip().isdigit() else None
-                    # Campos decimales
-                    elif key in ["base_price", "tax_rate", "promotion_discount"]:
-                        try:
-                            cleaned[key] = float(value) if value else None
-                        except (ValueError, TypeError):
-                            cleaned[key] = None
-                    # Campos JSON (como image_urls)
-                    elif key == "image_urls" and value:
-                        # Ya viene como string JSON del CSV, mantenerlo así
-                        cleaned[key] = value
-                    else:
-                        cleaned[key] = value.strip() if isinstance(value, str) else value
-
-                obj = model(**cleaned)
-                db.session.add(obj)
-                count += 1
+    # Validaciones de claves foráneas
+    if foreign_key_validations:
+        for fk_column, referenced_table in foreign_key_validations.items():
+            if fk_column in rows[0]:
+                referenced_ids = get_existing_ids(referenced_table)
+                rows = validate_foreign_keys(rows, fk_column, referenced_ids, strict_mode)
                 
-                # Commit cada 100 registros para evitar problemas de memoria
-                if count % 100 == 0:
-                    db.session.commit()
-                    print(f"  → Procesados {count} registros...")
-                    
-            except (ValueError, IntegrityError, DataError) as e:
-                errors += 1
-                print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:150]}")
-                db.session.rollback()
-                continue
+                if not rows:
+                    print(f"⚠️ No hay registros válidos después de validar {fk_column}")
+                    return 0
 
-        # Commit final
+    count = 0
+    errors = 0
+    
+    for idx, row in enumerate(rows, 1):
         try:
-            db.session.commit()
-            print(f"✅ Importado: {count} registros en {model.__tablename__} (Errores: {errors})")
-            return count
-        except Exception as e:
-            print(f"❌ Error al hacer commit final en {model.__tablename__}: {e}")
+            cleaned = {}
+            for key, value in row.items():
+                # Saltar ID si se especifica
+                if key == "id" and skip_id:
+                    continue
+                
+                # Normalizar el valor (convertir string "None" a None real)
+                if isinstance(value, str):
+                    value = value.strip()
+                    if value.lower() == 'none' or value == '':
+                        value = None
+                
+                # Claves foráneas
+                elif key.endswith("_id"):
+                    cleaned[key] = int(value) if str(value).strip().isdigit() else None
+                # Campos booleanos (TODOS los casos posibles)
+                elif (key.startswith("is_") or 
+                      key.endswith("_enabled") or 
+                      key.endswith("_included") or
+                      key in ["active", "enabled", "verified", "has_tax_included", "store_enabled"]):
+                    cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si", "false", "f", "no", "off")
+                # Campos numéricos
+                elif key in ["day_of_week", "duration", "amount", "price", "stock", "view_count"]:
+                    cleaned[key] = int(value) if str(value).strip().isdigit() else None
+                # Campos decimales
+                elif key in ["base_price", "tax_rate", "promotion_discount"]:
+                    try:
+                        cleaned[key] = float(value) if value else None
+                    except (ValueError, TypeError):
+                        cleaned[key] = None
+                # Campos JSON (como image_urls)
+                elif key == "image_urls" and value:
+                    # Ya viene como string JSON del CSV, mantenerlo así
+                    cleaned[key] = value
+                else:
+                    cleaned[key] = value.strip() if isinstance(value, str) else value
+
+            obj = model(**cleaned)
+            db.session.add(obj)
+            count += 1
+            
+            # Commit cada 100 registros para evitar problemas de memoria
+            if count % 100 == 0:
+                db.session.commit()
+                print(f"  → Procesados {count} registros...")
+                
+        except (ValueError, IntegrityError, DataError) as e:
+            errors += 1
+            print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:150]}")
             db.session.rollback()
-            return 0
+            continue
+
+    # Commit final
+    try:
+        db.session.commit()
+        print(f"✅ Importado: {count} registros en {model.__tablename__} (Errores: {errors})")
+        return count
+    except Exception as e:
+        print(f"❌ Error al hacer commit final en {model.__tablename__}: {e}")
+        db.session.rollback()
+        return 0
 
 def truncate_tables_safely():
     """
