@@ -1,33 +1,54 @@
 import os
 import csv
 from sqlalchemy.exc import IntegrityError, DataError
-from app.models import db  # Asegúrate de importar tu instancia de SQLAlchemy
-from sqlalchemy import inspect
-
-import os
-from sqlalchemy import inspect
-from app.models import db  # Asegúrate de importar tu instancia de SQLAlchemy
+from sqlalchemy import inspect, text
+from app.models import db
 
 # Define la ruta del directorio de importación
-IMPORT_DIR = "exported_data"  # Reemplaza con la ruta correcta
+IMPORT_DIR = "exported_data"
 
 # Verifica que el directorio exista
 if not os.path.exists(IMPORT_DIR):
     raise FileNotFoundError(f"El directorio de importación no existe: {IMPORT_DIR}")
 
-def validate_foreign_keys(csv_data, foreign_key_column, referenced_table):
+
+def validate_foreign_keys(csv_data, foreign_key_column, referenced_ids):
     """
     Valida que los valores de una columna de clave foránea en los datos CSV
     coincidan con los IDs existentes en la tabla referenciada.
     """
-    referenced_ids = {row.id for row in referenced_table.query.all()}
-    invalid_keys = [row[foreign_key_column] for row in csv_data if row[foreign_key_column] not in referenced_ids]
-    if invalid_keys:
-        raise ValueError(f"Claves foráneas inválidas en {foreign_key_column}: {invalid_keys}")
+    invalid_keys = []
+    for row in csv_data:
+        fk_value = row.get(foreign_key_column)
+        if fk_value and fk_value != '' and int(fk_value) not in referenced_ids:
+            invalid_keys.append(fk_value)
 
-def import_csv_to_model(csv_path, model, skip_id=False):
+    if invalid_keys:
+        raise ValueError(f"❌ Claves foráneas inválidas en '{foreign_key_column}': {set(invalid_keys)}")
+
+
+def get_existing_ids(table_name):
+    """
+    Obtiene todos los IDs existentes de una tabla.
+    """
+    try:
+        # Usa SQLAlchemy para generar consultas seguras
+        result = db.session.execute(text("SELECT id FROM :table"), {"table": table_name})
+        return {row[0] for row in result}
+    except Exception as e:
+        print(f"⚠️ No se pudieron obtener IDs de {table_name}: {e}")
+        return set()
+
+
+def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=None):
     """
     Importa datos desde un archivo CSV a una tabla específica del modelo.
+    
+    Args:
+        csv_path: Ruta al archivo CSV
+        model: Clase del modelo SQLAlchemy
+        skip_id: Si True, no importa la columna 'id'
+        foreign_key_validations: Dict con {columna: tabla_referenciada}
     """
     if not os.path.exists(csv_path):
         print(f"⚠️ Archivo CSV no encontrado: {csv_path}")
@@ -35,112 +56,196 @@ def import_csv_to_model(csv_path, model, skip_id=False):
 
     with open(csv_path, "r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
-        rows = list(reader)  # Convertimos el lector en una lista para validación
+        rows = list(reader)
 
-        # Validar claves foráneas si es necesario
-        foreign_key_columns = {
-            "clinic": "doctor_id",
-            "assistants": "doctor_id",
-            "tasks": "doctor_id",
-            "appointments": "patient_id",
-        }
-        if model.__tablename__ in foreign_key_columns:
-            foreign_key_column = foreign_key_columns[model.__tablename__]
-            referenced_table = globals()[model.__tablename__.capitalize()]
-            validate_foreign_keys(rows, foreign_key_column, referenced_table)
+        if not rows:
+            print(f"⚠️ Archivo CSV vacío: {csv_path}")
+            return
+
+        # Validar claves foráneas si se especifican
+        if foreign_key_validations:
+            for fk_column, referenced_table in foreign_key_validations.items():
+                if fk_column in rows[0]:
+                    referenced_ids = get_existing_ids(referenced_table)
+                    validate_foreign_keys(rows, fk_column, referenced_ids)
 
         count = 0
-        for row in rows:
+        errors = 0
+
+        for idx, row in enumerate(rows, 1):
             try:
                 cleaned = {}
                 for key, value in row.items():
+                    # Saltar ID si se especifica
                     if key == "id" and skip_id:
-                        continue  # Saltar el ID si se especifica
+                        continue
+
+                    # Valores vacíos
                     if value == "" or value is None:
                         cleaned[key] = None
-                    elif key.endswith("_id"):  # Claves foráneas
-                        cleaned[key] = int(value) if str(value).isdigit() else None
-                    elif key.startswith("is_"):  # Campos booleanos
+                    # Claves foráneas
+                    elif key.endswith("_id"):
+                        cleaned[key] = int(value) if str(value).strip().isdigit() else None
+                    # Campos booleanos
+                    elif key.startswith("is_") or key in ["active", "enabled", "verified"]:
                         cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
+                    # Campos numéricos
+                    elif key in ["day_of_week", "duration", "amount", "price", "stock"]:
+                        cleaned[key] = int(value) if str(value).strip().isdigit() else None
                     else:
-                        cleaned[key] = value
+                        cleaned[key] = value.strip() if isinstance(value, str) else value
 
                 obj = model(**cleaned)
                 db.session.add(obj)
                 count += 1
+
+                # Commit cada 100 registros para evitar problemas de memoria
+                if count % 100 == 0:
+                    db.session.commit()
+                    print(f"  → Procesados {count} registros...")
+
             except (ValueError, IntegrityError, DataError) as e:
-                print(f"❌ Error al procesar fila {count + 1} en {csv_path}: {e}")
+                errors += 1
+                print(f"❌ Error en fila {idx} de {csv_path}: {str(e)[:100]}")
                 db.session.rollback()
                 continue
 
+        # Commit final
+        try:
+            db.session.commit()
+            print(f"✅ Importado: {count} registros en {model.__tablename__} (Errores: {errors})")
+        except Exception as e:
+            print(f"❌ Error al hacer commit final en {model.__tablename__}: {e}")
+            db.session.rollback()
+
+
+def truncate_tables_safely():
+    """
+    Vacía las tablas de forma segura deshabilitando temporalmente las foreign keys.
+    """
+    print("🗑️ Vaciando tablas...")
+
+    # Orden inverso para respetar dependencias
+    TABLES_TO_CLEAR = [
+        "event",
+        "notes",
+        "publications",
+        "medical_records",
+        "appointments",
+        "availability",
+        "schedules",  # ← AGREGADA
+        "tasks",
+        "assistants",
+        "product",
+        "product_category",
+        "clinic",
+        "user_roles",
+        "visits",
+        "invitation_logs",
+        "company_invites",
+        "subscribers",
+    ]
+
+    try:
+        # Deshabilitar temporalmente las foreign keys (PostgreSQL)
+        db.session.execute(text("SET CONSTRAINTS ALL DEFERRED;"))
+
+        for table in TABLES_TO_CLEAR:
+            try:
+                db.session.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"))
+                print(f"  ✓ Tabla {table} vaciada")
+            except Exception as e:
+                print(f"  ⚠️ No se pudo vaciar {table}: {str(e)[:80]}")
+
         db.session.commit()
-        print(f"✅ Importado: {count} registros en {model.__tablename__}")
+        print("✅ Tablas vaciadas exitosamente")
+
+    except Exception as e:
+        print(f"❌ Error al vaciar tablas: {e}")
+        db.session.rollback()
+        raise
+
 
 def import_csv_to_render_db():
     """
     Importa datos desde múltiples archivos CSV a la base de datos.
     """
-    print("🗑️ Vaciamos todas las tablas para sincronización limpia...")
-    inspector = inspect(db.engine)
-    existing_tables = inspector.get_table_names()
+    print("=" * 60)
+    print("🚀 INICIANDO IMPORTACIÓN DE DATOS A PRODUCCIÓN")
+    print("=" * 60)
 
-    # Lista de tablas a vaciar
-    TABLES_TO_CLEAR = [
-        "clinic",
-        "assistants",
-        "tasks",
-        "users",
-        "product_category",
-        "notes",
-        "publications",
-        "medical_records",
-        "appointments",
-        "availability",
-        "event",
+    # Asegurar que las tablas existen (sin intentar crearlas manualmente)
+    print("📋 Verificando estructura de base de datos...")
+    db.create_all()
+    print("✅ Estructura verificada")
+
+    # Vaciar tablas existentes
+    truncate_tables_safely()
+
+    # Definir orden de importación con validaciones de FK
+    IMPORT_CONFIG = [
+        ("users", None, False),
+        ("user_roles", {"user_id": "users"}, False),
+        ("clinic", {"doctor_id": "users"}, False),
+        ("product_category", None, False),
+        ("assistants", {"user_id": "users", "doctor_id": "users"}, False),
+        ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
+        ("tasks", {"doctor_id": "users"}, False),
+        ("availability", {"doctor_id": "users"}, False),
+        ("appointments", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("medical_records", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("publications", None, False),
+        ("notes", None, False),
+        ("event", None, False),
+        ("subscribers", None, False),
+        ("company_invites", None, False),
+        ("invitation_logs", None, True),  # skip_id = True
+        ("visits", None, True),  # skip_id = True
+        ("product", {"category_id": "product_category"}, False),
     ]
 
-    for table in reversed(db.metadata.sorted_tables):
-        if table.name in existing_tables and table.name in TABLES_TO_CLEAR:
-            print(f"  → Eliminando {table.name}...")
-            db.session.execute(table.delete())
-        else:
-            print(f"  ⚠️ Tabla {table.name} no existe. Creándola...")
-            table.create(bind=db.engine)
-    db.session.commit()
-    print("✅ Todas las tablas vaciadas.")
+    total_imported = 0
 
-    # Orden de importación basado en dependencias
-    TARGET_TABLES = [
-        "users",
-        "user_roles",
-        "clinic",
-        "product_category",
-        "assistants",
-        "tasks",
-        "availability",
-        "appointments",
-        "medical_records",
-        "publications",
-        "notes",
-        "event",
-        "subscribers",
-        "company_invites",
-        "invitation_logs",
-        "visits",
-        "product",
-    ]
+    for table_name, fk_validations, skip_id in IMPORT_CONFIG:
+        csv_path = os.path.join(IMPORT_DIR, f"{table_name}.csv")
 
-    for table in TARGET_TABLES:
-        csv_path = os.path.join(IMPORT_DIR, f"{table}.csv")
         if not os.path.exists(csv_path):
-            print(f"  ⚠️ Archivo CSV para {table} no encontrado. Saltando...")
+            print(f"\n⚠️ CSV no encontrado: {table_name}.csv - Saltando...")
             continue
 
-        model_class = globals().get(table.capitalize())
+        # Obtener el modelo dinámicamente
+        model_class = None
+        for key in dir(db.Model):
+            obj = getattr(db.Model, key)
+            if hasattr(obj, '__tablename__') and obj.__tablename__ == table_name:
+                model_class = obj
+                break
+
         if not model_class:
-            print(f"  ⚠️ Modelo para {table} no encontrado. Saltando...")
+            # Intento alternativo: buscar en app.models
+            try:
+                from app import models
+                model_class = getattr(models, table_name.capitalize(), None)
+            except:
+                pass
+
+        if not model_class:
+            print(f"\n⚠️ Modelo no encontrado para tabla '{table_name}' - Saltando...")
             continue
 
-        import_csv_to_model(csv_path, model_class, skip_id=(table in ["invitation_logs", "visits"]))
+        print(f"\n📥 Importando {table_name}...")
+        import_csv_to_model(csv_path, model_class, skip_id, fk_validations)
+        total_imported += 1
 
-    print("🎉 Sincronización completada exitosamente.")
+    print("\n" + "=" * 60)
+    print(f"🎉 IMPORTACIÓN COMPLETADA: {total_imported} tablas procesadas")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    try:
+        import_csv_to_render_db()
+    except Exception as e:
+        print(f"\n💥 ERROR CRÍTICO: {e}")
+        import traceback
+        traceback.print_exc()
