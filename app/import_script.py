@@ -115,17 +115,16 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
             print(f"⚠️ Archivo CSV vacío: {csv_path}")
             return 0
 
-        # VALIDACIONES DE FK DESHABILITADAS
-        # PostgreSQL se encargará de validar la integridad
-        # if foreign_key_validations:
-        #     for fk_column, referenced_table in foreign_key_validations.items():
-        #         if fk_column in rows[0]:
-        #             referenced_ids = get_existing_ids(referenced_table)
-        #             rows = validate_foreign_keys(rows, fk_column, referenced_ids, strict_mode)
-        #             
-        #             if not rows:
-        #                 print(f"⚠️ No hay registros válidos después de validar {fk_column}")
-        #                 return 0
+        # Validaciones de claves foráneas
+        if foreign_key_validations:
+            for fk_column, referenced_table in foreign_key_validations.items():
+                if fk_column in rows[0]:
+                    referenced_ids = get_existing_ids(referenced_table)
+                    rows = validate_foreign_keys(rows, fk_column, referenced_ids, strict_mode)
+                    
+                    if not rows:
+                        print(f"⚠️ No hay registros válidos después de validar {fk_column}")
+                        return 0
 
         count = 0
         errors = 0
@@ -155,7 +154,7 @@ def import_csv_to_model(csv_path, model, skip_id=False, foreign_key_validations=
                           key.endswith("_enabled") or 
                           key.endswith("_included") or
                           key in ["active", "enabled", "verified", "has_tax_included", "store_enabled"]):
-                        cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si")
+                        cleaned[key] = str(value).strip().lower() in ("1", "true", "t", "yes", "on", "sí", "si", "false", "f", "no", "off")
                     # Campos numéricos
                     elif key in ["day_of_week", "duration", "amount", "price", "stock", "view_count"]:
                         cleaned[key] = int(value) if str(value).strip().isdigit() else None
@@ -256,7 +255,7 @@ def import_csv_to_render_db(strict_mode=True):
     print(f"   Modo: {'ESTRICTO' if strict_mode else 'PERMISIVO'}")
     print("=" * 60)
     
-    # Asegurar que las tablas existen
+    # Asegurar que las tablas existan
     print("📋 Verificando estructura de base de datos...")
     db.create_all()
     print("✅ Estructura verificada")
@@ -264,27 +263,26 @@ def import_csv_to_render_db(strict_mode=True):
     # Vaciar tablas existentes
     truncate_tables_safely()
     
-    # Definir orden de importación SIN validaciones de FK
-    # Las validaciones las hace PostgreSQL automáticamente
+    # Definir orden de importación con validaciones de FK
     IMPORT_CONFIG = [
-        ("users", None, False),
+        ("users", {"role_id": "user_roles"}, False),
         ("user_roles", None, False),
-        ("clinic", None, False),
-        ("product_category", None, False),
-        ("assistants", None, False),
-        ("schedules", None, False),
-        ("tasks", None, False),
+        ("clinic", {"doctor_id": "users"}, False),
+        ("product_category", {"doctor_id": "users"}, False),
+        ("assistants", {"user_id": "users", "doctor_id": "users"}, False),
+        ("schedules", {"doctor_id": "users", "clinic_id": "clinic"}, False),
+        ("tasks", {"doctor_id": "users"}, False),
         ("availability", None, False),
-        ("appointments", None, False),
-        ("medical_records", None, False),
-        ("publications", None, False),
+        ("appointments", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("medical_records", {"patient_id": "users", "doctor_id": "users"}, False),
+        ("publications", {"user_id": "users"}, False),
         ("notes", None, False),
         ("event", None, False),
         ("subscribers", None, False),
         ("company_invites", None, False),
         ("invitation_logs", None, True),  # skip_id = True
         ("visits", None, True),  # skip_id = True
-        ("product", None, False),
+        ("product", {"category_id": "product_category"}, False),
     ]
     
     total_imported = 0
