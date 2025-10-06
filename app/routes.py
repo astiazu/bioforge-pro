@@ -4500,8 +4500,10 @@ def crear_categoria(doctor_id):
         
         except Exception as e:
             db.session.rollback()
-            flash('❌ Error al crear la categoría. Inténtalo nuevamente.', 'danger')
-            print(f"Error: {e}")
+            print("🧨 Error al crear categoría:", e)
+            import traceback
+            traceback.print_exc()
+            flash(f'❌ Error al crear la categoría: {str(e)}', 'danger')
     
     # Cargar solo categorías raíz (sin padre) y activas del profesional
     root_categories = ProductCategory.query.filter_by(

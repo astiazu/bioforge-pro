@@ -1,0 +1,16 @@
+"column_name","data_type","character_maximum_length","is_nullable","column_default"
+"attributes","json",NULL,"YES",NULL
+"created_by","integer",NULL,"NO",NULL
+"updated_by","integer",NULL,"YES",NULL
+"id","integer",NULL,"NO","nextval('product_id_seq'::regclass)"
+"price","numeric",NULL,"NO",NULL
+"is_service","boolean",NULL,"NO",NULL
+"stock","integer",NULL,"NO",NULL
+"is_visible","boolean",NULL,"NO",NULL
+"hide_if_out_of_stock","boolean",NULL,"NO",NULL
+"created_at","timestamp without time zone",NULL,"NO",NULL
+"updated_at","timestamp without time zone",NULL,"YES",NULL
+"doctor_id","integer",NULL,"NO",NULL
+"name","character varying",100,"NO",NULL
+"description","text",NULL,"YES",NULL
+"category","character varying",50,"YES",NULL

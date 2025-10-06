@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
-from time import sleep
 
 # === Instancias globales ===
 db = SQLAlchemy()
@@ -13,7 +12,6 @@ login_manager = LoginManager()
 mail = Mail()
 migrate = Migrate()
 
-# Cloudinary (opcional)
 try:
     import cloudinary
 except ImportError:
@@ -22,9 +20,10 @@ except ImportError:
 
 def create_app(strict_mode=False):
     """Crea e inicializa la aplicación Flask (compatible con Render y local)."""
-    # Cargar variables locales (solo en desarrollo)
+    from dotenv import load_dotenv
+
+    # Cargar variables locales si no estamos en Render
     if os.environ.get("FLASK_ENV") != "production":
-        from dotenv import load_dotenv
         load_dotenv()
 
     app = Flask(
@@ -37,19 +36,26 @@ def create_app(strict_mode=False):
     # === Configuración general ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
 
-    # --- Base de datos ---
-    if os.environ.get('DATABASE_URL'):
-        database_url = os.environ.get('DATABASE_URL')
+    # --- Configuración base de datos ---
+    if os.environ.get("DATABASE_URL"):
+        database_url = os.environ.get("DATABASE_URL")
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
+        # Detectar si estamos en Render o local
+        if "render.com" in database_url or os.environ.get("RENDER") == "true":
+            ssl_args = {"sslmode": "require"}  # Render exige SSL
+        else:
+            ssl_args = {}  # Local no usa SSL
     else:
         os.makedirs(app.instance_path, exist_ok=True)
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
+        ssl_args = {}
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": {"sslmode": "require"} if "postgresql" in app.config["SQLALCHEMY_DATABASE_URI"] else {},
+        "connect_args": ssl_args,
         "pool_pre_ping": True,
         "pool_recycle": 300,
         "execution_options": {"strict_mode": strict_mode},
@@ -63,12 +69,6 @@ def create_app(strict_mode=False):
     app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
     app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
 
-    # --- Variables adicionales ---
-    app.config["BIO_SHORT"] = "Breve descripción del sitio"
-    app.config["BIO_EXTENDED"] = "Descripción extendida del sitio BioForge..."
-    app.config['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN')
-    app.config['TELEGRAM_CHAT_ID'] = os.environ.get('TELEGRAM_CHAT_ID')
-
     # === Inicializar extensiones ===
     db.init_app(app)
     migrate.init_app(app, db)
@@ -76,80 +76,66 @@ def create_app(strict_mode=False):
     mail.init_app(app)
     login_manager.login_view = "auth.login"
 
-    # === User Loader ===
     from app.models import User
+
     @login_manager.user_loader
     def load_user(user_id):
         return User.query.get(int(user_id))
 
-    # === Contexto de la aplicación ===
+    # === Registrar blueprints y filtros ===
     with app.app_context():
         from app import models
         from datetime import datetime
-
-        # --- Blueprints ---
         from app.routes import routes
         from app.auth import auth
+
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
-        # --- Filtros personalizados ---
-        @app.template_filter('sort_by_due_date')
+        @app.template_filter("sort_by_due_date")
         def sort_by_due_date(tasks):
             def sort_key(task):
                 return task.due_date if task.due_date else datetime.max.date()
             return sorted(tasks, key=sort_key)
 
-        @app.template_filter('without_page')
+        @app.template_filter("without_page")
         def without_page(args):
-            return {k: v for k, v in args.items() if k != 'page'}
+            return {k: v for k, v in args.items() if k != "page"}
 
-        # --- Registro de visitas ---
+        # Registro de visitas
         @app.before_request
         def log_visit():
-            if request.endpoint and not request.endpoint.startswith('auth'):
+            if request.endpoint and not request.endpoint.startswith("auth"):
                 from app.models import Visit
                 Visit.log_visit(request)
 
-        # --- Configuración de Cloudinary ---
+        # Configurar Cloudinary (opcional)
         if cloudinary:
             cloudinary.config(
                 cloud_name=os.environ.get("CLOUD_NAME"),
                 api_key=os.environ.get("CLOUDINARY_API_KEY"),
                 api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-                secure=True
+                secure=True,
             )
 
-        # --- Creación robusta de tablas (Render Safe) ---
-        create_tables_with_retry(app)
+        # 🔸 No crear tablas automáticamente al iniciar
+        # Se hará manualmente desde el panel de administrador
 
-        # --- Registrar comandos CLI ---
+        # Registrar comandos CLI
         register_cli_commands(app)
-
-        # 🔹 Importación automática deshabilitada (Render la ejecuta por separado)
-        # from scripts.import_script import run_import
-        # run_import()
 
     return app
 
 
-# === Función auxiliar: creación robusta de tablas ===
-def create_tables_with_retry(app, retries=5):
-    """Evita fallas por hibernación o latencia de Render al inicializar la BD."""
-    for attempt in range(retries):
-        try:
-            with app.app_context():
-                db.create_all()
-                print("✅ Tablas creadas o ya existentes.")
-                return
-        except Exception as e:
-            print(f"⚠️ Intento {attempt + 1}/{retries} fallido: {e}")
-            sleep(3)
-    print("💥 No se pudieron crear las tablas tras varios intentos.")
-
-
-# === Comandos CLI personalizados ===
 def register_cli_commands(app):
+    """Comandos CLI personalizados"""
+    @app.cli.command("create-tables")
+    def create_tables():
+        """Crea todas las tablas manualmente"""
+        with app.app_context():
+            db.create_all()
+            print("✅ Tablas creadas o ya existentes.")
+
     @app.cli.command("sync-sequences")
     def sync_sequences_command():
         """Sincroniza secuencias de PostgreSQL tras migración."""
@@ -157,5 +143,5 @@ def register_cli_commands(app):
         sync_all_sequences()
 
 
-# === Instancia global para Gunicorn (Render) ===
+# Instancia global para Gunicorn o Flask CLI
 app = create_app()
