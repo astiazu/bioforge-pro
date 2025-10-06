@@ -4147,49 +4147,53 @@ def crear_producto(doctor_id):
 
     if request.method == 'POST':
         try:
-            # Determinar si es servicio
             is_service = 'is_service' in request.form
             stock = 0 if is_service else max(0, int(request.form.get('stock', 0)))
-            
-            # Precios e impuestos
-            base_price = float(request.form['base_price'])
-            tax_rate = float(request.form.get('tax_rate', 0.0))
+
+            base_price = float(request.form.get('base_price', 0) or 0)
+            tax_rate = float(request.form.get('tax_rate', 0) or 0)
             has_tax_included = 'has_tax_included' in request.form
-            
-            # Promociones
+
             is_on_promotion = 'is_on_promotion' in request.form
-            promotion_discount = float(request.form.get('promotion_discount', 0.0)) if is_on_promotion else 0.0
+            promotion_discount = float(request.form.get('promotion_discount', 0) or 0)
             promotion_end_date = None
             if is_on_promotion and request.form.get('promotion_end_date'):
-                promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
-            
-            # Imágenes: asume que vienen como JSON (desde un campo oculto o AJAX)
+                try:
+                    promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
+                except ValueError:
+                    promotion_end_date = None
+
+            # 🧠 Debug imagenes
             image_urls = []
             if request.form.get('image_urls'):
                 import json
                 try:
                     image_urls = json.loads(request.form['image_urls'])
-                    # Asegurar que sea una lista y no más de 3 imágenes
                     if isinstance(image_urls, list):
                         image_urls = image_urls[:3]
                     else:
                         image_urls = []
-                except (json.JSONDecodeError, TypeError):
+                except (json.JSONDecodeError, TypeError) as e:
+                    print(f"[DEBUG] Error parseando image_urls: {e}")
                     image_urls = []
-            
-            # Categoría (solo si es válida, activa y del mismo profesional)
-            category_id = request.form.get('category_id')
-            if category_id and category_id.isdigit():
+
+            # 🧠 Debug categoría
+            category_id = None
+            cat_form = request.form.get('category_id')
+            if cat_form and cat_form.isdigit():
                 category = ProductCategory.query.filter_by(
-                    id=int(category_id),
+                    id=int(cat_form),
                     doctor_id=doctor_id,
                     is_active=True
                 ).first()
                 category_id = category.id if category else None
-            else:
-                category_id = None
 
-            # Crear producto
+            print(f"[DEBUG] Datos antes de crear producto:")
+            print(f"  name={request.form.get('name')}")
+            print(f"  base_price={base_price}, tax_rate={tax_rate}")
+            print(f"  category_id={category_id}, doctor_id={doctor_id}")
+            print(f"  image_urls={image_urls}")
+
             product = Product(
                 name=request.form['name'].strip(),
                 description=request.form.get('description', '').strip(),
@@ -4209,18 +4213,18 @@ def crear_producto(doctor_id):
                 created_by=current_user.id,
                 updated_by=current_user.id
             )
-            
+
             db.session.add(product)
             db.session.commit()
             flash('✅ Producto creado exitosamente', 'success')
             return redirect(url_for('routes.gestion_productos', doctor_id=doctor_id))
-        
-        except (ValueError, KeyError) as e:
-            flash('❌ Error: verifica que todos los campos numéricos sean válidos.', 'danger')
+
         except Exception as e:
             db.session.rollback()
-            flash('❌ Error interno al crear el producto.', 'danger')
-            print(f"Error en crear_producto: {e}")
+            import traceback
+            print("🚨 ERROR en crear_producto:")
+            traceback.print_exc()
+            flash(f'❌ Error interno al crear el producto: {e}', 'danger')
     
     return render_template(
         'ecommerce/form_producto.html',
