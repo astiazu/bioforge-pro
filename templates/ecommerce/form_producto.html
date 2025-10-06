@@ -129,7 +129,7 @@
                         </div>
                     </div>
 
-                    <!-- Columna derecha: Precios, impuestos, promoción -->
+                    <!-- Columna derecha: Precios, stock, impuestos, promoción -->
                     <div class="col-12 col-lg-6">
                         <div class="mb-3">
                             <label class="form-label">Precio base *</label>
@@ -140,6 +140,18 @@
                                    value="{{ '%.2f'|format(product.base_price) if product else request.form.base_price }}"
                                    class="form-control form-control-sm">
                             <small class="form-text text-muted">Precio sin impuestos (a menos que indiques lo contrario abajo)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Stock disponible</label>
+                            <input type="number"
+                                name="stock"
+                                min="0"
+                                step="1"
+                                value="{{ product.stock if product else request.form.stock or 0 }}"
+                                class="form-control form-control-sm"
+                                {% if product and product.is_service or request.form.is_service %}disabled{% endif %}>
+                            <small class="form-text text-muted">Cantidad en inventario (solo productos físicos)</small>
                         </div>
 
                         <div class="mb-3">

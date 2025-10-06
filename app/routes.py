@@ -4137,8 +4137,7 @@ def crear_producto(doctor_id):
     if not check_access(doctor_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
-    
-    # Cargar SOLO categorías activas del profesional
+
     from app.models import ProductCategory
     categories = ProductCategory.query.filter_by(
         doctor_id=doctor_id,
@@ -4147,13 +4146,17 @@ def crear_producto(doctor_id):
 
     if request.method == 'POST':
         try:
+            # 🧠 Validación de servicio y stock
             is_service = 'is_service' in request.form
-            stock = 0 if is_service else max(0, int(request.form.get('stock', 0)))
+            raw_stock = request.form.get('stock', '0').strip()
+            stock = 0 if is_service else max(0, int(raw_stock)) if raw_stock.isdigit() else 0
 
+            # 🧠 Datos de precios
             base_price = float(request.form.get('base_price', 0) or 0)
             tax_rate = float(request.form.get('tax_rate', 0) or 0)
             has_tax_included = 'has_tax_included' in request.form
 
+            # 🧠 Promoción
             is_on_promotion = 'is_on_promotion' in request.form
             promotion_discount = float(request.form.get('promotion_discount', 0) or 0)
             promotion_end_date = None
@@ -4163,21 +4166,18 @@ def crear_producto(doctor_id):
                 except ValueError:
                     promotion_end_date = None
 
-            # 🧠 Debug imagenes
+            # 🧠 Imágenes (JSON seguro)
+            import json
             image_urls = []
             if request.form.get('image_urls'):
-                import json
                 try:
-                    image_urls = json.loads(request.form['image_urls'])
-                    if isinstance(image_urls, list):
-                        image_urls = image_urls[:3]
-                    else:
-                        image_urls = []
-                except (json.JSONDecodeError, TypeError) as e:
-                    print(f"[DEBUG] Error parseando image_urls: {e}")
-                    image_urls = []
+                    urls = json.loads(request.form['image_urls'])
+                    if isinstance(urls, list):
+                        image_urls = urls[:3]
+                except json.JSONDecodeError:
+                    pass
 
-            # 🧠 Debug categoría
+            # 🧠 Categoría válida
             category_id = None
             cat_form = request.form.get('category_id')
             if cat_form and cat_form.isdigit():
@@ -4188,12 +4188,7 @@ def crear_producto(doctor_id):
                 ).first()
                 category_id = category.id if category else None
 
-            print(f"[DEBUG] Datos antes de crear producto:")
-            print(f"  name={request.form.get('name')}")
-            print(f"  base_price={base_price}, tax_rate={tax_rate}")
-            print(f"  category_id={category_id}, doctor_id={doctor_id}")
-            print(f"  image_urls={image_urls}")
-
+            # 🧠 Crear producto
             product = Product(
                 name=request.form['name'].strip(),
                 description=request.form.get('description', '').strip(),
@@ -4225,7 +4220,7 @@ def crear_producto(doctor_id):
             print("🚨 ERROR en crear_producto:")
             traceback.print_exc()
             flash(f'❌ Error interno al crear el producto: {e}', 'danger')
-    
+
     return render_template(
         'ecommerce/form_producto.html',
         doctor_id=doctor_id,
@@ -4234,6 +4229,7 @@ def crear_producto(doctor_id):
         now=datetime.now
     )
 
+
 @routes.route('/producto/<int:product_id>/editar', methods=['GET', 'POST'])
 @login_required
 def editar_producto(product_id):
@@ -4241,8 +4237,7 @@ def editar_producto(product_id):
     if not check_access(product.doctor_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
-    
-    # Cargar SOLO categorías activas del profesional
+
     from app.models import ProductCategory
     categories = ProductCategory.query.filter_by(
         doctor_id=product.doctor_id,
@@ -4251,52 +4246,56 @@ def editar_producto(product_id):
 
     if request.method == 'POST':
         try:
+            # 🧠 Datos generales
             product.name = request.form['name'].strip()
             product.description = request.form.get('description', '').strip()
-            
-            product.base_price = float(request.form['base_price'])
-            product.tax_rate = float(request.form.get('tax_rate', 0.0))
+
+            # 🧠 Precios
+            product.base_price = float(request.form.get('base_price', 0) or 0)
+            product.tax_rate = float(request.form.get('tax_rate', 0) or 0)
             product.has_tax_included = 'has_tax_included' in request.form
-            
+
+            # 🧠 Promoción
             product.is_on_promotion = 'is_on_promotion' in request.form
-            product.promotion_discount = float(request.form.get('promotion_discount', 0.0)) if product.is_on_promotion else 0.0
-            
+            product.promotion_discount = float(request.form.get('promotion_discount', 0) or 0) if product.is_on_promotion else 0.0
+            product.promotion_end_date = None
             if product.is_on_promotion and request.form.get('promotion_end_date'):
-                product.promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
-            else:
-                product.promotion_end_date = None
-            
+                try:
+                    product.promotion_end_date = datetime.strptime(request.form['promotion_end_date'], '%Y-%m-%d')
+                except ValueError:
+                    product.promotion_end_date = None
+
+            # 🧠 Servicio / stock
             product.is_service = 'is_service' in request.form
-            product.stock = 0 if product.is_service else max(0, int(request.form.get('stock', 0)))
-            
-            # Validar categoría: debe pertenecer al profesional y estar activa
-            category_id = request.form.get('category_id')
-            if category_id and category_id.isdigit():
+            raw_stock = request.form.get('stock', '0').strip()
+            product.stock = 0 if product.is_service else max(0, int(raw_stock)) if raw_stock.isdigit() else 0
+
+            # 🧠 Categoría
+            cat_id = request.form.get('category_id')
+            if cat_id and cat_id.isdigit():
                 category = ProductCategory.query.filter_by(
-                    id=int(category_id),
+                    id=int(cat_id),
                     doctor_id=product.doctor_id,
                     is_active=True
                 ).first()
                 product.category_id = category.id if category else None
             else:
                 product.category_id = None
-            
+
+            # 🧠 Visibilidad
             product.is_visible = 'is_visible' in request.form
             product.hide_if_out_of_stock = 'hide_if_out_of_stock' in request.form
             product.updated_by = current_user.id
-            
+
             db.session.commit()
             flash('✅ Producto actualizado', 'success')
             return redirect(url_for('routes.gestion_productos', doctor_id=product.doctor_id))
-        
-        except (ValueError, KeyError) as e:
-            flash('❌ Error: verifica los campos numéricos y fechas.', 'danger')
+
         except Exception as e:
             db.session.rollback()
-            flash('❌ Error al actualizar el producto.', 'danger')
-            print(f"Error en editar_producto: {e}")
-    
-  
+            print("🚨 ERROR en editar_producto:", e)
+            flash(f'❌ Error al actualizar producto: {e}', 'danger')
+
     return render_template(
         'ecommerce/form_producto.html',
         doctor_id=product.doctor_id,
