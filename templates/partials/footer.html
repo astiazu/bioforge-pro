@@ -1,0 +1,74 @@
+<!-- templates/partials/footer.html -->
+<footer class="footer bg-dark text-light pt-5 pb-3">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4 mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="{{ url_for('static', filename='img/logo-datos.gif') }}" 
+                         alt="DatosConsultora" height="40" class="me-2">
+                    <h5 class="mb-0 fw-bold">
+                        <span class="text-info">#</span>DatosConsultora
+                    </h5>
+                </div>
+                <p class="text-light-emphasis mb-3">
+                    Transformamos PyMEs con el poder de sus datos. 
+                    ROI +300% promedio en 30-45 días.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="#" class="text-light fs-4"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://wa.me/5493544404054" class="text-light fs-4"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <h6 class="fw-bold text-info mb-3">Servicios</h6>
+                <ul class="list-unstyled">
+                    <li><a href="{{ url_for('routes.publications') }}" class="text-light-emphasis text-decoration-none">Dashboards Ejecutivos</a></li>
+                    <li><a href="{{ url_for('routes.data_analysis') }}" class="text-light-emphasis text-decoration-none">Business Intelligence</a></li>
+                    <li><a href="{{ url_for('routes.upload_csv') }}" class="text-light-emphasis text-decoration-none">Automatización</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <h6 class="fw-bold text-info mb-3">Especialidades</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-light-emphasis text-decoration-none">Manufactura</a></li>
+                    <li><a href="#" class="text-light-emphasis text-decoration-none">Retail</a></li>
+                    <li><a href="#" class="text-light-emphasis text-decoration-none">Salud</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold text-info mb-3">Contacto Directo</h6>
+                <div class="mb-3">
+                    <i class="fas fa-envelope text-info me-2"></i>
+                    <a href="mailto:hola@datosconsultora.com" class="text-light-emphasis text-decoration-none">
+                        info@datosconsultora.com
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <i class="fab fa-whatsapp text-success me-2"></i>
+                    <a href="https://wa.me/5493544404054" class="text-light-emphasis text-decoration-none">
+                        +54 354 440-4054
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <i class="fas fa-map-marker-alt text-info me-2"></i>
+                    <span class="text-light-emphasis">Buenos Aires, Argentina</span>
+                </div>
+            </div>
+        </div>
+        <hr class="my-4 border-secondary">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="mb-0 text-light-emphasis">
+                    &copy; 2025 DatosConsultora. Todos los derechos reservados.
+                </p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <small class="text-light-emphasis">
+                    <a href="/terminos" class="text-decoration-none me-3">Términos</a>
+                    <a href="/privacidad" class="text-decoration-none me-3">Privacidad</a>
+                    <a href="/cookies" class="text-decoration-none">Cookies</a>
+                </small>
+            </div>
+        </div>
+    </div>
+</footer>

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito de Compras{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Carrito de Compras</h2>
+            {% if cart_items %}
+                <div class="card mb-3 p-3 shadow-sm">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if owner_photo %}
+                            <img src="{{ owner_photo }}" alt="{{ store_name }}" class="rounded-circle me-2" width="50" height="50">
+                        {% endif %}
+                        <h5 class="mb-0">{{ store_name }}</h5>
+                        {% if tienda_slug %}
+                            <a href="{{ url_for('routes.tienda_publica', url_slug=tienda_slug) }}" class="btn btn-link ms-auto">Volver a la tienda</a>
+                        {% endif %}
+                    </div>
+
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                            <tr data-product-id="{{ item.product.id }}">
+                                <td class="d-flex align-items-center">
+                                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="me-2" width="70" height="70">
+                                    <div>
+                                        <strong>{{ item.product.name }}</strong><br>
+                                        <small>{{ item.product.description[:60] ~ ('...' if item.product.description|length > 60 else '') }}</small>
+                                    </div>
+                                </td>
+                                <td class="price" data-price="{{ item.price }}">{{ item.price | round(2) }}</td>
+                                <td>
+                                    <input type="number" class="form-control quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}">
+                                </td>
+                                <td class="subtotal">{{ item.subtotal | round(2) }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger remove-item">Eliminar</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button id="vaciar-carrito" class="btn btn-outline-danger">Vaciar Carrito</button>
+                        <h4>Total: $<span id="total">{{ total | round(2) }}</span></h4>
+                    </div>
+                </div>
+
+                <!-- Formulario de Checkout -->
+                <div class="card p-3 shadow-sm">
+                    <h4>Información del Cliente</h4>
+                    <form method="POST" id="checkout-form">
+                        <div class="mb-3">
+                            <label for="customer_name" class="form-label">Nombre</label>
+                            <input type="text" name="customer_name" id="customer_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer_email" class="form-label">Email</label>
+                            <input type="email" name="customer_email" id="customer_email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="customer_phone" class="form-label">Teléfono</label>
+                            <input type="text" name="customer_phone" id="customer_phone" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Forma de Pago</label>
+                            <select name="payment_method" id="payment_method" class="form-select">
+                                <option value="Sin especificar">Sin especificar</option>
+                                <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+                                <option value="Transferencia">Transferencia</option>
+                                <option value="Efectivo">Efectivo</option>
+                            </select>
+                        </div>
+                        <button type="submit" name="checkout" class="btn btn-primary">Finalizar Compra</button>
+                    </form>
+                </div>
+            {% else %}
+                <p>Tu carrito está vacío. <a href="{{ url_for('routes.index') }}">Explorar productos</a></p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cartRows = document.querySelectorAll('tbody tr');
+    const totalEl = document.getElementById('total');
+
+    function actualizarTotal() {
+        let total = 0;
+        cartRows.forEach(row => {
+            const subtotalEl = row.querySelector('.subtotal');
+            const price = parseFloat(row.querySelector('.price').dataset.price);
+            const qty = parseInt(row.querySelector('.quantity').value);
+            const subtotal = price * qty;
+            subtotalEl.textContent = subtotal.toFixed(2);
+            total += subtotal;
+        });
+        totalEl.textContent = total.toFixed(2);
+    }
+
+    cartRows.forEach(row => {
+        const qtyInput = row.querySelector('.quantity');
+        qtyInput.addEventListener('change', () => {
+            if(qtyInput.value < 1) qtyInput.value = 1;
+            actualizarTotal();
+        });
+
+        const removeBtn = row.querySelector('.remove-item');
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            actualizarTotal();
+            // Aquí podrías enviar fetch para eliminar del session['cart']
+        });
+    });
+
+    document.getElementById('vaciar-carrito').addEventListener('click', () => {
+        fetch('{{ url_for("routes.vaciar_carrito", url_slug=tienda_slug) }}', {
+            method: 'POST'
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

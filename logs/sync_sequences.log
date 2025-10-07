@@ -1,0 +1,21 @@
+[2025-10-07 11:34:28] INFO: Iniciando sincronización de secuencias...
+[2025-10-07 11:34:28] INFO: Secuencias detectadas: ['user_roles_id_seq', 'subscribers_id_seq', 'users_id_seq', 'notes_id_seq', 'publications_id_seq', 'clinic_id_seq', 'invitation_logs_id_seq', 'availability_id_seq', 'schedules_id_seq', 'assistants_id_seq', 'company_invites_id_seq', 'appointments_id_seq', 'tasks_id_seq', 'medical_records_id_seq', 'product_category_id_seq', 'visits_id_seq', 'product_id_seq', 'event_id_seq']
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'user_roles_id_seq' (tabla 'user_roles'), próximo ID: 7
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'subscribers_id_seq' (tabla 'subscribers'), próximo ID: 6
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'users_id_seq' (tabla 'users'), próximo ID: 40
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'notes_id_seq' (tabla 'notes'), próximo ID: 8
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'publications_id_seq' (tabla 'publications'), próximo ID: 17
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'clinic_id_seq' (tabla 'clinic'), próximo ID: 9
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'invitation_logs_id_seq' (tabla 'invitation_logs'), próximo ID: 1
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'availability_id_seq' (tabla 'availability'), próximo ID: 1
+[2025-10-07 11:34:28] INFO: Secuencia sincronizada: 'schedules_id_seq' (tabla 'schedules'), próximo ID: 1
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'assistants_id_seq' (tabla 'assistants'), próximo ID: 31
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'company_invites_id_seq' (tabla 'company_invites'), próximo ID: 1
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'appointments_id_seq' (tabla 'appointments'), próximo ID: 1
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'tasks_id_seq' (tabla 'tasks'), próximo ID: 61
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'medical_records_id_seq' (tabla 'medical_records'), próximo ID: 1
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'product_category_id_seq' (tabla 'product_category'), próximo ID: 6
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'visits_id_seq' (tabla 'visits'), próximo ID: 2453
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'product_id_seq' (tabla 'product'), próximo ID: 8
+[2025-10-07 11:34:29] INFO: Secuencia sincronizada: 'event_id_seq' (tabla 'event'), próximo ID: 1
+[2025-10-07 11:34:29] INFO: ✅ Todas las secuencias procesadas y commit realizado correctamente

@@ -19,10 +19,13 @@ except ImportError:
 
 
 def create_app(strict_mode=False):
-    """Crea e inicializa la aplicación Flask (compatible con Render y local)."""
+    """
+    Crea e inicializa la aplicación Flask.
+    Compatible con entornos locales y Render.
+    """
     from dotenv import load_dotenv
 
-    # Cargar variables locales si no estamos en Render
+    # Cargar variables locales si no estamos en producción
     if os.environ.get("FLASK_ENV") != "production":
         load_dotenv()
 
@@ -39,16 +42,20 @@ def create_app(strict_mode=False):
     # --- Configuración base de datos ---
     if os.environ.get("DATABASE_URL"):
         database_url = os.environ.get("DATABASE_URL")
+
+        # Render usa postgres:// (viejo) → reemplazar por postgresql://
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
+
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 
         # Detectar si estamos en Render o local
         if "render.com" in database_url or os.environ.get("RENDER") == "true":
             ssl_args = {"sslmode": "require"}  # Render exige SSL
         else:
-            ssl_args = {}  # Local no usa SSL
+            ssl_args = {}
     else:
+        # Base de datos local SQLite
         os.makedirs(app.instance_path, exist_ok=True)
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
         ssl_args = {}
@@ -61,13 +68,17 @@ def create_app(strict_mode=False):
         "execution_options": {"strict_mode": strict_mode},
     }
 
-    # --- Configuración de Email ---
+    # === Configuración de Email ===
+    
     app.config["MAIL_SERVER"] = "smtp.gmail.com"
     app.config["MAIL_PORT"] = 587
     app.config["MAIL_USE_TLS"] = True
     app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME") or "astiazu@gmail.com"
     app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
-    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
+
+    # Estos dos se fijan explícitamente según lo que pediste
+    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", "astiazu@gmail.com")
+    app.config["ADMIN_EMAIL"] = "astiazu@gmail.com"
 
     # === Inicializar extensiones ===
     db.init_app(app)
@@ -92,6 +103,7 @@ def create_app(strict_mode=False):
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
+        # --- Filtros de plantilla personalizados ---
         @app.template_filter("sort_by_due_date")
         def sort_by_due_date(tasks):
             def sort_key(task):
@@ -100,16 +112,18 @@ def create_app(strict_mode=False):
 
         @app.template_filter("without_page")
         def without_page(args):
+            """Elimina el parámetro 'page' de la query string (paginación limpia)."""
             return {k: v for k, v in args.items() if k != "page"}
 
-        # Registro de visitas
+        # --- Registro de visitas ---
         @app.before_request
         def log_visit():
+            """Registra cada visita en la base de datos (salvo rutas de login)."""
             if request.endpoint and not request.endpoint.startswith("auth"):
                 from app.models import Visit
                 Visit.log_visit(request)
 
-        # Configurar Cloudinary (opcional)
+        # --- Configurar Cloudinary (opcional) ---
         if cloudinary:
             cloudinary.config(
                 cloud_name=os.environ.get("CLOUD_NAME"),
@@ -118,17 +132,15 @@ def create_app(strict_mode=False):
                 secure=True,
             )
 
-        # 🔸 No crear tablas automáticamente al iniciar
-        # Se hará manualmente desde el panel de administrador
-
-        # Registrar comandos CLI
+        # No crear tablas automáticamente (se hace manualmente)
         register_cli_commands(app)
 
     return app
 
 
+# === Comandos CLI personalizados ===
 def register_cli_commands(app):
-    """Comandos CLI personalizados"""
+    """Comandos CLI para gestión de la BD"""
     @app.cli.command("create-tables")
     def create_tables():
         """Crea todas las tablas manualmente"""
@@ -143,5 +155,5 @@ def register_cli_commands(app):
         sync_all_sequences()
 
 
-# Instancia global para Gunicorn o Flask CLI
+# === Instancia global para Gunicorn o Flask CLI ===
 app = create_app()

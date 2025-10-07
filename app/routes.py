@@ -42,6 +42,7 @@ from sqlalchemy import or_, and_, func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urlparse
+from decimal import Decimal, ROUND_HALF_UP
 
 
 import cloudinary
@@ -4111,11 +4112,21 @@ def tienda_publica(url_slug):
         ((Product.stock == 0) & (Product.hide_if_out_of_stock == False))
     ).all()
     
-    return render_template('ecommerce/tienda_publica.html', 
-                           professional=professional, 
-                           products=products,
-                           now=datetime.utcnow
-                           ) 
+    # Categorías activas
+    categories = (
+        ProductCategory.query
+        .filter_by(doctor_id=professional.id, is_active=True)
+        .order_by(ProductCategory.name)
+        .all()
+    )
+
+    return render_template(
+        'ecommerce/tienda_publica.html',
+        professional=professional,
+        products=products,
+        categories=categories,
+        now=datetime.now
+    )    
 
 # === PRODUCTOS ===
 @routes.route('/<int:doctor_id>/productos')
@@ -4287,13 +4298,21 @@ def editar_producto(product_id):
             product.hide_if_out_of_stock = 'hide_if_out_of_stock' in request.form
             product.updated_by = current_user.id
 
+            # 🧠 Mantener imágenes existentes desde formulario
+            image_urls = request.form.getlist('image_urls[]')
+            if image_urls:
+                product.image_urls = image_urls
+
+            # 🧠 Confirmar cambios
             db.session.commit()
             flash('✅ Producto actualizado', 'success')
             return redirect(url_for('routes.gestion_productos', doctor_id=product.doctor_id))
 
         except Exception as e:
             db.session.rollback()
-            print("🚨 ERROR en editar_producto:", e)
+            import traceback
+            print("🚨 ERROR en editar_producto:")
+            traceback.print_exc()
             flash(f'❌ Error al actualizar producto: {e}', 'danger')
 
     return render_template(
@@ -4360,41 +4379,248 @@ def eliminar_imagen_producto(product_id, index):
     if not check_access(product.doctor_id):
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.mi_perfil'))
-    
-    if index < 0 or index >= len(product.image_urls):
+
+    if not product.image_urls or index < 0 or index >= len(product.image_urls):
         flash('❌ Índice de imagen inválido.', 'danger')
         return redirect(url_for('routes.editar_producto', product_id=product_id))
-    
+
     try:
-        # Obtener la URL a eliminar
-        url_to_remove = product.image_urls[index]
-        public_id = extract_public_id_from_url(url_to_remove)
-        
-        # Eliminar de Cloudinary (si se puede extraer el public_id)
-        if public_id:
-            try:
-                destroy_result = cloudinary.uploader.destroy(public_id)
-                if destroy_result.get('result') != 'ok':
-                    current_app.logger.warning(f"Cloudinary no eliminó {public_id}: {destroy_result}")
-            except Exception as e:
-                current_app.logger.error(f"Error al destruir en Cloudinary: {str(e)}")
-                # No fallamos si Cloudinary falla; seguimos eliminando de la DB
-        
-        # Eliminar de la lista en la base de datos
-        new_urls = product.image_urls.copy()
-        new_urls.pop(index)
-        product.image_urls = new_urls
+        # Eliminar imagen de la lista localmente
+        removed_url = product.image_urls.pop(index)
         flag_modified(product, "image_urls")
         db.session.commit()
-        
+
+        # Intentar borrar de Cloudinary
+        public_id = extract_public_id_from_url(removed_url)
+        if public_id:
+            try:
+                cloudinary.uploader.destroy(public_id)
+            except Exception as e:
+                current_app.logger.warning(f"No se pudo eliminar de Cloudinary: {e}")
+
         flash('✅ Imagen eliminada correctamente', 'success')
-        
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error al eliminar imagen del producto: {str(e)}")
+        current_app.logger.error(f"Error al eliminar imagen: {e}")
         flash('❌ Error al eliminar la imagen.', 'danger')
-    
+
     return redirect(url_for('routes.editar_producto', product_id=product_id))
+
+# ==== CARRITO DE COMPRAS ====
+# ---------- Ver carrito y checkout ----------
+@routes.route('/carrito', methods=['GET', 'POST'])
+@login_required
+def carrito():
+    cart = session.get('cart', {})
+    product_ids = list(cart.keys())
+    products = Product.query.filter(Product.id.in_(product_ids)).all() if product_ids else []
+
+    cart_items = []
+    total = Decimal('0.00')
+    stock_issue = False
+    tienda = products[0].doctor if products and products[0].doctor else None
+    store_name = getattr(tienda, 'username', 'Tienda desconocida')
+    tienda_slug = getattr(tienda, 'url_slug', None)
+    owner_email = getattr(tienda, 'email', None)
+    owner_photo = getattr(tienda, 'profile_photo', None)
+
+    for p in products:
+        qty = cart.get(str(p.id), 0)
+
+        # Verificar stock
+        if not p.is_service and qty > p.stock:
+            qty = p.stock
+            stock_issue = True
+            cart[str(p.id)] = qty
+
+        price = Decimal(str(p.final_price or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        subtotal = price * qty
+        total += subtotal
+        cart_items.append({
+            'product': p,
+            'quantity': qty,
+            'subtotal': subtotal,
+            'price': price
+        })
+
+    session['cart'] = cart
+    session.modified = True
+
+    if request.method == 'POST' and 'checkout' in request.form:
+        customer_name = request.form.get('customer_name', '').strip()
+        customer_email = request.form.get('customer_email', '').strip()
+        customer_phone = request.form.get('customer_phone', '').strip()
+        payment_method = request.form.get('payment_method', 'Sin especificar')
+
+        if not customer_name or not customer_email:
+            flash("❌ Nombre y email del cliente son obligatorios", "danger")
+            return redirect(url_for('routes.carrito'))
+
+        # Enviar mail al dueño de la tienda
+        if owner_email:
+            try:
+                msg = Message(
+                    subject="Nueva compra en tu tienda - BioForge",
+                    sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                    recipients=[owner_email],
+                    body=f"Cliente: {customer_name}\nEmail: {customer_email}\nTeléfono: {customer_phone}\nTotal: ${total:.2f}\nForma de pago: {payment_method}\nProductos:\n" +
+                         "\n".join([f"{item['quantity']} x {item['product'].name} (${item['price']:.2f})" for item in cart_items])
+                )
+                current_app.mail.send(msg)
+            except Exception as e:
+                print("Error enviando correo al dueño de la tienda:", e)
+
+        # Enviar mail al administrador
+        try:
+            admin_email = current_app.config['ADMIN_EMAIL']
+            msg_admin = Message(
+                subject="[BioForge] Compra realizada",
+                sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                recipients=[admin_email],
+                body=f"Compra realizada por {customer_name} ({customer_email}). Total: ${total:.2f}\nProductos:\n" +
+                     "\n".join([f"{item['quantity']} x {item['product'].name} (${item['price']:.2f})" for item in cart_items])
+            )
+            current_app.mail.send(msg_admin)
+        except Exception as e:
+            print("Error enviando correo al admin:", e)
+
+        # Vaciar carrito
+        session.pop('cart', None)
+        flash("✅ Compra completada. El dueño de la tienda y el administrador fueron notificados.", "success")
+
+        # Redirigir a la tienda
+        return redirect(url_for('routes.tienda_publica', url_slug=tienda_slug) if tienda_slug else url_for('routes.index'))
+
+    return render_template(
+        'ecommerce/carrito.html',
+        cart_items=cart_items,
+        total=total,
+        stock_issue=stock_issue,
+        store_name=store_name,
+        tienda_slug=tienda_slug,
+        owner_photo=owner_photo
+    )
+
+# Agregar al carrito
+@routes.route('/agregar_al_carrito/<int:product_id>', methods=['POST'])
+@login_required
+def agregar_al_carrito(product_id):
+    product = Product.query.get_or_404(product_id)
+
+    # Cantidad solicitada
+    qty = int(request.form.get('quantity', 1))
+    if qty < 1:
+        qty = 1
+
+    # Verificar stock
+    if not product.is_service and product.stock < qty:
+        flash("❌ No hay suficiente stock disponible.", "danger")
+        return redirect(request.referrer or url_for('routes.tienda_publica', url_slug=product.doctor.url_slug))
+
+    cart = session.get('cart', {})
+
+    # Si ya está en el carrito, sumamos
+    current_qty = int(cart.get(str(product_id), 0))
+    new_qty = current_qty + qty
+
+    # No permitir superar el stock
+    if not product.is_service and new_qty > product.stock:
+        new_qty = product.stock
+        flash(f"⚠️ Solo hay {product.stock} unidades disponibles.", "warning")
+
+    cart[str(product_id)] = new_qty
+    session['cart'] = cart
+    session.modified = True
+
+    flash(f"✅ {product.name} agregado al carrito.", "success")
+    return redirect(request.referrer or url_for('routes.tienda_publica', url_slug=product.doctor.url_slug))
+
+# actualizar contador carrito
+@routes.route('/cart_count')
+def cart_count():
+    cart = session.get('cart', [])
+    return jsonify({'count': len(cart)})
+
+# Actualizar carrito
+@routes.route('/actualizar_carrito', methods=['POST'])
+def actualizar_carrito():
+    data = request.get_json()
+    cart = session.get('cart', [])
+    for item in cart:
+        pid = str(item['id'])
+        if pid in data:
+            item['cantidad'] = int(data[pid])
+    session['cart'] = cart
+    total = sum(i['precio'] * i['cantidad'] for i in cart)
+    return jsonify({'success': True, 'total': total})
+
+
+# Vaciar carrito
+@routes.route('/vaciar_carrito/<url_slug>', methods=['POST'])
+def vaciar_carrito(url_slug):
+    session.pop('cart', None)
+    # Devuelve un JSON indicando éxito y la URL a la que redirigir
+    return jsonify({'success': True, 'redirect_url': url_for('routes.tienda_publica', url_slug=url_slug)})
+
+@routes.route("/add_to_cart", methods=["POST"])
+def add_to_cart():
+    data = request.get_json()
+    product_id = data.get("id")
+    product_name = data.get("name")
+
+    if "cart" not in session:
+        session["cart"] = []
+
+    session["cart"].append({"id": product_id, "name": product_name})
+    session.modified = True  # importante para que Flask guarde cambios en session
+
+    return jsonify(success=True, cart_count=len(session["cart"]))
+
+@routes.route('/checkout', methods=['POST'])
+def checkout():
+    data = request.form
+    cart = session.get('cart', [])
+
+    if not cart:
+        return jsonify({'success': False, 'message': 'El carrito está vacío'})
+
+    total = sum(item['precio'] * item['cantidad'] for item in cart)
+
+    # 🔸 Simulación de creación de orden (sin BD)
+    # order = Order(
+    #     customer_name=data.get('customer_name'),
+    #     customer_email=data.get('customer_email'),
+    #     customer_phone=data.get('customer_phone'),
+    #     payment_method=data.get('payment_method'),
+    #     total=total
+    # )
+    # db.session.add(order)
+    # db.session.commit()
+
+    # 🔸 Guardar los ítems (simulado)
+    # for item in cart:
+    #     order_item = OrderItem(
+    #         order_id=order.id,
+    #         product_id=item['id'],
+    #         quantity=item['cantidad'],
+    #         price=item['precio']
+    #     )
+    #     db.session.add(order_item)
+    # db.session.commit()
+
+    # 🔸 Simulación de número de orden
+    import uuid
+    order_id = str(uuid.uuid4())[:8]
+
+    # Limpiar carrito
+    session.pop('cart', None)
+
+    return jsonify({
+        'success': True,
+        'message': f'Compra #{order_id} registrada con éxito (simulada)',
+        'order_id': order_id,
+        'total': total
+    })
 
 # === EVENTOS ===
 @routes.route('/<int:doctor_id>/eventos')
@@ -4417,6 +4643,7 @@ def eventos_publicos(url_slug):
         is_public=True
     ).filter(Event.end_datetime >= now).order_by(Event.start_datetime).all()
     return render_template('ecommerce/eventos_publicos.html', professional=professional, events=events)
+
 
 # === EVENTOS ===
 @routes.route('/<int:doctor_id>/evento/nuevo', methods=['GET', 'POST'])

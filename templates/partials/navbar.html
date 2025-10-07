@@ -1,0 +1,155 @@
+<!-- templates/partials/navbar.html -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-lg" id="main-nav">
+    <div class="container">
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ url_for('routes.index') }}">
+            <img src="{{ url_for('static', filename='img/logo-datos.gif') }}" alt="DatosConsultora" height="40" class="me-2">
+            <span class="text-info">#</span>DatosConsultora
+        </a>
+
+        <!-- Toggler -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menú -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Links principales -->
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'home' %}active{% endif %}" href="{{ url_for('routes.index') }}">
+                        <i class="fas fa-home me-1"></i>Inicio
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'portfolio' %}active{% endif %}" href="{{ url_for('routes.portfolio') }}">
+                        <i class="fas fa-chart-line me-1"></i>Servicios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'publications' %}active{% endif %}" href="{{ url_for('routes.publications') }}">
+                        <i class="fas fa-cogs me-1"></i>Publicaciones
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'blog_public' %}active{% endif %}" href="{{ url_for('routes.public_notes') }}">
+                        <i class="fas fa-blog me-1"></i>Blog
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'profesionales' %}active{% endif %}" href="{{ url_for('routes.profesionales') }}">
+                        <i class="fas fa-user-tie me-1"></i>Profesionales
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Usuario y carrito -->
+            <div class="d-flex align-items-center gap-2">
+                {% if current_user.is_authenticated %}
+                    <div class="dropdown">
+                        <a class="btn btn-outline-light dropdown-toggle" href="#" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ current_user.username }}
+                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
+                                {% if active_assistant %}
+                                    <span class="badge bg-warning text-dark ms-3">
+                                        <i class="fas fa-briefcase me-1"></i>
+                                        Modo: Asistente en {{ active_assistant.doctor.username }}
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- Mi Perfil / Perfil del Equipo -->
+                            <li>
+                                {% if session.get('active_role') == 'asistente' %}
+                                <a class="dropdown-item" href="{{ url_for('routes.perfil_equipo') }}">
+                                    <i class="fas fa-building me-2"></i>Perfil del Equipo
+                                </a>
+                                {% else %}
+                                <a class="dropdown-item" href="{{ url_for('routes.mi_perfil') }}">
+                                    <i class="fas fa-user-circle me-2"></i>Mi Perfil
+                                </a>
+                                {% endif %}
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.notes') }}">
+                                    <i class="fas fa-newspaper me-2"></i>Mis Notas
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.mi_agenda') }}">
+                                    <i class="fa-regular fa-calendar me-2"></i>Mi Agenda
+                                </a>
+                            </li>
+
+                            <!-- Mis Equipos (si corresponde) -->
+                            {% if current_user.assistant_accounts %}
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.mis_equipos') }}">
+                                    <i class="fa fa-users me-2"></i>Mis Equipos
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Perfil de Asistente -->
+                            {% if current_user.is_general_assistant and session.get('active_role') == 'asistente' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.perfil_asistente') }}">
+                                    <i class="fas fa-briefcase me-2"></i>Perfil de Asistente
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Cambiar contraseña -->
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.cambiar_pass') }}">
+                                    <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                                </a>
+                            </li>
+
+                            <!-- Admin Panel -->
+                            {% if current_user.is_admin %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.admin_panel') }}">
+                                    <i class="fas fa-cog me-2"></i>Panel de Administración
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- Dashboard -->
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('routes.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                </a>
+                            </li>
+
+                            <!-- Cerrar sesión -->
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a class="btn btn-outline-light" href="{{ url_for('auth.login') }}">
+                        Iniciar sesión
+                    </a>
+                {% endif %}
+
+                <!-- Carrito -->
+                <a href="{{ url_for('routes.carrito') }}" class="nav-link position-relative ms-2">
+                    🛒 Carrito
+                    <span id="cart-count" class="badge bg-secondary position-absolute top-0 start-100 translate-middle">
+                        {{ (session.get('cart') or []) | length }}
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
