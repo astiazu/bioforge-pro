@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Gestión de Eventos - {{ current_user.username }}{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📅 Gestión de Eventos</h2>
+
+    <!-- Botón para Crear Nuevo Evento -->
+    <div class="mb-4">
+        <a href="{{ url_for('routes.crear_evento', doctor_id=doctor_id) }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Crear Nuevo Evento
+        </a>
+    </div>
+
+    <!-- Lista de Eventos -->
+    {% if events %}
+    <div class="row">
+        {% for event in events %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <!-- Imagen del Evento -->
+                {% if event.image_url %}
+                <img src="{{ event.image_url }}" class="card-img-top" alt="{{ event.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-calendar-alt fa-3x"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ event.title }}</h5>
+
+                    <!-- Fecha y Hora -->
+                    <p class="text-muted small mb-2">
+                        📅 {{ event.start_datetime.strftime('%d/%m/%Y %H:%M') }}
+                        {% if event.end_datetime %} → {{ event.end_datetime.strftime('%H:%M') }}{% endif %}
+                    </p>
+
+                    <!-- Descripción -->
+                    <p class="card-text flex-grow-1">{{ event.description|truncate(120) }}</p>
+
+                    <!-- Ubicación -->
+                    {% if event.location %}
+                    <p class="mb-2"><i class="fas fa-map-marker-alt me-1"></i> {{ event.location }}</p>
+                    {% endif %}
+
+                    <!-- Estado del Evento -->
+                    <span class="badge {% if event.is_public %}bg-success{% else %}bg-secondary{% endif %} mb-2">
+                        {% if event.is_public %}Público{% else %}Privado{% endif %}
+                    </span>
+
+                    <!-- Botones de Acción -->
+                    <div class="mt-auto">
+                        <a href="{{ url_for('routes.editar_evento', event_id=event.id) }}" class="btn btn-primary btn-sm me-2">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <form action="{{ url_for('routes.eliminar_evento', event_id=event.id) }}" method="POST" style="display: inline-block;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de eliminar este evento?');">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        No hay eventos programados por el momento.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

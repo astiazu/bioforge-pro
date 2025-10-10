@@ -1,0 +1,60 @@
+<!-- template/ecommerce/event_details.html-->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Botón Volver -->
+        <div class="col-12 mb-4">
+            <a href="{{ request.referrer or url_for('routes.index') }}" 
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+
+        <!-- Detalles del Evento -->
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="card-title">{{ event.title }}</h2>
+                    <p class="text-muted">
+                        <i class="icon-calendar me-1"></i>
+                        Fecha: {{ event.start_datetime|format_date }}
+                        {% if event.end_datetime %}
+                            - {{ event.end_datetime|format_date }}
+                        {% endif %}
+                    </p>
+                    {% if event.location %}
+                        <p class="small text-secondary mb-3">
+                            <i class="icon-location me-1"></i>
+                            Ubicación: {{ event.location }}
+                        </p>
+                    {% endif %}
+                    <p class="card-text">{{ event.description or "Sin descripción disponible." }}</p>
+
+                    <!-- Información Adicional -->
+                    <div class="mt-3">
+                        <p><strong>Cupos disponibles:</strong> {{ event.max_attendees or "Ilimitados" }}</p>
+                        {% if event.image_url %}
+                            <img src="{{ event.image_url }}" alt="{{ event.title }}" class="img-fluid rounded mt-3">
+                        {% endif %}
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="mt-4 d-flex gap-2">
+                        <!-- Botón de Comprar Entrada (Placeholder) -->
+                        <button class="btn btn-success" disabled>
+                            <i class="fas fa-ticket-alt me-1"></i> Comprar Entrada
+                        </button>
+
+                        <!-- Botón de Compartir (Placeholder) -->
+                        <button class="btn btn-primary" disabled>
+                            <i class="fas fa-share-alt me-1"></i> Compartir Evento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

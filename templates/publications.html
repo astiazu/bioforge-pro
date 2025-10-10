@@ -66,6 +66,11 @@
     {% else %}
     <p class="text-secondary">No hay publicaciones destacadas.</p>
     {% endif %}
+    
+    <!-- Eventos (si aplica) -->
+    {% if professional and professional.events %}
+        {% include "partials/timeline_events.html" %}
+    {% endif %}
 
     <!-- 3. Publicaciones Actuales -->
     <h3 class="mb-4">📰 Publicaciones Actuales</h3>

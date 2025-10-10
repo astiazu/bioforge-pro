@@ -1,0 +1,61 @@
+{% if events %}
+<section class="mt-5">
+    <h3 class="mb-4">
+        🗓️ Próximos Eventos de {{ doctor.username }}
+    </h3>
+    <div class="timeline-container">
+        {% for event in events %}
+        <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-content card shadow-sm border-light">
+                <div class="card-body">
+                    <h5 class="card-title mb-1">{{ event.title }}</h5>
+                    <small class="text-muted" aria-label="Fecha del evento">
+                        <i class="icon-calendar me-1"></i>
+                        <!-- Formato de fecha legible -->
+                        Fecha del evento: {{ event.start_datetime|format_date }}
+                        {% if event.end_datetime %}
+                            - {{ event.end_datetime|format_date }}
+                        {% endif %}
+                    </small>
+                    {% if event.location %}
+                        <p class="small text-secondary mt-1" aria-label="Ubicación del evento">
+                            <i class="icon-location me-1"></i>
+                            {{ event.location }}
+                        </p>
+                    {% endif %}
+                    <p class="card-text small mt-2">
+                        {% if event.description %}
+                            {{ event.description|truncate(120) }}
+                        {% else %}
+                            Sin descripción disponible.
+                        {% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="badge bg-primary" aria-label="Cupos disponibles">
+                            {{ event.max_attendees or "Libre" }} cupos
+                        </span>
+                        <a href="{{ url_for('routes.view_event', event_id=event.id) }}"
+                           class="btn btn-outline-primary btn-sm"
+                           aria-label="Ver más detalles del evento">
+                           Ver más
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="mt-5">
+    <h5 class="text-secondary">
+        No hay eventos próximos para este profesional.
+        {% if current_user.is_authenticated and current_user.id == doctor.id %}
+            <a href="{{ url_for('routes.create_event') }}" class="ms-2" aria-label="Crear un nuevo evento">
+                Crear evento
+            </a>
+        {% endif %}
+    </h5>
+</section>
+{% endif %}

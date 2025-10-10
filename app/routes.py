@@ -72,7 +72,8 @@ from app.forms import (
     NoteForm, PublicationForm, ClinicForm, AssistantForm,
     TaskAssignmentForm, AppointmentForm, MedicalRecordForm,
     CompanyInviteForm, SubscriberForm, DataUploadForm,
-    ProfessionalProfileForm, PublicationFilterForm, RegistrationForm, TaskForm
+    ProfessionalProfileForm, PublicationFilterForm, RegistrationForm, 
+    TaskForm, EventForm
 )
 from app.utils import send_telegram_message, send_whatsapp_message
 
@@ -1573,36 +1574,87 @@ def profesionales():
     )
 
 # Perfil público más completo
-@routes.route('/profesional/<string:url_slug>') 
+@routes.route('/profesional/<string:url_slug>')
 def perfil_profesional(url_slug):
+    # Buscar el profesional
     professional = User.query.filter_by(
         url_slug=url_slug, 
         is_professional=True
     ).first_or_404()
 
-    # ✅ Verificar si el usuario está logueado Y es el dueño del perfil
+    # Verificar si el usuario está logueado y es el dueño del perfil
     if current_user.is_authenticated:
         if current_user.id == professional.id:
-            # 👉 Es el dueño: redirigir a su perfil privado
             return redirect(url_for('routes.mi_perfil'))
 
+    # Cargar consultorios activos del profesional
     clinics = Clinic.query.filter_by(
         doctor_id=professional.id, 
         is_active=True
     ).all()
-    
+
+    # Cargar notas publicadas o pendientes del profesional
     published_notes = Note.query.filter(
         Note.user_id == professional.id,
         Note.status.in_([NoteStatus.PUBLISHED, NoteStatus.PRIVATE, NoteStatus.PENDING])
     ).order_by(Note.approved_at.desc().nullslast(), Note.created_at.desc()).all()
 
+    # ✅ Cargar eventos públicos del profesional
+    from datetime import datetime
+    current_time = datetime.utcnow()
+    events = Event.query.filter(
+        Event.doctor_id == professional.id,
+        Event.is_public == True,
+        Event.start_datetime >= current_time
+    ).order_by(Event.start_datetime.asc()).all()
+
+    # Renderizar el template
     return render_template(
         'public/perfil_profesional.html',
         doctor=professional,
         clinics=clinics,
         published_notes=published_notes,
+        events=events,  # ✅ Pasar los eventos al template
         active_tab='profesionales'
     )
+
+# @routes.route('/mi-perfil')
+# @login_required
+# def mi_perfil():
+#     if session.get('active_role') != 'profesional':
+#         flash("Acceso denegado", "danger")
+#         return redirect(url_for('routes.seleccionar_perfil'))
+    
+#     if not current_user.is_professional and not current_user.is_admin:
+#         flash('Acceso denegado', 'danger')
+#         return redirect(url_for('routes.index'))
+
+#     # ✅ Cargar consultorios del profesional actual
+#     from app.models import Clinic, Task, Assistant, Appointment, Availability
+#     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+
+#     # ✅ Obtener todas las tareas de mis asistentes
+#     all_tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == current_user.id).all()
+#     pending_tasks_count = sum(1 for task in all_tasks if task.status == 'pending')
+
+#     # ✅ Turnos recibidos
+#     turnos_recibidos = []
+#     clinicas_ids = [c.id for c in clinics]  # ✅ Usa la lista ya cargada
+#     if clinicas_ids:
+#         turnos_recibidos = Appointment.query.join(Availability).filter(
+#             Availability.clinic_id.in_(clinicas_ids)
+#         ).order_by(Appointment.created_at.desc()).all()
+
+#     return render_template(
+#         'mi_perfil_medico.html',
+#         user=current_user,
+#         clinics=clinics,  # ← ¡Esto es lo nuevo!
+#         turnos_recibidos=turnos_recibidos,
+#         bio_short=BIO_SHORT,
+#         bio_extended=BIO_EXTENDED,
+#         pending_tasks_count=pending_tasks_count,
+#         total_tasks=len(all_tasks)
+#     )
 
 @routes.route('/mi-perfil')
 @login_required
@@ -1615,28 +1667,35 @@ def mi_perfil():
         flash('Acceso denegado', 'danger')
         return redirect(url_for('routes.index'))
 
-    # ✅ Cargar consultorios del profesional actual
-    from app.models import Clinic, Task, Assistant, Appointment, Availability
+    # Cargar consultorios del profesional actual
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
 
-    # ✅ Obtener todas las tareas de mis asistentes
+    # Obtener todas las tareas de mis asistentes
     all_tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == current_user.id).all()
     pending_tasks_count = sum(1 for task in all_tasks if task.status == 'pending')
 
-    # ✅ Turnos recibidos
+    # Turnos recibidos
     turnos_recibidos = []
-    clinicas_ids = [c.id for c in clinics]  # ✅ Usa la lista ya cargada
+    clinicas_ids = [c.id for c in clinics]
     if clinicas_ids:
         turnos_recibidos = Appointment.query.join(Availability).filter(
             Availability.clinic_id.in_(clinicas_ids)
         ).order_by(Appointment.created_at.desc()).all()
 
+    # Cargar eventos del profesional
+    from datetime import datetime
+    current_time = datetime.utcnow()
+    events = Event.query.filter(
+        Event.doctor_id == current_user.id,
+        Event.start_datetime >= current_time
+    ).order_by(Event.start_datetime.asc()).all()
+
     return render_template(
         'mi_perfil_medico.html',
-        clinics=clinics,  # ← ¡Esto es lo nuevo!
+        user=current_user,
+        events=events,
+        clinics=clinics,
         turnos_recibidos=turnos_recibidos,
-        bio_short=BIO_SHORT,
-        bio_extended=BIO_EXTENDED,
         pending_tasks_count=pending_tasks_count,
         total_tasks=len(all_tasks)
     )
@@ -4622,7 +4681,28 @@ def checkout():
         'total': total
     })
 
-# === EVENTOS ===
+# === GESTION de EVENTOS ===
+@routes.route('/profesional/<url_slug>')
+def view_professional(url_slug):
+    # Buscar el usuario/profesional por su URL slug
+    user = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
+
+    # Obtener el número máximo de eventos a mostrar (opcional)
+    max_events = request.args.get('max_events', None, type=int)
+
+    # Filtrar los eventos del usuario/profesional
+    if max_events:
+        events = user.events.order_by(Event.start_datetime.asc()).limit(max_events).all()
+    else:
+        events = user.events.order_by(Event.start_datetime.asc()).all()
+
+    # Renderizar el template con el usuario y sus eventos
+    return render_template(
+        'professional_profile.html',
+        user=user,  # Pasar el objeto user en lugar de professional
+        events=events
+    )
+
 @routes.route('/<int:doctor_id>/eventos')
 @login_required
 def gestion_eventos(doctor_id):
@@ -4638,43 +4718,202 @@ def gestion_eventos(doctor_id):
 def eventos_publicos(url_slug):
     professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
     now = datetime.utcnow()
+
+    # Obtener eventos públicos directos
     events = Event.query.filter_by(
         doctor_id=professional.id,
         is_public=True
     ).filter(Event.end_datetime >= now).order_by(Event.start_datetime).all()
-    return render_template('ecommerce/eventos_publicos.html', professional=professional, events=events)
 
+    # Obtener publicaciones asociadas a eventos
+    publications = Publication.query.filter_by(
+        user_id=professional.id,
+        is_published=True
+    ).join(Event, Publication.event).filter(Event.end_datetime >= now).all()
+
+    return render_template('ecommerce/eventos_publicos.html', professional=professional, events=events, publications=publications)
 
 # === EVENTOS ===
 @routes.route('/<int:doctor_id>/evento/nuevo', methods=['GET', 'POST'])
 @login_required
 def crear_evento(doctor_id):
-    if not check_access(doctor_id):
-        flash('Acceso denegado', 'danger')
+    # Verificar acceso
+    if current_user.id != doctor_id or not current_user.is_professional:
+        flash('Acceso denegado. Solo los profesionales pueden crear eventos.', 'danger')
         return redirect(url_for('routes.mi_perfil'))
     
+    # Obtener consultorios activos del profesional
     clinics = Clinic.query.filter_by(doctor_id=doctor_id, is_active=True).all()
-    
-    if request.method == 'POST':
+    professional = User.query.get_or_404(doctor_id)
+
+    # Crear el formulario
+    form = EventForm()
+    form.clinic_id.choices = [(c.id, c.name) for c in clinics] if clinics else [(-1, "Sin consultorios disponibles")]
+
+    if form.validate_on_submit():
+        # Subir imagen a Cloudinary
+        image_url = None
+        if form.image.data and form.image.data.filename:
+            file = form.image.data
+            upload_result = cloudinary.uploader.upload(file)
+            image_url = upload_result['secure_url']
+
+        # Crear el evento
         event = Event(
-            title=request.form['title'].strip(),
-            description=request.form.get('description', '').strip(),
-            start_datetime=datetime.fromisoformat(request.form['start_datetime']),
-            end_datetime=datetime.fromisoformat(request.form['end_datetime']),
-            location=request.form.get('location', '').strip(),
-            clinic_id=request.form.get('clinic_id') or None,
-            is_public='is_public' in request.form,
-            max_attendees=request.form.get('max_attendees') or None,
+            title=form.title.data.strip(),
+            description=form.description.data.strip(),
+            start_datetime=form.start_datetime.data,
+            end_datetime=form.end_datetime.data,
+            location=form.location.data.strip() if form.location.data else None,
+            clinic_id=form.clinic_id.data if form.clinic_id.data != -1 else None,  # Manejar caso sin consultorios
+            is_public=form.is_public.data,
+            max_attendees=form.max_attendees.data or None,
             doctor_id=doctor_id,
-            created_by=current_user.id
+            created_by=current_user.id,
+            image_url=image_url  # Guardar la URL de la imagen
         )
         db.session.add(event)
         db.session.commit()
-        flash('✅ Evento creado', 'success')
+        
+        flash('✅ Evento creado exitosamente.', 'success')
         return redirect(url_for('routes.mi_perfil'))
     
-    return render_template('ecommerce/form_evento.html', doctor_id=doctor_id, clinics=clinics)
+    return render_template(
+        'ecommerce/form_evento.html', 
+        form=form, 
+        doctor_id=doctor_id, 
+        clinics=clinics, 
+        professional=professional,
+        event=None  # Asegúrate de pasar `event=None` explícitamente
+    )
 
+
+@routes.route('/editar-evento/<int:event_id>', methods=['GET', 'POST'])
+@login_required
+def editar_evento(event_id):
+    # Obtener el evento
+    event = Event.query.get_or_404(event_id)
+    if not check_access(event.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+
+    # Obtener la dirección del consultorio si existe
+    clinic_address = None
+    if event.clinic_id:
+        clinic = Clinic.query.get(event.clinic_id)
+        if clinic:
+            clinic_address = f"{clinic.address}"
+
+    # Obtener las coordenadas de la ubicación si existe
+    location_coords = None
+    if event.location:
+        try:
+            import requests
+            response = requests.get(f"https://nominatim.openstreetmap.org/search?format=json&q={event.location}")
+            data = response.json()
+            if data:
+                location_coords = {
+                    "lat": float(data[0]["lat"]),
+                    "lon": float(data[0]["lon"])
+                }
+        except Exception as e:
+            print("Error obteniendo coordenadas:", str(e))
+
+    # Obtener consultorios activos del profesional
+    clinics = Clinic.query.filter_by(doctor_id=event.doctor_id, is_active=True).all()
+
+    # Crear el formulario con los datos actuales del evento
+    form = EventForm(obj=event)
+    form.clinic_id.choices = [(c.id, c.name) for c in clinics] if clinics else [(-1, "Sin consultorios disponibles")]
+    if form.clinic_id.data is None:
+        form.clinic_id.data = -1  # Asegurarse de que el valor por defecto sea válido
+
+    if form.validate_on_submit():
+        # Subir imagen a Cloudinary si se proporciona una nueva
+        if form.image.data and form.image.data.filename:
+            file = form.image.data
+            upload_result = cloudinary.uploader.upload(file)
+            event.image_url = upload_result['secure_url']
+
+        # Actualizar los datos del evento
+        event.title = form.title.data.strip()
+        event.description = form.description.data.strip()
+        event.start_datetime = form.start_datetime.data
+        event.end_datetime = form.end_datetime.data
+        event.location = form.location.data.strip() if form.location.data else None
+        event.clinic_id = form.clinic_id.data if form.clinic_id.data != -1 else None  # Manejar caso sin consultorios
+        event.is_public = form.is_public.data
+        event.max_attendees = form.max_attendees.data or None
+
+        db.session.commit()
+        flash('Evento actualizado exitosamente.', 'success')
+        return redirect(url_for('routes.gestion_eventos', doctor_id=event.doctor_id))
+    else:
+        print(form.errors)  # Imprime los errores del formulario para depurar
+
+    return render_template(
+        'ecommerce/form_evento.html',
+        form=form,
+        professional=current_user,
+        event=event,
+        location_coords=location_coords,
+        clinic_address=clinic_address  # Pasar la dirección del consultorio al template
+    )
+
+
+@routes.route('/eliminar-evento/<int:event_id>', methods=['POST'])
+@login_required
+def eliminar_evento(event_id):
+    event = Event.query.get_or_404(event_id)
+    if not check_access(event.doctor_id):
+        flash('Acceso denegado', 'danger')
+        return redirect(url_for('routes.mi_perfil'))
+
+    db.session.delete(event)
+    db.session.commit()
+    flash('Evento eliminado exitosamente.', 'success')
+    return redirect(url_for('routes.gestion_eventos', doctor_id=event.doctor_id))
+
+@routes.route('/evento/<int:event_id>/publicar', methods=['POST'])
+@login_required
+def publicar_evento(event_id):
+    # Solo los administradores pueden autorizar la publicación
+    if not current_user.is_admin:
+        flash('Acceso denegado. Solo los administradores pueden publicar eventos.', 'danger')
+        return redirect(url_for('routes.home'))
+
+    event = Event.query.get_or_404(event_id)
+
+    # Crear una nueva publicación asociada al evento
+    publication = Publication(
+        title=event.title,
+        content=event.description,
+        excerpt=event.description[:200],
+        is_published=True,
+        user_id=event.doctor_id,  # La publicación pertenece al profesional
+        image_url=event.image_url  # Usar la misma imagen del evento
+    )
+    db.session.add(publication)
+    db.session.commit()
+
+    # Asociar la publicación con el evento
+    event.publication_id = publication.id
+    db.session.commit()
+
+    flash('Evento publicado exitosamente.', 'success')
+    return redirect(url_for('routes.gestion_eventos', doctor_id=event.doctor_id))
+
+@routes.route('/evento/<int:event_id>')
+def view_event(event_id):
+    # Buscar el evento por su ID
+    event = Event.query.get_or_404(event_id)
+
+    return render_template(
+        'ecommerce/event_details.html', 
+        event=event
+    )
+
+# === GESTION CATEGORÍAS DE PRODUCTOS ===
 @routes.route('/<int:doctor_id>/categorias')
 @login_required
 def gestion_categorias(doctor_id):

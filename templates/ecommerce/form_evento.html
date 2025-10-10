@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if event %}
+        Editar Evento - {{ professional.username }}
+    {% else %}
+        Crear Evento - {{ professional.username }}
+    {% endif %}
+{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>
+        {% if event %}
+            📅 Editar Evento
+        {% else %}
+            📅 Crear Nuevo Evento
+        {% endif %}
+    </h2>
+    
+    <form method="POST" enctype="multipart/form-data" class="mt-4">
+        {{ form.hidden_tag() }}
+        
+        <!-- Título -->
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+            {% for error in form.title.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Descripción -->
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows=3) }}
+            {% for error in form.description.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Fecha y Hora de Inicio -->
+        <div class="mb-3">
+            {{ form.start_datetime.label(class="form-label") }}
+            {{ form.start_datetime(class="form-control", type="datetime-local") }}
+            {% for error in form.start_datetime.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Fecha y Hora de Fin -->
+        <div class="mb-3">
+            {{ form.end_datetime.label(class="form-label") }}
+            {{ form.end_datetime(class="form-control", type="datetime-local") }}
+            {% for error in form.end_datetime.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Ubicación -->
+        <div class="mb-3">
+            {{ form.location.label(class="form-label") }}
+            {{ form.location(
+                id="location",
+                class="form-control",
+                value=(event.location if event else "") or clinic_address
+            ) }}
+            {% for error in form.location.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Mapa -->
+        <div class="mb-3">
+            <label class="form-label">Ubicación en el Mapa</label>
+            <div id="map" style="height: 300px; border: 1px solid #ccc;"></div>
+        </div>
+
+        <!-- Consultorio -->
+        <div class="mb-3">
+            {{ form.clinic_id.label(class="form-label") }}
+            {{ form.clinic_id(class="form-select") }}
+            {% for error in form.clinic_id.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Público -->
+        <div class="mb-3 form-check">
+            {{ form.is_public(class="form-check-input") }}
+            {{ form.is_public.label(class="form-check-label") }}
+        </div>
+
+        <!-- Máximo de Asistentes -->
+        <div class="mb-3">
+            {{ form.max_attendees.label(class="form-label") }}
+            {{ form.max_attendees(class="form-control") }}
+            {% for error in form.max_attendees.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Imagen -->
+        <div class="mb-3">
+            {{ form.image.label(class="form-label") }}
+            {{ form.image(class="form-control") }}
+            {% for error in form.image.errors %}
+                <small class="text-danger">{{ error }}</small>
+            {% endfor %}
+        </div>
+
+        <!-- Botones -->
+        <button type="submit" class="btn btn-primary">Guardar Evento</button>
+        <a href="{{ url_for('routes.mi_perfil') }}" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
+</div>
+
+<!-- Script para el mapa -->
+<script>
+    // Coordenadas predeterminadas
+    let defaultLat = 51.505;
+    let defaultLon = -0.09;
+
+    // Coordenadas del evento (si existen)
+    {% if location_coords %}
+    defaultLat = {{ location_coords.lat }};
+    defaultLon = {{ location_coords.lon }};
+    {% endif %}
+
+    // Inicializar el mapa
+    const map = L.map('map').setView([defaultLat, defaultLon], 13);
+
+    // Añadir capa de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Añadir marcador inicial si hay coordenadas
+    {% if location_coords %}
+    L.marker([{{ location_coords.lat }}, {{ location_coords.lon }}])
+        .addTo(map)
+        .bindPopup('{{ event.location|tojson|safe if event else "" }}')
+        .openPopup();
+    {% endif %}
+
+    // Función para actualizar el mapa cuando el usuario ingresa una ubicación
+    function updateMap(location) {
+        try {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error en la solicitud: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length > 0) {
+                        const { lat, lon } = data[0];
+                        map.setView([lat, lon], 13);
+                        map.eachLayer(layer => {
+                            if (layer instanceof L.Marker) {
+                                map.removeLayer(layer); // Eliminar marcadores anteriores
+                            }
+                        });
+                        L.marker([lat, lon]).addTo(map).bindPopup(location).openPopup();
+                    } else {
+                        console.warn("No se encontraron coordenadas para la ubicación:", location);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error procesando la respuesta de la API:", error);
+                });
+        } catch (error) {
+            console.error("Error en la función updateMap:", error);
+        }
+    }
+
+    // Escuchar cambios en el campo de ubicación
+    const locationField = document.querySelector('#location');
+    if (locationField) {
+        locationField.addEventListener('input', (e) => {
+            const location = e.target.value;
+            if (location) {
+                updateMap(location);
+            }
+        });
+    }
+</script>
+{% endblock %}

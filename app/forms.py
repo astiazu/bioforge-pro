@@ -4,8 +4,9 @@ from flask_wtf.file import FileField, FileAllowed
 from wtforms import (
     StringField, TextAreaField, SubmitField, BooleanField,
     PasswordField, EmailField, SelectField, IntegerField,
-    DateField, TimeField
+    DateField, TimeField, FileField, DateTimeField, DateTimeLocalField
 )
+
 from wtforms.validators import DataRequired, Length, Email, EqualTo, Optional
 
 # === Formularios de Autenticación ===
@@ -145,3 +146,57 @@ class PublicationFilterForm(FlaskForm):
     search = StringField('Buscar')
     category = SelectField('Categoría', choices=[('', 'Todas'), ('blog', 'Blog'), ('news', 'Noticias')])
     submit = SubmitField('Filtrar')
+
+class EventForm(FlaskForm):
+    title = StringField(
+        "Título",
+        validators=[
+            DataRequired(message="El título del evento es obligatorio."),
+            Length(max=100, message="El título no puede superar los 100 caracteres.")
+        ]
+    )
+    
+    description = TextAreaField(
+        "Descripción",
+        validators=[Optional(), Length(max=500, message="La descripción es demasiado larga.")]
+    )
+    
+    start_datetime = DateTimeLocalField(  # Cambio aquí
+        "Fecha y hora de inicio",
+        format="%Y-%m-%dT%H:%M",
+        validators=[DataRequired(message="La fecha y hora de inicio son obligatorias.")]
+    )
+    
+    end_datetime = DateTimeLocalField(  # Cambio aquí
+        "Fecha y hora de fin",
+        format="%Y-%m-%dT%H:%M",
+        validators=[DataRequired(message="La fecha y hora de fin son obligatorias.")]
+    )
+    
+    location = StringField(
+        "Ubicación del evento",
+        validators=[Optional(), Length(max=150, message="La ubicación no puede superar los 150 caracteres.")]
+    )
+    
+    clinic_id = SelectField(
+        "Dirección particular",
+        coerce=int,
+        validators=[Optional()]
+    )
+    
+    is_public = BooleanField(
+        "¿Hacer el evento público?",
+        default=False
+    )
+    
+    max_attendees = IntegerField(
+        "Máximo de asistentes",
+        validators=[Optional()]
+    )
+    
+    image = FileField(
+        "Imagen del evento",
+        validators=[FileAllowed(['jpg', 'png', 'jpeg'], "Solo se permiten imágenes.")]
+    )
+    
+    submit = SubmitField("Guardar Evento")

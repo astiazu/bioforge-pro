@@ -1,10 +1,19 @@
 # app/models.py
-import json
+from __future__ import annotations  # para anotaciones diferidas
 from datetime import datetime
-from enum import Enum
+import json
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+from sqlalchemy.orm import backref
+from flask_sqlalchemy import SQLAlchemy
+from typing import TYPE_CHECKING
+from enum import Enum
+
+from . import db  # <-- importa la instancia de SQLAlchemy desde __init__.py
+
+# 🔹 Solo para el linter y evitar warnings de import circular
+if TYPE_CHECKING:
+    from .models import Event
 
 class UserRole(Enum):
     USER = "user"
@@ -66,7 +75,7 @@ class Note(db.Model):
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
-    
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -76,11 +85,9 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     url_slug = db.Column(db.String(100), unique=True, nullable=True)
-   
-    # 👇 NUEVO CAMPO: permite al admin del sitio activar/desactivar tiendas
     store_enabled = db.Column(db.Boolean, default=True, nullable=False)
 
-    # ✅ Campos para perfil profesional
+    # Perfil profesional
     professional_category = db.Column(db.String(50))
     specialty = db.Column(db.String(100))
     bio = db.Column(db.Text)
@@ -89,14 +96,11 @@ class User(UserMixin, db.Model):
     license_number = db.Column(db.String(100))
     services = db.Column(db.Text)
     skills = db.Column(db.Text)
-    
-    # ✅ RENOMBRADO: evita conflicto con relación role_obj
-    role_name = db.Column(db.String(50), default="user")  # "user", "assistant", etc.
-    
-    # ✅ FK a UserRole
+
+    role_name = db.Column(db.String(50), default="user")  # fallback
     role_id = db.Column(db.Integer, db.ForeignKey("user_roles.id"), nullable=True)
-    
-    # ✅ RELACIONES PRINCIPALES
+
+    # Relaciones
     assistants = db.relationship(
         "Assistant",
         foreign_keys="Assistant.doctor_id",
@@ -104,16 +108,15 @@ class User(UserMixin, db.Model):
         lazy="select",
         cascade="all, delete-orphan"
     )
-    
+
     assistant_accounts = db.relationship(
         "Assistant",
         foreign_keys="Assistant.user_id",
         back_populates="user",
-        uselist=True,
-        lazy="select"
+        lazy="select",
+        uselist=True
     )
-    
-    # ✅ Otras relaciones existentes
+
     schedules = db.relationship("Schedule", back_populates="doctor", lazy="select")
     clinics = db.relationship("Clinic", back_populates="doctor", lazy="select")
     authored_notes = db.relationship("Note", foreign_keys="Note.user_id", back_populates="author", lazy="select")
@@ -124,23 +127,40 @@ class User(UserMixin, db.Model):
     as_doctor_records = db.relationship("MedicalRecord", foreign_keys="MedicalRecord.doctor_id", back_populates="doctor", lazy="select")
     as_patient_records = db.relationship("MedicalRecord", foreign_keys="MedicalRecord.patient_id", back_populates="patient", lazy="select")
     sent_invites = db.relationship("CompanyInvite", back_populates="doctor", lazy="select")
-    
-    # ✅ Relación con UserRole
-    role_obj = db.relationship("UserRole", back_populates="users")
 
-    # ✅ Relación con ProductCategory
+    role_obj = db.relationship("UserRole", back_populates="users")
     product_categories = db.relationship('ProductCategory', back_populates='doctor', lazy='select')
-    # ✅ PROPIEDADES NUEVAS PARA ASISTENTES
+
+    # Eventos
+    events = db.relationship(
+    "Event",
+    back_populates="doctor",
+    foreign_keys="Event.doctor_id",  # <-- string en lugar de Event.doctor_id
+    lazy="select"
+    )
+
+    created_events = db.relationship(
+        "Event",
+        back_populates="creator",
+        foreign_keys="Event.created_by",
+        lazy="select"
+    )
+
+    updated_events = db.relationship(
+        "Event",
+        back_populates="updater",
+        foreign_keys="Event.updated_by",
+        lazy="select"
+    )
+
+    # Propiedades de asistentes
     @property
     def is_general_assistant(self):
         return any(a.type == 'general' for a in self.assistant_accounts)
 
     @property
     def is_common_assistant(self):
-        return any(
-            a.type == 'common' and a.is_active 
-            for a in self.assistant_accounts
-    )
+        return any(a.type == 'common' and a.is_active for a in self.assistant_accounts)
 
     @property
     def can_assign_tasks(self):
@@ -148,7 +168,6 @@ class User(UserMixin, db.Model):
 
     @property
     def role_display(self):
-        """Devuelve el nombre del rol desde UserRole o fallback al role_name"""
         if self.role_obj:
             return self.role_obj.name
         return self.role_name or "Sin rol"
@@ -216,6 +235,8 @@ class Publication(db.Model):
 
     # ✅ Relación bidireccional
     author = db.relationship("User", back_populates="publications")
+    # Relación inversa con Event
+    event = db.relationship("Event", back_populates="publication", uselist=False)
 
     def can_edit(self, user):
         return user.is_admin_user or user.id == self.user_id
@@ -593,10 +614,19 @@ class Event(db.Model):
     max_attendees = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
     doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # ← Auditoría
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Auditoría
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    image_url = db.Column(db.String(300), nullable=True)
+    publication_id = db.Column(db.Integer, db.ForeignKey('publications.id'), nullable=True)
+
+    # Relaciones
+    doctor = db.relationship("User", back_populates="events", foreign_keys=[doctor_id])
+    creator = db.relationship("User", back_populates="created_events", foreign_keys=[created_by])
+    updater = db.relationship("User", back_populates="updated_events", foreign_keys=[updated_by])
+    publication = db.relationship("Publication", back_populates="event")
 
 class Visit(db.Model):
     __tablename__ = 'visits'

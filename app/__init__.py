@@ -5,6 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
+from flask import Flask
+from .filters import format_date  # Filtro Fechas
 
 # === Instancias globales ===
 db = SQLAlchemy()
@@ -35,6 +37,9 @@ def create_app(strict_mode=False):
         template_folder="../templates",
         static_folder="../static"
     )
+    
+    # Registrar el filtro personalizado
+    app.jinja_env.filters['format_date'] = format_date
 
     # === Configuración general ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
@@ -88,6 +93,9 @@ def create_app(strict_mode=False):
     login_manager.login_view = "auth.login"
 
     from app.models import User
+
+    # 🔹 Ahora sí, inicializar Migrate
+    migrate.init_app(app, db)
 
     @login_manager.user_loader
     def load_user(user_id):
