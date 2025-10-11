@@ -2,7 +2,10 @@
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
-from app.models import User, Assistant, Clinic
+from app.models import User, Assistant, Clinic, UserRole
+from datetime import datetime
+from app import db
+
 
 auth = Blueprint('auth', __name__)
 
@@ -100,39 +103,46 @@ def signup():
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-    from app.models import UserRole
-    from app import db
     roles_activos = UserRole.query.filter_by(is_active=True).all()
-    
+
     if request.method == 'POST':
-        username = request.form.get('username').strip()
-        email = request.form.get('email').strip()
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password')
         role_id = request.form.get('role_id')
 
-        if not role_id or not UserRole.query.filter_by(id=role_id, is_active=True).first():
-            flash('Por favor selecciona un rol válido', 'error')
+        # ✅ Validaciones básicas
+        if not all([username, email, password, role_id]):
+            flash('Todos los campos son obligatorios.', 'error')
+            return render_template('auth/register.html', roles_activos=roles_activos)
+
+        role = UserRole.query.filter_by(id=role_id, is_active=True).first()
+        if not role:
+            flash('Por favor selecciona un rol válido.', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
         if User.query.filter_by(email=email).first():
-            flash('Este email ya está registrado', 'error')
+            flash('Este email ya está registrado.', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
         if User.query.filter_by(username=username).first():
-            flash('Este nombre de usuario ya existe', 'error')
+            flash('Este nombre de usuario ya existe.', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
+        # ✅ Determinación automática del tipo profesional
         user = User(
             username=username,
             email=email,
-            role_id=role_id,
-            is_professional=(role_id != 1)
+            role_id=role.id,
+            is_professional=(role.name not in ['Visitante', 'Paciente']),
+            created_at=datetime.utcnow()
         )
         user.set_password(password)
+
         db.session.add(user)
         db.session.commit()
 
-        flash('✅ Registro exitoso. Inicia sesión.', 'success')
+        flash('✅ Registro exitoso. Ahora puedes iniciar sesión.', 'success')
         return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html', roles_activos=roles_activos)

@@ -648,44 +648,6 @@ def index():
 def health():
     return 'OK', 200
 
-@routes.route("/auth/register", methods=["GET", "POST"])
-def register():
-    roles_activos = UserRole.query.filter_by(is_active=True).all()
-    
-    if request.method == "POST":
-        username = request.form.get("username").strip()
-        email = request.form.get("email").strip()
-        password = request.form.get("password")
-        role_id = request.form.get("role_id")
-
-        if not role_id or not UserRole.query.filter_by(id=role_id, is_active=True).first():
-            flash("Por favor selecciona un rol válido", "error")
-            return render_template("auth/register.html", roles_activos=roles_activos)
-
-        if User.query.filter_by(email=email).first():
-            flash("Este email ya está registrado", "error")
-            return render_template("auth/register.html", roles_activos=roles_activos)
-
-        if User.query.filter_by(username=username).first():
-            flash("Este nombre de usuario ya existe", "error")
-            return render_template("auth/register.html", roles_activos=roles_activos)
-
-        role = UserRole.query.get(role_id)
-        user = User(
-            username=username,
-            email=email,
-            role_id=role_id,
-            is_professional=(role.name != "Visitante" and role.name != "Paciente")
-        )
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-
-        flash("✅ Registro exitoso. Inicia sesión.", "success")
-        return redirect(url_for("auth.login"))
-
-    return render_template("auth/register.html", roles_activos=roles_activos)
-
 @routes.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
