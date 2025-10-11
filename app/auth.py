@@ -25,14 +25,20 @@ def login():
             return render_template('auth/login.html')
 
         user = User.query.filter_by(email=email).first()
+
         if user and user.check_password(password):
             login_user(user, remember=True)
             flash('✅ Sesión iniciada correctamente', 'success')
 
             # Detectar roles usando consultas reales, no campos booleanos
             es_admin = user.is_admin is True
-            es_profesional = Clinic.query.filter_by(doctor_id=user.id, is_active=True).first() is not None
-            
+
+            # es_profesional = Clinic.query.filter_by(doctor_id=user.id, is_active=True).first() is not None
+            es_profesional = (
+                Clinic.query.filter_by(doctor_id=user.id, is_active=True).first() is not None or
+                (user.role_id in PROFESSIONAL_ROLE_IDS)
+            )
+
             # Verificar si el usuario tiene un registro en la tabla Assistant
             asistente_encontrado = Assistant.query.filter_by(user_id=user.id, is_active=True).first()
             es_asistente = asistente_encontrado is not None

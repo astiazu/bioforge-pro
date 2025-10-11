@@ -1625,13 +1625,13 @@ def mi_perfil():
         flash("Acceso denegado", "danger")
         return redirect(url_for('routes.seleccionar_perfil'))
     
-    if not current_user.is_professional and not current_user.is_admin:
-        flash('Acceso denegado', 'danger')
-        return redirect(url_for('routes.index'))
+    # if not current_user.is_professional and not current_user.is_admin:
+    #     flash('Acceso denegado', 'danger')
+    #     return redirect(url_for('routes.index'))
 
     # Cargar consultorios del profesional actual
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
-
+    
     # Obtener todas las tareas de mis asistentes
     all_tasks = Task.query.join(Assistant).filter(Assistant.doctor_id == current_user.id).all()
     pending_tasks_count = sum(1 for task in all_tasks if task.status == 'pending')
