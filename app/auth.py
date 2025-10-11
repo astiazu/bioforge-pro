@@ -9,6 +9,8 @@ from app import db
 
 auth = Blueprint('auth', __name__)
 
+PROFESSIONAL_ROLE_IDS = [1, 2, 6]  # Profesional, Tienda, PyME
+
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -106,43 +108,37 @@ def register():
     roles_activos = UserRole.query.filter_by(is_active=True).all()
 
     if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        email = request.form.get('email', '').strip().lower()
+        username = request.form.get('username').strip()
+        email = request.form.get('email').strip()
         password = request.form.get('password')
         role_id = request.form.get('role_id')
 
-        # ✅ Validaciones básicas
-        if not all([username, email, password, role_id]):
-            flash('Todos los campos son obligatorios.', 'error')
+        # Validación rol
+        if not role_id or not UserRole.query.filter_by(id=role_id, is_active=True).first():
+            flash('Por favor selecciona un rol válido', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
-        role = UserRole.query.filter_by(id=role_id, is_active=True).first()
-        if not role:
-            flash('Por favor selecciona un rol válido.', 'error')
-            return render_template('auth/register.html', roles_activos=roles_activos)
-
+        # Validación email y usuario
         if User.query.filter_by(email=email).first():
-            flash('Este email ya está registrado.', 'error')
+            flash('Este email ya está registrado', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
         if User.query.filter_by(username=username).first():
-            flash('Este nombre de usuario ya existe.', 'error')
+            flash('Este nombre de usuario ya existe', 'error')
             return render_template('auth/register.html', roles_activos=roles_activos)
 
-        # ✅ Determinación automática del tipo profesional
+        # Creación usuario
         user = User(
             username=username,
             email=email,
-            role_id=role.id,
-            is_professional=(role.name not in ['Visitante', 'Paciente']),
-            created_at=datetime.utcnow()
+            role_id=int(role_id),
+            is_professional=(int(role_id) in PROFESSIONAL_ROLE_IDS)
         )
         user.set_password(password)
-
         db.session.add(user)
         db.session.commit()
 
-        flash('✅ Registro exitoso. Ahora puedes iniciar sesión.', 'success')
+        flash('✅ Registro exitoso. Inicia sesión.', 'success')
         return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html', roles_activos=roles_activos)
