@@ -4261,6 +4261,13 @@ def crear_producto(doctor_id):
         now=datetime.now
     )
 
+@routes.route('/detalle-producto/<int:product_id>', methods=['GET'])
+def detalle_producto(product_id):
+    # Obtener el producto por ID
+    product = Product.query.get_or_404(product_id)
+
+    # Renderizar la plantilla con los detalles del producto
+    return render_template('ecommerce/detalle_producto.html', product=product)
 
 @routes.route('/producto/<int:product_id>/editar', methods=['GET', 'POST'])
 @login_required
@@ -4445,6 +4452,10 @@ def carrito():
     owner_email = getattr(tienda, 'email', None)
     owner_photo = getattr(tienda, 'profile_photo', None)
 
+    # Obtener instrucciones de pago del profesional
+    payment_instructions = getattr(tienda, 'payment_instructions', 
+                                   "Por favor, comunícate con el vendedor para coordinar el pago y la entrega del producto.")
+
     for p in products:
         qty = cart.get(str(p.id), 0)
 
@@ -4457,11 +4468,16 @@ def carrito():
         price = Decimal(str(p.final_price or 0)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         subtotal = price * qty
         total += subtotal
+
+        # Obtener la URL de la primera imagen o usar una imagen predeterminada
+        product_image_url = p.image_urls[0] if p.image_urls else url_for('static', filename='images/default-product.png')
+
         cart_items.append({
             'product': p,
             'quantity': qty,
             'subtotal': subtotal,
-            'price': price
+            'price': price,
+            'image_url': product_image_url  # Añadir la URL de la imagen al carrito
         })
 
     session['cart'] = cart
@@ -4519,7 +4535,8 @@ def carrito():
         stock_issue=stock_issue,
         store_name=store_name,
         tienda_slug=tienda_slug,
-        owner_photo=owner_photo
+        owner_photo=owner_photo,
+        payment_instructions=payment_instructions  # Pasar las instrucciones de pago al template
     )
 
 # Agregar al carrito

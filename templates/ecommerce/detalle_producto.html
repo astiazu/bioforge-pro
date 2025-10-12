@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles de {{ product.name }} - BioForge{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Columna Izquierda: Miniaturas de Imágenes -->
+        <div class="col-md-3 d-none d-md-block">
+            <div class="d-flex flex-column gap-2">
+                {% for image_url in product.image_urls %}
+                <div class="thumbnail" style="cursor: pointer;" onclick="changeMainImage('{{ image_url }}')">
+                    <img src="{{ image_url }}" class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 80px; object-fit: cover;">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Columna Central: Imagen Principal -->
+        <div class="col-md-6 col-12">
+            <div class="text-center mb-3">
+                <img id="main-image" src="{{ product.image_urls[0] if product.image_urls else '/static/img/default-product.png' }}" 
+                     class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 400px; object-fit: contain;">
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Detalles del Producto -->
+        <div class="col-md-3 col-12">
+            <h2>{{ product.name }}</h2>
+            <p class="text-muted">{{ product.description }}</p>
+
+            <!-- Precios -->
+            <div class="mb-3">
+                {% if product.is_on_promotion and product.promotion_discount > 0 and (not product.promotion_end_date or product.promotion_end_date > now()) %}
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="h4 text-success">${{ "%.2f"|format(product.final_price) }}</span>
+                        <small class="text-muted text-decoration-line-through">
+                            ${{ "%.2f"|format(product.list_price) }}
+                        </small>
+                    </div>
+                {% else %}
+                    <span class="h4 text-primary">${{ "%.2f"|format(product.final_price) }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="mb-3">
+                <strong>Categoría:</strong> {{ product.category.name if product.category else 'Sin categoría' }}<br>
+                <strong>Tipo:</strong> {{ 'Servicio' if product.is_service else 'Producto' }}<br>
+                <strong>Stock:</strong> {{ product.stock if not product.is_service else 'N/A' }}<br>
+                <strong>Vendedor:</strong> {{ product.doctor.username }}
+            </div>
+
+            <!-- Botones -->
+            <div class="d-grid gap-2">
+                <form action="{{ url_for('routes.agregar_al_carrito', product_id=product.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary w-100">
+                        Comprar
+                    </button>
+                </form>
+                <a href="{{ url_for('routes.tienda_publica', url_slug=product.doctor.url_slug) }}" 
+                   class="btn btn-outline-secondary w-100">
+                    Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para cambiar la imagen principal -->
+<script>
+function changeMainImage(imageUrl) {
+    document.getElementById('main-image').src = imageUrl;
+}
+</script>
+{% endblock %}

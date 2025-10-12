@@ -6,7 +6,8 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from flask import Flask
-from .filters import format_date  # Filtro Fechas
+from .filters import format_date, format_currency_filter  # Filtros Fechas
+
 
 # === Instancias globales ===
 db = SQLAlchemy()
@@ -130,6 +131,14 @@ def create_app(strict_mode=False):
             if request.endpoint and not request.endpoint.startswith("auth"):
                 from app.models import Visit
                 Visit.log_visit(request)
+
+        @app.context_processor
+        def inject_globals():
+            return {
+                'now': datetime.utcnow,  # Función para obtener la fecha/hora actual
+                # Aquí puedes agregar otras funciones/variables globales si las necesitas
+                'format_currency': format_currency_filter,  # Filtro de moneda  
+                }
 
         # --- Configurar Cloudinary (opcional) ---
         if cloudinary:

@@ -19,6 +19,11 @@
                         {% endif %}
                     </div>
 
+                    <!-- Mensaje de Instrucciones de Pago -->
+                    <div class="alert alert-info" role="alert">
+                        <strong>Instrucciones de Pago:</strong> {{ payment_instructions }}
+                    </div>
+
                     <table class="table align-middle">
                         <thead>
                             <tr>
@@ -33,7 +38,7 @@
                             {% for item in cart_items %}
                             <tr data-product-id="{{ item.product.id }}">
                                 <td class="d-flex align-items-center">
-                                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="me-2" width="70" height="70">
+                                    <img src="{{ item.image_url }}" alt="{{ item.product.name }}" class="me-2" width="70" height="70">
                                     <div>
                                         <strong>{{ item.product.name }}</strong><br>
                                         <small>{{ item.product.description[:60] ~ ('...' if item.product.description|length > 60 else '') }}</small>

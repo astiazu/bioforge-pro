@@ -1,5 +1,7 @@
 # app/filters.py
 from datetime import datetime
+from babel.numbers import format_currency
+
 
 def format_date(value, format='%d %b %Y %H:%M'):
     """
@@ -11,3 +13,9 @@ def format_date(value, format='%d %b %Y %H:%M'):
     if isinstance(value, datetime):
         return value.strftime(format)
     return value  # Retorna el valor original si no es una fecha válida
+
+def format_currency_filter(value, currency='USD'):
+    """
+    Filtro personalizado para formatear monedas usando Babel.
+    """
+    return format_currency(value, currency)
