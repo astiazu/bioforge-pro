@@ -22,6 +22,7 @@
 <!-- FullCalendar -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/es.js"></script>
 
 {% endblock %}
 
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(response => response.json())
         .then(data => {
             const availableDays = new Set(data.available_days);
+            const events = data.events;
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
@@ -44,19 +46,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
+                events: events, // Mostrar eventos directamente
                 dayCellDidMount: function (info) {
                     const dateStr = info.date.toISOString().split('T')[0];
                     if (availableDays.has(dateStr)) {
-                        info.el.style.backgroundColor = '#d4edda';
+                        info.el.style.backgroundColor = '#d4edda'; // Verde claro para días disponibles
                         info.el.style.cursor = 'pointer';
                     }
                 },
                 dateClick: function (info) {
-                    // ✅ Usa info.dateStr directamente
                     const fechaStr = info.dateStr;
 
                     if (availableDays.has(fechaStr)) {
-                        // ✅ Mostrar la fecha local
                         document.getElementById('selected-date-title').textContent = 
                             `Horarios disponibles - ${formatearFecha(fechaStr)}`;
                         cargarHorarios(fechaStr);

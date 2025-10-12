@@ -2113,23 +2113,37 @@ def api_horarios(doctor_id, clinic_id, fecha):
 
 @routes.route('/api/dias-disponibles/<int:doctor_id>/<int:clinic_id>')
 def api_dias_disponibles(doctor_id, clinic_id):
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
-    # Buscar todos los Availability futuros (hasta 1 año)
-    un_anio = datetime.now().date() + timedelta(days=365)
-    
-    avail = Availability.query.join(Clinic).filter(
-        Clinic.doctor_id == doctor_id,
-        Clinic.id == clinic_id,
-        Availability.is_booked == False,
-        Availability.date >= datetime.now().date(),
-        Availability.date <= un_anio
+    # Obtener días disponibles
+    available_days = Availability.query.filter(
+        Availability.clinic_id == clinic_id,
+        Availability.date >= datetime.utcnow().date(),
+        Availability.is_booked == False
+    ).distinct(Availability.date).all()
+
+    available_dates = {day.date.strftime('%Y-%m-%d') for day in available_days}
+
+    # Obtener eventos próximos del profesional
+    events = Event.query.filter(
+        Event.doctor_id == doctor_id,
+        Event.start_datetime >= datetime.utcnow(),
+        Event.is_public == True
     ).all()
 
-    available_dates = {a.date.isoformat() for a in avail}
+    event_data = [
+        {
+            "title": event.title,
+            "start": event.start_datetime.strftime('%Y-%m-%d'),
+            "end": event.end_datetime.strftime('%Y-%m-%d') if event.end_datetime else None,
+            "url": url_for('routes.view_event', event_id=event.id)
+        }
+        for event in events
+    ]
 
     return jsonify({
-        "available_days": sorted(available_dates)
+        "available_days": list(available_dates),
+        "events": event_data
     })
 
 @routes.route('/calendario/<int:doctor_id>/<int:clinic_id>')
