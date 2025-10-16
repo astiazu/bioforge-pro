@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Solicitud de Eliminación de Datos Personales - DatosConsultora{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="mb-4 text-primary">Solicitud de Eliminación de Datos Personales</h1>
+
+  <p>
+    En <strong>DatosConsultora (DC)</strong> respetamos tu derecho a decidir sobre tu información.
+    Esta página te permite ejercer el <strong>derecho de supresión</strong> o “derecho al olvido”,
+    previsto en la <strong>Ley 25.326</strong> de Protección de Datos Personales (Argentina) y el
+    <strong>Reglamento General de Protección de Datos (GDPR)</strong>.
+  </p>
+
+  <h2 class="mt-4">1. ¿Qué implica eliminar tus datos?</h2>
+  <p>
+    Al solicitar la eliminación, borraremos tu información personal de nuestros sistemas activos.
+    Esto incluye tu cuenta de usuario, datos de contacto, historial de actividad y cualquier registro
+    vinculado a tu perfil. Ciertos datos podrán mantenerse en copias de seguridad durante un tiempo limitado
+    por razones técnicas o legales (por ejemplo, obligaciones fiscales o facturación).
+  </p>
+
+  <h2 class="mt-4">2. Cómo solicitar la eliminación</h2>
+  <p>Podés ejercer tu derecho enviando una solicitud a:</p>
+  <ul>
+    <li>Email: <a href="mailto:privacidad@datosconsultora.com">privacidad@datosconsultora.com</a></li>
+    <li>Asunto: “Eliminación de mis datos personales”</li>
+  </ul>
+  <p>Incluí tu nombre completo, correo electrónico asociado a la cuenta y, si lo deseas, una breve descripción del motivo.</p>
+
+  <h2 class="mt-4">3. Confirmación y plazos</h2>
+  <p>
+    Una vez recibida tu solicitud, te confirmaremos por correo electrónico que la hemos recibido.
+    La eliminación se realizará dentro de los <strong>10 días hábiles</strong>, conforme a la normativa vigente.
+  </p>
+
+  <h2 class="mt-4">4. Consideraciones importantes</h2>
+  <ul>
+    <li>Si tenés una suscripción activa o facturación pendiente, primero deberás cancelarla.</li>
+    <li>Una vez eliminada la cuenta, no podremos restaurarla ni recuperar su historial.</li>
+    <li>Los datos anonimizados (sin posibilidad de identificación) podrán conservarse para fines estadísticos o de mejora del servicio.</li>
+  </ul>
+
+  <h2 class="mt-4">5. Autoridad de control</h2>
+  <p>
+    Si considerás que no hemos respetado tus derechos, podés contactar a la
+    <strong>Agencia de Acceso a la Información Pública</strong>, organismo de control en Argentina:
+  </p>
+  <p>
+    <strong>Agencia de Acceso a la Información Pública (AAIP)</strong><br>
+    Dirección Nacional de Protección de Datos Personales<br>
+    Av. Pte. Julio A. Roca 710, Piso 3, C1067ABP, Ciudad Autónoma de Buenos Aires<br>
+    Web: <a href="https://www.argentina.gob.ar/aaip/datospersonales" target="_blank">www.argentina.gob.ar/aaip/datospersonales</a>
+  </p>
+
+  <p class="mt-5 text-muted">Última actualización: {{ current_year }}</p>
+</div>
+{% endblock %}

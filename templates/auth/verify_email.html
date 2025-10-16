@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Verificación de Correo</h4>
+                </div>
+                <div class="card-body">
+                    <p>Se ha enviado un código de verificación a tu correo electrónico.</p>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Código de Verificación</label>
+                            <input type="text" class="form-control" id="code" name="code" required placeholder="Ingresa el código">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Verificar</button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('auth.register') }}">¿No recibiste el código? Reenviar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

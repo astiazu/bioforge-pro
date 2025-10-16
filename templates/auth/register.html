@@ -1,3 +1,5 @@
+<!-- templates/auth/register.html -->
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -35,6 +37,15 @@
                             <div class="form-text">
                                 Elige tu rol: Profesional, Tienda, Visitante, Paciente, etc.
                             </div>
+                        </div>
+
+                        <!-- Aceptar Términos y Condiciones -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="accept_terms" name="accept_terms" required>
+                            <label class="form-check-label" for="accept_terms">
+                                Acepto los <a href="{{ url_for('routes.terminos_condiciones') }}" target="_blank">Términos y Condiciones</a> y la 
+                                <a href="{{ url_for('routes.politica_privacidad') }}" target="_blank">Política de Privacidad</a>.
+                            </label>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100">Registrarse</button>

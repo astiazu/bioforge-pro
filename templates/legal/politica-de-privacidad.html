@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidad{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="mb-4">Política de Privacidad</h1>
+    <p><strong>Última actualización:</strong> {{ last_updated or "Octubre 2025"
+        }}</p>
+
+    <p>En <strong>BioForge</strong> (posible marca comercial <em>DatosConsultora
+            – DC</em>), valoramos tu privacidad y queremos que entiendas
+        claramente cómo manejamos tu información. Este documento explica qué
+        datos recopilamos, cómo los usamos y qué derechos tenés sobre ellos.</p>
+
+    <h2>1. Qué información recopilamos</h2>
+    <p>Recopilamos la información que nos brindás al registrarte, crear un
+        perfil profesional o utilizar nuestras herramientas: nombre, correo
+        electrónico, especialidad, imagen de perfil y cualquier otro dato que
+        decidas compartir. También podemos registrar datos técnicos mínimos,
+        como dirección IP y tipo de dispositivo, para mejorar la seguridad y el
+        rendimiento de la plataforma.</p>
+
+    <h2>2. Cómo usamos la información</h2>
+    <p>Usamos los datos para:</p>
+    <ul>
+        <li>Administrar tu cuenta y personalizar tu experiencia.</li>
+        <li>Conectarte con pacientes, asistentes o profesionales según tu
+            rol.</li>
+        <li>Mejorar el funcionamiento de la plataforma.</li>
+        <li>Cumplir con obligaciones legales o de seguridad.</li>
+    </ul>
+
+    <h2>3. Con quién compartimos tus datos</h2>
+    <p>No vendemos ni alquilamos tu información. Solo la compartimos cuando es
+        necesario para prestar el servicio (por ejemplo, con proveedores de
+        hosting o almacenamiento de imágenes como <strong>Cloudinary</strong>),
+        siempre bajo acuerdos de confidencialidad y seguridad.</p>
+
+    <h2>4. Tus derechos</h2>
+    <p>Podés acceder, corregir o eliminar tus datos personales en cualquier
+        momento. Si querés ejercer estos derechos, escribinos a <a
+            href="mailto:soporte@bioforge.com">soporte@bioforge.com</a> (o el
+        correo que definas).</p>
+
+    <h2>5. Seguridad</h2>
+    <p>Protegemos la información usando protocolos cifrados y medidas técnicas
+        acordes al estándar de la industria. Aun así, ningún sistema es
+        completamente infalible, por lo que te recomendamos usar contraseñas
+        seguras y mantener tu información actualizada.</p>
+
+    <h2>6. Cambios en esta política</h2>
+    <p>Podemos modificar esta política cuando lo creamos necesario. Las
+        versiones actualizadas estarán siempre disponibles en esta página con la
+        fecha de última revisión.</p>
+
+    <p class="mt-4">Si tenés dudas sobre esta política, podés contactarnos en <a
+            href="mailto:contacto@bioforge.com">contacto@bioforge.com</a>.</p>
+</div>
+{% endblock %}

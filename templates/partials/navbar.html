@@ -42,6 +42,14 @@
                         <i class="fas fa-user-tie me-1"></i>Profesionales
                     </a>
                 </li>
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link fw-bold" href="{{ url_for('routes.upload_csv') }}">
+                        <i class="fas fa-database me-1 text-warning"></i>
+                        Analizar CSV
+                    </a>
+                </li>
+                {% endif %}
             </ul>
 
             <!-- Usuario y carrito -->

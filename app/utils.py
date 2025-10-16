@@ -1,5 +1,6 @@
 # app/utils.py
 import os
+
 import requests
 import cloudinary
 import cloudinary.uploader
@@ -7,6 +8,7 @@ import urllib.parse
 from itsdangerous import URLSafeTimedSerializer
 from flask import current_app, url_for, request
 from flask_mail import Message
+from email_validator import validate_email, EmailNotValidError
 from app import mail, db
 from datetime import datetime
 import secrets
@@ -231,3 +233,33 @@ def get_assistant_for_doctor(user, doctor_id):
     from app.models import Assistant
     return next((a for a in user.assistant_accounts if a.doctor_id == doctor_id), None)
 
+def is_valid_email(email):
+    """
+    Valida el formato y dominio del correo electrónico.
+    """
+    try:
+        # Valida el formato y verifica si el dominio existe
+        validate_email(email)
+        return True
+    except EmailNotValidError:
+        return False
+
+
+def generate_verification_code():
+    """
+    Genera un código de verificación único de 6 caracteres.
+    """
+    return secrets.token_hex(3)  # Genera un código de 6 caracteres
+
+
+def send_verification_email(email, code):
+    """
+    Envía un correo con el código de verificación al usuario.
+    """
+    msg = Message(
+        "Código de Verificación",
+        sender=("Equipo Fuerza Bruta", "astiazu@gmail.com"),
+        recipients=[email]
+    )
+    msg.body = f"Tu código de verificación es: {code}"
+    mail.send(msg)

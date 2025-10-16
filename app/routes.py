@@ -43,7 +43,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urlparse
 from decimal import Decimal, ROUND_HALF_UP
-
+from app.config.constants import PROFESSIONAL_ROLE_IDS
 
 import cloudinary
 import cloudinary.uploader
@@ -287,6 +287,18 @@ def check_access(doctor_id):
 # ================================
 # RUTAS - ANÁLISIS DE DATOS (CSV + GRÁFICOS)
 # ================================
+@routes.route("/politica-de-privacidad")
+def politica_privacidad():
+    return render_template("legal/politica-de-privacidad.html", current_year=datetime.now().year)
+
+@routes.route("/terminos-y-condiciones")
+def terminos_condiciones():
+    return render_template("legal/terminos-y-condiciones.html", current_year=datetime.now().year)
+
+@routes.route("/eliminar-datos")
+def eliminar_datos():
+    return render_template("legal/eliminar-datos.html", current_year=datetime.now().year)
+
 @routes.route('/upload_csv', methods=['GET', 'POST'])
 @login_required
 def upload_csv():
@@ -357,6 +369,80 @@ def upload_csv():
         return redirect(url_for('routes.select_columns'))
 
     return render_template('upload_csv.html')
+
+@routes.route('/data_preview', methods=['GET'])
+@login_required
+def data_preview():
+    """Vista exploratoria automática del CSV cargado."""
+    csv_path = session.get('csv_file')
+    if not csv_path or not os.path.exists(csv_path):
+        flash('❌ No se encontró ningún archivo cargado.', 'danger')
+        return redirect(url_for('routes.upload_csv'))
+
+    try:
+        df = pd.read_csv(csv_path)
+    except Exception as e:
+        current_app.logger.error(f"Error al leer CSV: {e}")
+        flash('❌ Error al leer el archivo CSV.', 'danger')
+        return redirect(url_for('routes.upload_csv'))
+
+    # --- Análisis básico ---
+    info = {
+        "rows": len(df),
+        "columns": len(df.columns),
+        "missing_values": int(df.isna().sum().sum()),
+        "column_summary": []
+    }
+
+    for col in df.columns:
+        dtype = str(df[col].dtype)
+        nulls = df[col].isna().sum()
+        unique = df[col].nunique()
+        sample = df[col].dropna().unique()[:3].tolist()
+        info["column_summary"].append({
+            "name": col,
+            "dtype": dtype,
+            "nulls": nulls,
+            "unique": unique,
+            "sample": sample
+        })
+
+    # --- Preparar algunos gráficos automáticos ---
+    import plotly.express as px
+
+    graphs = []
+    try:
+        # 1️⃣ Si hay una columna de fecha → gráfica de series
+        date_cols = [c for c in df.columns if "fecha" in c.lower() or "date" in c.lower()]
+        if date_cols:
+            date_col = date_cols[0]
+            df[date_col] = pd.to_datetime(df[date_col], errors='coerce')
+            num_cols = df.select_dtypes(include='number').columns.tolist()
+            if num_cols:
+                fig = px.line(df, x=date_col, y=num_cols[0],
+                              title=f"Evolución temporal de {num_cols[0]}",
+                              markers=True)
+                graphs.append(fig.to_html(full_html=False))
+
+        # 2️⃣ Primer numérico con distribución
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        if num_cols:
+            fig = px.histogram(df, x=num_cols[0], nbins=30,
+                               title=f"Distribución de {num_cols[0]}")
+            graphs.append(fig.to_html(full_html=False))
+
+        # 3️⃣ Primera columna categórica
+        cat_cols = df.select_dtypes(exclude='number').columns.tolist()
+        if cat_cols:
+            fig = px.bar(df[cat_cols[0]].value_counts().head(10).reset_index(),
+                         x='index', y=cat_cols[0],
+                         title=f"Top categorías en {cat_cols[0]}")
+            graphs.append(fig.to_html(full_html=False))
+
+    except Exception as e:
+        current_app.logger.warning(f"Error generando gráficos: {e}")
+
+    return render_template('data_preview.html', info=info, graphs=graphs)
 
 @routes.context_processor
 def inject_active_assistant():
@@ -3791,8 +3877,8 @@ def seleccionar_perfil():
         })
 
     # Rol: Profesional / Dueño - y como asistente si lo fuera 
-    clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
-    if clinics:
+    # clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    if current_user.is_professional or current_user.role_id in PROFESSIONAL_ROLE_IDS:
         roles.append({
             'tipo': 'profesional',
             'nombre': f"Como Profesional: {current_user.username}",

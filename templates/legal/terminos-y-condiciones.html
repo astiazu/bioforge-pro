@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Términos y Condiciones{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4 text-primary">Términos y Condiciones de Uso</h1>
+
+    <p>Bienvenido/a a <strong>BioForge</strong>, una plataforma desarrollada por
+        <strong>DatosConsultora (DC)</strong> para profesionales, asistentes y
+        usuarios que buscan gestionar servicios y experiencias de manera
+        sencilla y segura.</p>
+
+    <h2 class="mt-4">1. Aceptación de los términos</h2>
+    <p>Al crear una cuenta o usar nuestros servicios, aceptás estos Términos y
+        Condiciones. Si no estás de acuerdo, no deberías continuar usando la
+        plataforma.</p>
+
+    <h2 class="mt-4">2. Uso responsable</h2>
+    <p>Te comprometés a usar la plataforma de manera ética, respetando a otros
+        usuarios y sin realizar actividades que puedan dañar el sistema o la
+        información de terceros.</p>
+
+    <h2 class="mt-4">3. Cuentas y contraseñas</h2>
+    <p>Vos sos responsable de mantener la confidencialidad de tus credenciales.
+        DC no se hace responsable por el uso no autorizado de tu cuenta si
+        compartís tus datos de acceso.</p>
+
+    <h2 class="mt-4">4. Contenidos y publicaciones</h2>
+    <p>El contenido que generes (textos, imágenes, eventos) sigue siendo tuyo,
+        pero al publicarlo otorgás a DC una licencia limitada para mostrarlo
+        dentro de la plataforma, siempre respetando tu autoría.</p>
+
+    <h2 class="mt-4">5. Limitación de responsabilidad</h2>
+    <p>BioForge se ofrece “tal cual”. Aunque trabajamos para garantizar su
+        disponibilidad y seguridad, DC no se responsabiliza por pérdidas
+        derivadas de errores técnicos, caídas del servicio o mal uso de la
+        plataforma.</p>
+
+    <h2 class="mt-4">6. Modificaciones</h2>
+    <p>DC puede actualizar estos términos en cualquier momento. Los cambios
+        entrarán en vigor al publicarse en esta página, por lo que recomendamos
+        revisarlos periódicamente.</p>
+
+    <h2 class="mt-4">7. Contacto</h2>
+    <p>Para consultas o reclamos, escribinos a <a
+            href="mailto:contacto@datosconsultora.com">contacto@datosconsultora.com</a>.</p>
+
+    <p class="mt-5 text-muted">Última actualización: {{ current_year }}</p>
+</div>
+{% endblock %}

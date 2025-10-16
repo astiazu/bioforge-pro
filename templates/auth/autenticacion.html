@@ -1,0 +1,67 @@
+
+{% block title %}Iniciar Sesión y Registro{% endblock %}
+
+{% block content %}
+<div class="container min-vh-75 d-flex justify-content-center align-items-center">
+  <div class="card shadow-xl p-4 w-100" style="max-width: 400px;">
+    <!-- Formulario de Inicio de Sesión -->
+    <h2 class="text-center display-6 text-gradient">Iniciar Sesión</h2>
+    <form method="POST" action="{{ url_for('auth.login') }}" class="mt-4">
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="Ingresa tu email" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 hover-lift">Iniciar Sesión</button>
+    </form>
+
+    <div class="mt-4 text-center">
+      <p>¿No tienes cuenta? <a href="{{ url_for('auth.register') }}" class="text-info text-gradient">Regístrate aquí</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Formulario de Registro -->
+<div class="container min-vh-75 d-flex justify-content-center align-items-center mt-5">
+  <div class="card shadow-xl p-4 w-100" style="max-width: 400px;">
+    <h2 class="text-center display-6 text-gradient">Registro</h2>
+    <form method="POST" action="{{ url_for('auth.register') }}" class="mt-4">
+      <div class="mb-3">
+        <label for="username" class="form-label">Nombre de Usuario</label>
+        <input type="text" class="form-control" id="username" name="username" placeholder="Ingresa tu nombre de usuario" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" placeholder="Ingresa tu email" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="password" name="password" placeholder="Ingresa tu contraseña" required>
+      </div>
+      <div class="mb-3">
+        <label for="role_id" class="form-label">Rol</label>
+        <select class="form-select" id="role_id" name="role_id" required>
+          {% for role in roles_activos %}
+            <option value="{{ role.id }}">{{ role.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="accept_terms" id="accept_terms" required>
+        <label class="form-check-label" for="accept_terms">
+          Acepto los <a href="{{ url_for('routes.terminos_condiciones') }}" target="_blank">Términos y Condiciones</a> y la 
+          <a href="{{ url_for('routes.politica_privacidad') }}" target="_blank">Política de Privacidad</a>.
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 hover-lift">Registrarse</button>
+    </form>
+
+    <div class="mt-4 text-center">
+      <p>¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}" class="text-info text-gradient">Inicia sesión aquí</a></p>
+    </div>
+  </div>
+</div>
+{% endblock %}
