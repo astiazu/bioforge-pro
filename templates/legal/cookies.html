@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Política de Cookies</h4>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Utilizamos cookies para mejorar tu experiencia en nuestro sitio web. 
+                        Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo 
+                        cuando visitas nuestro sitio.
+                    </p>
+                    <p>
+                        Algunas cookies son necesarias para el funcionamiento básico del sitio, 
+                        mientras que otras nos ayudan a analizar el tráfico y mejorar nuestros servicios.
+                    </p>
+                    <p>
+                        Puedes aceptar todas las cookies o configurar tus preferencias a continuación.
+                    </p>
+
+                    <form method="POST">
+                        <div class="mb-3 form-check">
+                            <input type="radio" class="form-check-input" id="accept_yes" name="accept_cookies" value="yes" required>
+                            <label class="form-check-label" for="accept_yes">Aceptar todas las cookies</label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="radio" class="form-check-input" id="accept_no" name="accept_cookies" value="no" required>
+                            <label class="form-check-label" for="accept_no">Rechazar cookies no esenciales</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Preferencias</button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">
+                        Para más información, consulta nuestra 
+                        <a href="{{ url_for('routes.politica_privacidad') }}">Política de Privacidad</a>.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

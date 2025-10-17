@@ -65,24 +65,12 @@
             </div>
             <div class="col-md-6 text-center text-md-end">
                 <small class="text-light-emphasis">
-                    <a href="/terminos" class="text-decoration-none me-3">Términos</a>
-                    <a href="/privacidad" class="text-decoration-none me-3">Privacidad</a>
-                    <a href="/cookies" class="text-decoration-none">Cookies</a>
+                    <a href="{{ url_for('routes.terminos_condiciones') }}" class="text-decoration-none me-3">Términos</a>
+                    <a href="{{ url_for('routes.politica_privacidad') }}" class="text-decoration-none me-3">Privacidad</a>
+                    <a href="{{ url_for('routes.cookies') }}" class="text-decoration-none">Cookies </a>
+                    <a href="{{ url_for('routes.eliminar_datos') }}" class="text-decoration-none me-3"> Eliminación de Datos</a>
                 </small>
             </div>
         </div>
     </div>
-    <div class="text-center mt-3">
-    <a href="{{ url_for('routes.politica_privacidad') }}" class="text-decoration-none text-muted me-3">
-        Política de Privacidad
-    </a>
-    |
-    <a href="{{ url_for('routes.terminos_condiciones') }}" class="text-decoration-none text-muted ms-3 me-3">
-        Términos y Condiciones
-    </a>
-    |
-    <a href="{{ url_for('routes.eliminar_datos') }}" class="text-decoration-none text-muted ms-3">
-        Eliminación de Datos
-    </a>
-    </div>   
 </footer>

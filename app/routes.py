@@ -299,6 +299,22 @@ def terminos_condiciones():
 def eliminar_datos():
     return render_template("legal/eliminar-datos.html", current_year=datetime.now().year)
 
+@routes.route('/cookies', methods=['GET', 'POST'])
+def cookies():
+    if request.method == 'POST':
+        # El usuario acepta las cookies
+        accept_cookies = request.form.get('accept_cookies')
+        if accept_cookies == 'yes':
+            session['cookies_accepted'] = True
+            flash('✅ Has aceptado el uso de cookies.', 'success')
+        else:
+            session['cookies_accepted'] = False
+            flash('❌ Has rechazado el uso de cookies.', 'warning')
+
+        return redirect(url_for('routes.index'))
+
+    return render_template('legal/cookies.html')
+
 @routes.route('/upload_csv', methods=['GET', 'POST'])
 @login_required
 def upload_csv():

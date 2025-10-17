@@ -175,5 +175,28 @@
         }
     }
     </script>
+    <!-- Banner de Cookies -->
+    {% if not session.get('cookies_accepted') %}
+    <div id="cookie-banner" class="fixed-bottom bg-light p-3 text-center shadow">
+        <p class="mb-2">
+            Usamos cookies para mejorar tu experiencia. 
+            <a href="{{ url_for('routes.cookies') }}" class="text-primary">Más información</a>.
+        </p>
+        <button id="accept-cookies" class="btn btn-primary btn-sm">Aceptar Cookies</button>
+    </div>
+
+    <script>
+        // Script para aceptar cookies automáticamente
+        document.getElementById('accept-cookies').addEventListener('click', function () {
+            fetch("{{ url_for('routes.cookies') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "accept_cookies=yes"
+            }).then(() => {
+                document.getElementById('cookie-banner').style.display = 'none';
+            });
+        });
+    </script>
+    {% endif %}
 </body>
 </html>
