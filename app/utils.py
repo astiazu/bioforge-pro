@@ -243,34 +243,32 @@ def format_date(value, format: str = "%d/%m/%Y") -> str:
             return value
     return value.strftime(format)
 
-def send_verification_email(user):
-    """Envía un correo de verificación al registrarse."""
+def send_verification_email(email, verification_code):
+    """Envía un correo de verificación usando el email y el código."""
     try:
-        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
-        token = s.dumps({"user_id": user.id}, salt="email-verify-salt")
-        verify_url = url_for("auth.verify_email", token=token, _external=True)
+        verify_url = url_for("auth.verify_email", code=verification_code, _external=True)
 
         subject = f"Verificá tu cuenta — {current_app.config.get('APP_NAME', 'BioForge')}"
-        body = f"""Hola {user.username},
+        body = f"""Hola,
 
 Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
 
-Para activar tu cuenta, hacé clic en el siguiente enlace:
+Para activar tu cuenta, haz clic en el siguiente enlace:
 
 {verify_url}
 
 Este enlace expira en 24 horas.
 
-Si no creaste esta cuenta, ignorá este mensaje.
+Si no creaste esta cuenta, ignora este mensaje.
 """
 
         mail = current_app.extensions.get("mail")
         if not mail:
             raise RuntimeError("Flask-Mail no está inicializado.")
 
-        msg = Message(subject=subject, recipients=[user.email], body=body)
+        msg = Message(subject=subject, recipients=[email], body=body)
         mail.send(msg)
-        current_app.logger.info(f"📧 Correo de verificación enviado a {user.email}")
+        current_app.logger.info(f"📧 Correo de verificación enviado a {email}")
         return True
 
     except Exception as e:
