@@ -261,3 +261,14 @@ def send_verification_email(email, code):
         'body': f'Tu código de verificación es: {code}'
     }
     send_async_email.delay(email_data)
+
+def format_date(value, format='%d/%m/%Y'):
+    """Formatea una fecha según el formato especificado."""
+    if not value:
+        return ""
+    if isinstance(value, str):
+        try:
+            value = datetime.fromisoformat(value)
+        except ValueError:
+            return value
+    return value.strftime(format)

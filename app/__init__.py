@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from .utils import format_date
 import cloudinary
 
 # === Instancias globales ===
@@ -65,6 +66,8 @@ def create_app(strict_mode=False):
         api_key=os.environ.get("CLOUDINARY_API_KEY"),
         api_secret=os.environ.get("CLOUDINARY_API_SECRET")
     )
+    # Registrar el filtro personalizado
+    app.jinja_env.filters['format_date'] = format_date
 
     # === Inicializar extensiones ===
     db.init_app(app)
