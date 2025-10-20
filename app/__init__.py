@@ -112,3 +112,5 @@ def create_app(strict_mode: bool = False):
                     pass  # Evita que un fallo de logging rompa la carga principal
 
     return app
+
+app = create_app()
