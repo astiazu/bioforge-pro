@@ -1,112 +1,95 @@
 # app/utils.py
 import os
-
 import requests
-import cloudinary
 import cloudinary.uploader
 import urllib.parse
 from itsdangerous import URLSafeTimedSerializer
-from flask import current_app, url_for, request
+from flask import current_app, url_for
 from flask_mail import Message
 from email_validator import validate_email, EmailNotValidError
-from app import mail, db
 from datetime import datetime
 import secrets
 import string
 
-# === FUNCIONES DE NOTIFICACIÓN (con nombres correctos para routes.py) ===
 
-def send_telegram_message(message, chat_id=None):
-    """
-    Envía un mensaje a Telegram.
-    Compatible con la importación en routes.py
-    """
+# === FUNCIONES DE NOTIFICACIÓN ===
+
+def send_telegram_message(message: str, chat_id: str | None = None) -> bool:
+    """Envía un mensaje a Telegram usando el bot configurado."""
     try:
-        token = current_app.config.get('TELEGRAM_BOT_TOKEN')
+        token = current_app.config.get("TELEGRAM_BOT_TOKEN")
         if not token:
-            current_app.logger.warning("TELEGRAM_BOT_TOKEN no configurado")
-            return False
-            
-        chat_id = chat_id or current_app.config.get('TELEGRAM_CHAT_ID')
-        if not chat_id:
-            current_app.logger.warning("TELEGRAM_CHAT_ID no configurado")
+            current_app.logger.warning("⚠️ TELEGRAM_BOT_TOKEN no configurado")
             return False
 
-        # ✅ Corrección: eliminar espacios en la URL
+        chat_id = chat_id or current_app.config.get("TELEGRAM_CHAT_ID")
+        if not chat_id:
+            current_app.logger.warning("⚠️ TELEGRAM_CHAT_ID no configurado")
+            return False
+
         url = f"https://api.telegram.org/bot{token}/sendMessage"
         payload = {
-            'chat_id': chat_id,
-            'text': message,
-            'parse_mode': 'Markdown',
-            'disable_web_page_preview': True
+            "chat_id": chat_id,
+            "text": message,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
         }
+
         response = requests.post(url, data=payload, timeout=10)
+        if response.status_code != 200:
+            current_app.logger.error(f"Telegram error {response.status_code}: {response.text}")
         return response.status_code == 200
-        
+
     except Exception as e:
-        current_app.logger.error(f"Error enviando mensaje a Telegram: {str(e)}")
+        current_app.logger.error(f"[send_telegram_message] Error: {str(e)}", exc_info=True)
         return False
 
-def send_whatsapp_message(to, message):
-    """
-    Envía un mensaje por WhatsApp (versión simplificada para desarrollo).
-    Compatible con la importación en routes.py
-    """
+
+def send_whatsapp_message(to: str, message: str) -> bool:
+    """Envía un mensaje por WhatsApp (simulado para desarrollo)."""
     try:
-        # Para desarrollo local, solo logueamos
-        current_app.logger.info(f"WhatsApp simulado a {to}: {message}")
-        
-        # Si quieres implementar Twilio en el futuro, descomenta esto:
-        # from twilio.rest import Client
-        # account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-        # auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-        # if account_sid and auth_token:
-        #     client = Client(account_sid, auth_token)
-        #     whatsapp_from = os.environ.get('TWILIO_WHATSAPP_NUMBER')
-        #     client.messages.create(
-        #         body=message,
-        #         from_=f'whatsapp:+{whatsapp_from}',
-        #         to=f'whatsapp:+{to}'
-        #     )
-        #     return True
-        
-        return True  # Simula éxito en desarrollo
-        
+        current_app.logger.info(f"📱 WhatsApp simulado a {to}: {message}")
+        return True
     except Exception as e:
-        current_app.logger.error(f"Error en WhatsApp: {str(e)}")
+        current_app.logger.error(f"[send_whatsapp_message] Error: {str(e)}", exc_info=True)
         return False
 
-# === FUNCIONES EXISTENTES (mejoradas) ===
 
-def upload_to_cloudinary(file_path, folder="bioforge"):
-    """Sube una imagen a Cloudinary."""
+# === FUNCIONES DE ARCHIVOS ===
+
+def upload_to_cloudinary(file_path: str, folder: str = "bioforge") -> str | None:
+    """Sube una imagen a Cloudinary y devuelve la URL segura."""
     try:
         if not file_path:
-            raise ValueError("No file path provided for Cloudinary upload.")
-        
+            raise ValueError("Ruta de archivo no proporcionada para subir a Cloudinary.")
+
         response = cloudinary.uploader.upload(
             file_path,
             folder=folder,
             transformation=[
-                {'width': 1200, 'height': 800, 'crop': 'limit'},
-                {'quality': 'auto:good'}
+                {"width": 1200, "height": 800, "crop": "limit"},
+                {"quality": "auto:good"}
             ]
         )
-        return response['secure_url']
+        return response.get("secure_url")
+
     except Exception as e:
-        current_app.logger.error(f"Error subiendo a Cloudinary: {str(e)}")
+        current_app.logger.error(f"[upload_to_cloudinary] Error: {str(e)}", exc_info=True)
         return None
 
-def crear_mensaje_whatsapp(assistant, task, action="asignada"):
-    """Genera un mensaje predefinido para WhatsApp"""
+
+# === FUNCIONES DE MENSAJES ===
+
+def crear_mensaje_whatsapp(assistant, task, action: str = "asignada") -> str:
+    """Genera un mensaje predefinido y URL-encoded para WhatsApp."""
     nombre = assistant.name.split()[0] if assistant.name else "Asistente"
     status_map = {
-        'pending': 'Pendiente',
-        'in_progress': 'En progreso',
-        'completed': 'Completada',
-        'cancelled': 'Cancelada'
+        "pending": "Pendiente",
+        "in_progress": "En progreso",
+        "completed": "Completada",
+        "cancelled": "Cancelada"
     }
-    estado = status_map.get(task.status, 'Actualizada')
+    estado = status_map.get(task.status, "Actualizada")
 
     mensaje = f"""
 Hola {nombre}, tienes una actualización en tu tarea:
@@ -118,29 +101,34 @@ Hola {nombre}, tienes una actualización en tu tarea:
 ✅ Estado: {estado}
 
 Este mensaje fue generado automáticamente desde tu sistema de gestión.
-    """.strip()
+""".strip()
     return urllib.parse.quote(mensaje)
 
-# === FUNCIONES DE INVITACIÓN ===
 
-def generate_invite_token(email):
-    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
-    return s.dumps({'email': email}, salt='invite-salt')
+# === FUNCIONES DE INVITACIÓN Y EMAIL ===
 
-def verify_invite_token(token, max_age=60*60*24*7):
-    s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+def generate_invite_token(email: str) -> str:
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return s.dumps({"email": email}, salt="invite-salt")
+
+
+def verify_invite_token(token: str, max_age: int = 60 * 60 * 24 * 7) -> str | None:
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
-        data = s.loads(token, salt='invite-salt', max_age=max_age)
-        return data.get('email')
+        data = s.loads(token, salt="invite-salt", max_age=max_age)
+        return data.get("email")
     except Exception:
         return None
 
-def send_invite_email(recipient_email, invite_token, assistant_name, inviter_name):
-    invite_url = url_for('routes.accept_invite', token=invite_token, _external=True)
-    subject = f"Invitación para crear cuenta de Asistente — {current_app.config.get('APP_NAME','App')}"
-    body = f"""Hola {assistant_name},
 
-Has sido invitado(a) por {inviter_name} a registrarte como Asistente en {current_app.config.get('APP_NAME','la plataforma')}.
+def send_invite_email(recipient_email: str, invite_token: str, assistant_name: str, inviter_name: str) -> None:
+    """Envía un correo electrónico con el enlace de invitación."""
+    try:
+        invite_url = url_for("routes.accept_invite", token=invite_token, _external=True)
+        subject = f"Invitación para crear cuenta de Asistente — {current_app.config.get('APP_NAME', 'BioForge')}"
+        body = f"""Hola {assistant_name},
+
+Has sido invitado(a) por {inviter_name} a registrarte como Asistente en {current_app.config.get('APP_NAME', 'la plataforma')}.
 Por favor, completa tu registro y define tu contraseña en este enlace:
 
 {invite_url}
@@ -149,41 +137,45 @@ Este enlace expira en 7 días.
 
 Si no esperabas este correo, por favor ignóralo.
 """
-    try:
-        if mail:
-            msg = Message(subject=subject, recipients=[recipient_email], body=body)
-            mail.send(msg)
-        else:
-            current_app.logger.info(f"INVITE EMAIL to {recipient_email}:\n{body}")
-    except Exception as e:
-        current_app.logger.error(f"Error enviando email de invitación: {str(e)}")
 
-def can_manage_tasks(user, doctor_id):
-    """Verifica si un usuario puede gestionar tareas del equipo."""
+        mail = current_app.extensions.get("mail")
+        if not mail:
+            raise RuntimeError("La extensión Flask-Mail no está inicializada.")
+        msg = Message(subject=subject, recipients=[recipient_email], body=body)
+        mail.send(msg)
+
+    except Exception as e:
+        current_app.logger.error(f"[send_invite_email] Error enviando email: {str(e)}", exc_info=True)
+
+
+# === OTROS ===
+
+def can_manage_tasks(user, doctor_id: int) -> bool:
+    """Verifica si un usuario tiene permisos para gestionar tareas."""
     if not user or not user.is_active:
         return False
+    if user.is_admin:
+        return True
     if user.is_professional and user.id == doctor_id:
         return True
     if user.is_general_assistant and any(a.doctor_id == doctor_id for a in user.assistant_accounts):
         return True
-    if user.is_admin:
-        return True
     return False
 
-# === INVITACIONES PARA EMPRESAS ===
 
-def generate_unique_invite_code():
+def generate_unique_invite_code() -> str:
+    """Genera un código único de invitación."""
     from app.models import CompanyInvite
     while True:
-        code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+        code = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
         if not CompanyInvite.query.filter_by(invite_code=code).first():
             return code
 
-def send_company_invite(invite, doctor_user):
-    """Genera un enlace de registro para un asistente general."""
+
+def send_company_invite(invite, doctor_user) -> dict:
+    """Genera un enlace de registro y mensaje de invitación (con WhatsApp opcional)."""
     try:
-        invite_url = url_for('routes.registro_con_codigo', invite_code=invite.invite_code, _external=True)
-        
+        invite_url = url_for("routes.registro_con_codigo", invite_code=invite.invite_code, _external=True)
         message = f"""
 Hola {invite.name},
 
@@ -195,18 +187,16 @@ Hola {invite.name},
 Este código expira el {invite.expires_at.strftime('%d/%m/%Y a las %H:%M')}.
 
 ¡Bienvenido al equipo!
-        """.strip()
+""".strip()
 
         whatsapp_link = None
         if invite.whatsapp:
-            # Limpiar número de teléfono
-            phone = ''.join(c for c in invite.whatsapp if c.isdigit())
-            if phone and not phone.startswith('54'):  # 🇦🇷 Ajusta según tu país
-                phone = '54' + phone
-            
+            phone = "".join(c for c in invite.whatsapp if c.isdigit())
+            if phone and not phone.startswith("54"):  # 🇦🇷 Ajusta según tu país
+                phone = "54" + phone
+
             if phone:
                 whatsapp_text = urllib.parse.quote(message)
-                # ✅ Corrección: URL sin espacios
                 whatsapp_link = f"https://wa.me/{phone}?text={whatsapp_text}"
 
         return {
@@ -220,49 +210,29 @@ Este código expira el {invite.expires_at.strftime('%d/%m/%Y a las %H:%M')}.
     except Exception as e:
         current_app.logger.error(f"[send_company_invite] Error: {str(e)}", exc_info=True)
         return {
-            "code": invite.invite_code,
+            "code": getattr(invite, "invite_code", ""),
             "url": "",
             "whatsapp_link": None,
             "whatsapp_available": False,
             "message": ""
         }
 
-def get_assistant_for_doctor(user, doctor_id):
-    """Obtiene el Assistant activo del usuario en una empresa específica"""
-    from app.models import Assistant
-    return next((a for a in user.assistant_accounts if a.doctor_id == doctor_id), None)
 
-def is_valid_email(email):
-    """
-    Valida el formato y dominio del correo electrónico.
-    """
+def is_valid_email(email: str) -> bool:
+    """Valida formato y dominio del correo electrónico."""
     try:
-        # Valida el formato y verifica si el dominio existe
         validate_email(email)
         return True
     except EmailNotValidError:
         return False
 
 
-def generate_verification_code():
-    """
-    Genera un código de verificación único de 6 caracteres.
-    """
-    return secrets.token_hex(3)  # Genera un código de 6 caracteres
+def generate_verification_code() -> str:
+    """Genera un código de verificación único de 6 caracteres."""
+    return secrets.token_hex(3)
 
 
-from app.tasks import send_async_email
-
-def send_verification_email(email, code):
-    email_data = {
-        'subject': 'Código de Verificación',
-        'sender': ('Equipo Fuerza Bruta', 'astiazu@gmail.com'),
-        'recipients': [email],
-        'body': f'Tu código de verificación es: {code}'
-    }
-    send_async_email.delay(email_data)
-
-def format_date(value, format='%d/%m/%Y'):
+def format_date(value, format: str = "%d/%m/%Y") -> str:
     """Formatea una fecha según el formato especificado."""
     if not value:
         return ""
@@ -272,3 +242,37 @@ def format_date(value, format='%d/%m/%Y'):
         except ValueError:
             return value
     return value.strftime(format)
+
+def send_verification_email(user):
+    """Envía un correo de verificación al registrarse."""
+    try:
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        token = s.dumps({"user_id": user.id}, salt="email-verify-salt")
+        verify_url = url_for("auth.verify_email", token=token, _external=True)
+
+        subject = f"Verificá tu cuenta — {current_app.config.get('APP_NAME', 'BioForge')}"
+        body = f"""Hola {user.username},
+
+Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
+
+Para activar tu cuenta, hacé clic en el siguiente enlace:
+
+{verify_url}
+
+Este enlace expira en 24 horas.
+
+Si no creaste esta cuenta, ignorá este mensaje.
+"""
+
+        mail = current_app.extensions.get("mail")
+        if not mail:
+            raise RuntimeError("Flask-Mail no está inicializado.")
+
+        msg = Message(subject=subject, recipients=[user.email], body=body)
+        mail.send(msg)
+        current_app.logger.info(f"📧 Correo de verificación enviado a {user.email}")
+        return True
+
+    except Exception as e:
+        current_app.logger.error(f"[send_verification_email] Error: {str(e)}", exc_info=True)
+        return False

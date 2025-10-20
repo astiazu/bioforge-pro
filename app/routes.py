@@ -44,6 +44,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from urllib.parse import urlparse
 from decimal import Decimal, ROUND_HALF_UP
 from app.config.constants import PROFESSIONAL_ROLE_IDS
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 
 import cloudinary
 import cloudinary.uploader
@@ -3437,6 +3438,43 @@ def accept_invite(token):
         return redirect(url_for('auth.login'))  # ajustar nombre de ruta login
 
     return render_template('accept_invite.html', form=form, email=email)
+
+@routes.route("/verify/<token>")
+def verify_email(token):
+    """Verifica el correo electrónico del usuario mediante un token firmado."""
+    s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        # Decodificar token (válido 24 h = 86400 s)
+        data = s.loads(token, salt="email-verify-salt", max_age=86400)
+        user_id = data.get("user_id")
+
+        user = User.query.get(user_id)
+        if not user:
+            flash("❌ Usuario no encontrado.", "danger")
+            return redirect(url_for("auth.login"))
+
+        if user.email_verified:
+            flash("✅ Tu correo ya estaba verificado. Iniciá sesión.", "info")
+            return redirect(url_for("auth.login"))
+
+        # Actualizar flag en la base de datos
+        user.email_verified = True
+        db.session.commit()
+
+        flash("🎉 Correo verificado exitosamente. Bienvenido a la plataforma.", "success")
+        login_user(user)  # inicia sesión automáticamente si querés
+        return redirect(url_for("routes.seleccionar_perfil"))
+
+    except SignatureExpired:
+        flash("⚠️ El enlace de verificación expiró. Solicitá uno nuevo.", "warning")
+        return redirect(url_for("auth.resend_verification"))
+    except BadSignature:
+        flash("❌ Enlace de verificación inválido o alterado.", "danger")
+        return redirect(url_for("auth.login"))
+    except Exception as e:
+        current_app.logger.error(f"[verify_email] Error general: {str(e)}", exc_info=True)
+        flash("⚠️ Ocurrió un error al verificar tu correo.", "danger")
+        return redirect(url_for("auth.login"))    
 
 # Ruta para limpiar la sesión de WhatsApp después de mostrar el botón
 @routes.route('/_cleanup_whatsapp', methods=['POST'])

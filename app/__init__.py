@@ -6,7 +6,6 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-from .utils import format_date
 import cloudinary
 
 # === Instancias globales ===
@@ -15,11 +14,9 @@ login_manager = LoginManager()
 mail = Mail()
 migrate = Migrate()
 
-def create_app(strict_mode=False):
-    """
-    Crea e inicializa la aplicación Flask.
-    Compatible con entornos locales y Render.
-    """
+
+def create_app(strict_mode: bool = False):
+    """Crea e inicializa la aplicación Flask."""
     # Cargar variables locales si no estamos en producción
     if os.environ.get("FLASK_ENV") != "production":
         load_dotenv()
@@ -32,7 +29,7 @@ def create_app(strict_mode=False):
     )
 
     # === Configuración general ===
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 
     # --- Configuración base de datos ---
     database_url = os.environ.get("DATABASE_URL")
@@ -42,23 +39,24 @@ def create_app(strict_mode=False):
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
         os.makedirs(app.instance_path, exist_ok=True)
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'bioforge.db')}"
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     # --- Configuración de Email ---
-    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
-    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
-    app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS") == "True"
-    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
-    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
-    app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL")
+    app.config.update(
+        MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+        MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+        MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS", "True") == "True",
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
+        ADMIN_EMAIL=os.environ.get("ADMIN_EMAIL"),
+    )
 
     # --- Configuración de Celery ---
     app.config["broker_url"] = os.environ.get("broker_url", "redis://localhost:6379/0")
     app.config["result_backend"] = os.environ.get("result_backend", "redis://localhost:6379/0")
-    app.config["imports"] = os.environ.get("imports", "app.tasks")
 
     # --- Configuración de Cloudinary ---
     cloudinary.config(
@@ -66,8 +64,6 @@ def create_app(strict_mode=False):
         api_key=os.environ.get("CLOUDINARY_API_KEY"),
         api_secret=os.environ.get("CLOUDINARY_API_SECRET")
     )
-    # Registrar el filtro personalizado
-    app.jinja_env.filters['format_date'] = format_date
 
     # === Inicializar extensiones ===
     db.init_app(app)
@@ -87,7 +83,9 @@ def create_app(strict_mode=False):
         from datetime import datetime
         from app.routes import routes
         from app.auth import auth
+        from app.utils import format_date
 
+        app.jinja_env.filters["format_date"] = format_date
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
@@ -100,36 +98,17 @@ def create_app(strict_mode=False):
 
         @app.template_filter("without_page")
         def without_page(args):
-            """Elimina el parámetro 'page' de la query string (paginación limpia)."""
             return {k: v for k, v in args.items() if k != "page"}
 
         # --- Registro de visitas ---
         @app.before_request
         def log_visit():
-            """Registra cada visita en la base de datos (salvo rutas de login)."""
-            if request.endpoint and not request.endpoint.startswith("auth"):
+            """Registra cada visita (excepto rutas de login y estáticas)."""
+            if request.endpoint and not request.endpoint.startswith(("auth", "static")):
                 from app.models import Visit
-                Visit.log_visit(request)
+                try:
+                    Visit.log_visit(request)
+                except Exception:
+                    pass  # Evita que un fallo de logging rompa la carga principal
 
     return app
-
-
-# === Comandos CLI personalizados ===
-def register_cli_commands(app):
-    """Comandos CLI para gestión de la BD"""
-    @app.cli.command("create-tables")
-    def create_tables():
-        """Crea todas las tablas manualmente"""
-        with app.app_context():
-            db.create_all()
-            print("✅ Tablas creadas o ya existentes.")
-
-    @app.cli.command("sync-sequences")
-    def sync_sequences_command():
-        """Sincroniza secuencias de PostgreSQL tras migración."""
-        from scripts.sync_sequences import sync_all_sequences
-        sync_all_sequences()
-
-
-# === Instancia global para Gunicorn o Flask CLI ===
-app = create_app()
