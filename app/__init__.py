@@ -5,9 +5,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask import Flask
-from .filters import format_date, format_currency_filter  # Filtros Fechas
-
+from dotenv import load_dotenv
+import cloudinary
 
 # === Instancias globales ===
 db = SQLAlchemy()
@@ -15,19 +14,11 @@ login_manager = LoginManager()
 mail = Mail()
 migrate = Migrate()
 
-try:
-    import cloudinary
-except ImportError:
-    cloudinary = None
-
-
 def create_app(strict_mode=False):
     """
     Crea e inicializa la aplicación Flask.
     Compatible con entornos locales y Render.
     """
-    from dotenv import load_dotenv
-
     # Cargar variables locales si no estamos en producción
     if os.environ.get("FLASK_ENV") != "production":
         load_dotenv()
@@ -38,53 +29,42 @@ def create_app(strict_mode=False):
         template_folder="../templates",
         static_folder="../static"
     )
-    
-    # Registrar el filtro personalizado
-    app.jinja_env.filters['format_date'] = format_date
 
     # === Configuración general ===
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
     # --- Configuración base de datos ---
-    if os.environ.get("DATABASE_URL"):
-        database_url = os.environ.get("DATABASE_URL")
-
-        # Render usa postgres:// (viejo) → reemplazar por postgresql://
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
-
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-
-        # Detectar si estamos en Render o local
-        if "render.com" in database_url or os.environ.get("RENDER") == "true":
-            ssl_args = {"sslmode": "require"}  # Render exige SSL
-        else:
-            ssl_args = {}
     else:
-        # Base de datos local SQLite
         os.makedirs(app.instance_path, exist_ok=True)
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
-        ssl_args = {}
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "connect_args": ssl_args,
-        "pool_pre_ping": True,
-        "pool_recycle": 300,
-        "execution_options": {"strict_mode": strict_mode},
-    }
 
-    # === Configuración de Email ===
-    
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 587
-    app.config["MAIL_USE_TLS"] = True
-    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME") or "astiazu@gmail.com"
-    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
+    # --- Configuración de Email ---
+    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER")
+    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+    app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS") == "True"
+    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER")
+    app.config["ADMIN_EMAIL"] = os.environ.get("ADMIN_EMAIL")
 
-    # Estos dos se fijan explícitamente según lo que pediste
-    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", "astiazu@gmail.com")
-    app.config["ADMIN_EMAIL"] = "astiazu@gmail.com"
+    # --- Configuración de Celery ---
+    app.config["broker_url"] = os.environ.get("broker_url", "redis://localhost:6379/0")
+    app.config["result_backend"] = os.environ.get("result_backend", "redis://localhost:6379/0")
+    app.config["imports"] = os.environ.get("imports", "app.tasks")
+
+    # --- Configuración de Cloudinary ---
+    cloudinary.config(
+        cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.environ.get("CLOUDINARY_API_KEY"),
+        api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+    )
 
     # === Inicializar extensiones ===
     db.init_app(app)
@@ -93,13 +73,9 @@ def create_app(strict_mode=False):
     mail.init_app(app)
     login_manager.login_view = "auth.login"
 
-    from app.models import User
-
-    # 🔹 Ahora sí, inicializar Migrate
-    migrate.init_app(app, db)
-
     @login_manager.user_loader
     def load_user(user_id):
+        from app.models import User
         return User.query.get(int(user_id))
 
     # === Registrar blueprints y filtros ===
@@ -131,26 +107,6 @@ def create_app(strict_mode=False):
             if request.endpoint and not request.endpoint.startswith("auth"):
                 from app.models import Visit
                 Visit.log_visit(request)
-
-        @app.context_processor
-        def inject_globals():
-            return {
-                'now': datetime.utcnow,  # Función para obtener la fecha/hora actual
-                # Aquí puedes agregar otras funciones/variables globales si las necesitas
-                'format_currency': format_currency_filter,  # Filtro de moneda  
-                }
-
-        # --- Configurar Cloudinary (opcional) ---
-        if cloudinary:
-            cloudinary.config(
-                cloud_name=os.environ.get("CLOUD_NAME"),
-                api_key=os.environ.get("CLOUDINARY_API_KEY"),
-                api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-                secure=True,
-            )
-
-        # No crear tablas automáticamente (se hace manualmente)
-        register_cli_commands(app)
 
     return app
 

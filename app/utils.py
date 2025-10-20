@@ -81,10 +81,9 @@ def send_whatsapp_message(to, message):
 def upload_to_cloudinary(file_path, folder="bioforge"):
     """Sube una imagen a Cloudinary."""
     try:
-        if not hasattr(cloudinary, 'config'):
-            current_app.logger.warning("Cloudinary no configurado")
-            return None
-            
+        if not file_path:
+            raise ValueError("No file path provided for Cloudinary upload.")
+        
         response = cloudinary.uploader.upload(
             file_path,
             folder=folder,
@@ -252,14 +251,13 @@ def generate_verification_code():
     return secrets.token_hex(3)  # Genera un código de 6 caracteres
 
 
+from app.tasks import send_async_email
+
 def send_verification_email(email, code):
-    """
-    Envía un correo con el código de verificación al usuario.
-    """
-    msg = Message(
-        "Código de Verificación",
-        sender=("Equipo Fuerza Bruta", "astiazu@gmail.com"),
-        recipients=[email]
-    )
-    msg.body = f"Tu código de verificación es: {code}"
-    mail.send(msg)
+    email_data = {
+        'subject': 'Código de Verificación',
+        'sender': ('Equipo Fuerza Bruta', 'astiazu@gmail.com'),
+        'recipients': [email],
+        'body': f'Tu código de verificación es: {code}'
+    }
+    send_async_email.delay(email_data)

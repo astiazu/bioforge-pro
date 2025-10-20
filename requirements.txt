@@ -46,4 +46,7 @@ requests>=2.31.0
 
 Babel==2.12.1
 
+celery==5.3.6
+redis==4.6.0
+
 

@@ -1434,7 +1434,6 @@ def edit_note(note_id=None):
 
                 # Subir a Cloudinary
                 try:
-                    import cloudinary.uploader
                     response = cloudinary.uploader.upload(
                         temp_path,
                         folder="notes",
