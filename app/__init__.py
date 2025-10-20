@@ -30,7 +30,8 @@ def create_app(strict_mode: bool = False):
 
     # === Configuración general ===
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
-
+    app.config["DEBUG"] = True
+    
     # --- Configuración base de datos ---
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
