@@ -227,9 +227,9 @@ def is_valid_email(email: str) -> bool:
         return False
 
 
-def generate_verification_code() -> str:
-    """Genera un código de verificación único de 6 caracteres."""
-    return secrets.token_hex(3)
+def generate_verification_code(length=6):
+    """Genera un código de verificación aleatorio."""
+    return secrets.token_hex(length // 2)  # Genera un código hexadecimal
 
 
 def format_date(value, format: str = "%d/%m/%Y") -> str:
@@ -246,21 +246,21 @@ def format_date(value, format: str = "%d/%m/%Y") -> str:
 def send_verification_email(email, verification_code):
     """Envía un correo de verificación usando el email y el código."""
     try:
-        verify_url = url_for("auth.verify_email", code=verification_code, _external=True)
+        verify_url = url_for("routes.verify_email", code=verification_code, _external=True)
 
         subject = f"Verificá tu cuenta — {current_app.config.get('APP_NAME', 'BioForge')}"
         body = f"""Hola,
 
-Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
+                Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
 
-Para activar tu cuenta, haz clic en el siguiente enlace:
+                Para activar tu cuenta, haz clic en el siguiente enlace:
 
-{verify_url}
+                {verify_url}
 
-Este enlace expira en 24 horas.
+                Este enlace expira en 24 horas.
 
-Si no creaste esta cuenta, ignora este mensaje.
-"""
+                Si no creaste esta cuenta, ignora este mensaje.
+                """
 
         mail = current_app.extensions.get("mail")
         if not mail:

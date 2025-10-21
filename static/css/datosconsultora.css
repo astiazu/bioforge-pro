@@ -107,13 +107,14 @@ body {
 /* Links de navegación */
 .nav-link {
     font-weight: 500;
-    transition: var(--transition-base);
+    color: #f8f7f7; /* Color negro por defecto */
+    transition: color 0.3s ease, transform 0.3s ease; /* Transición solo para color y transform */
     position: relative;
 }
 
 .nav-link:hover {
-    color: var(--info-color) !important;
-    transform: translateY(-2px);
+    color: var(--info-color) !important; /* Cambia el color al pasar el cursor */
+    transform: translateY(-2px); /* Efecto de elevación */
 }
 
 .nav-link.active {

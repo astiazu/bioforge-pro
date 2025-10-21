@@ -86,6 +86,9 @@ class User(UserMixin, db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     url_slug = db.Column(db.String(100), unique=True, nullable=True)
     store_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # para verificar el correo electrónico
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
 
     # Perfil profesional
     professional_category = db.Column(db.String(50))

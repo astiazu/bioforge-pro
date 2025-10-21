@@ -8,9 +8,9 @@ def make_celery(app=None):
     app = app or current_app
     celery = Celery(
         app.import_name,
-        backend=app.config['result_backend'],  # Usa el nombre nuevo
-        broker=app.config['broker_url'],       # Usa el nombre nuevo
-        imports=app.config['imports']          # Usa el nombre nuevo
+        backend=app.config['result_backend'],  
+        broker=app.config['broker_url'],       
+        imports=app.config['imports']          
     )
     celery.conf.update(app.config)
 

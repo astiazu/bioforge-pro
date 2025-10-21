@@ -26,10 +26,17 @@
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email" required autofocus>
                         </div>
+                        
                         <div class="mb-3">
                             <label for="password" class="form-label">Contraseña</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password" required placeholder="Ingresa tu contraseña">
+                                <button type="button" class="btn btn-outline-secondary" id="toggle-password">
+                                    <i class="bi bi-eye"></i> <!-- Ícono de Bootstrap Icons -->
+                                </button>
+                            </div>
                         </div>
+
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="remember" name="remember">
                             <label class="form-check-label" for="remember">Recordarme</label>

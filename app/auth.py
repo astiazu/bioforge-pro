@@ -150,7 +150,7 @@ def register():
             'role_id': role_id
         }
 
-        send_verification_email(email, verification_code)
+        send_verification_email(email, verification_code) 
 
         flash('✅ Se ha enviado un código de verificación a tu correo electrónico.', 'success')
         return redirect(url_for('auth.verify_email'))
