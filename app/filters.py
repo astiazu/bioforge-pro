@@ -19,3 +19,9 @@ def format_currency_filter(value, currency='USD'):
     Filtro personalizado para formatear monedas usando Babel.
     """
     return format_currency(value, currency)
+
+def now():
+    """
+    Retorna la fecha y hora actual.
+    """
+    return datetime.now()

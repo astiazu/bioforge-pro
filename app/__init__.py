@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from dotenv import load_dotenv
+from app.filters import now, format_date
 import cloudinary
 
 # === Instancias globales ===
@@ -111,6 +112,13 @@ def create_app(strict_mode: bool = False):
                     Visit.log_visit(request)
                 except Exception:
                     pass  # Evita que un fallo de logging rompa la carga principal
+        
+        @app.context_processor
+        def inject_now():
+            """
+            Inyecta la función `now` en el contexto global de Jinja2.
+            """
+            return {'now': now}
 
     return app
 
