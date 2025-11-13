@@ -2439,18 +2439,24 @@ def nueva_agenda():
         start_time_str = request.form.get('start_time')
         end_time_str = request.form.get('end_time')
 
-        # Validaciones
-        if not all([day_of_week in range(7), clinic_id, start_time_str, end_time_str]):
+        # Validaciones básicas
+        if not all([day_of_week is not None, clinic_id, start_time_str, end_time_str]):
             flash('Todos los campos son obligatorios', 'error')
+            return redirect(url_for('routes.mi_agenda'))
+
+        # Validar día de la semana
+        if day_of_week not in range(7):
+            flash('Día de la semana inválido', 'error')
             return redirect(url_for('routes.mi_agenda'))
 
         try:
             start_time = datetime.strptime(start_time_str, '%H:%M').time()
             end_time = datetime.strptime(end_time_str, '%H:%M').time()
         except ValueError:
-            flash('Formato de hora inválido', 'error')
+            flash('Formato de hora inválido. Use HH:MM (24 horas)', 'error')
             return redirect(url_for('routes.mi_agenda'))
 
+        # Validar lógica de horarios
         if start_time >= end_time:
             flash('La hora de inicio debe ser menor a la de fin', 'error')
             return redirect(url_for('routes.mi_agenda'))
@@ -2458,19 +2464,22 @@ def nueva_agenda():
         # Verificar que el consultorio pertenece al médico
         clinic = Clinic.query.filter_by(id=clinic_id, doctor_id=current_user.id).first()
         if not clinic:
-            flash('Consultorio no válido', 'error')
+            flash('Consultorio no válido o no pertenece a tu cuenta', 'error')
             return redirect(url_for('routes.mi_agenda'))
 
-        # Evitar duplicados
-        if Schedule.query.filter_by(
+        # Evitar duplicados - solo horarios activos
+        existing_schedule = Schedule.query.filter_by(
             doctor_id=current_user.id,
             clinic_id=clinic_id,
-            day_of_week=day_of_week
-        ).first():
-            flash('Ya tienes una agenda para ese día en este consultorio', 'warning')
+            day_of_week=day_of_week,
+            is_active=True
+        ).first()
+        
+        if existing_schedule:
+            flash('Ya tienes una agenda activa para ese día en este consultorio', 'warning')
             return redirect(url_for('routes.mi_agenda'))
 
-        # Crear agenda
+        # Crear nueva agenda
         schedule = Schedule(
             doctor_id=current_user.id,
             clinic_id=clinic_id,
@@ -2479,32 +2488,53 @@ def nueva_agenda():
             end_time=end_time,
             is_active=True
         )
-        db.session.add(schedule)
-        db.session.flush()  # Para obtener ID
-
-        # Generar disponibilidad
+        
         try:
-            generar_disponibilidad_automatica(schedule, semanas=52)
-            db.session.commit()
-            flash('✅ Agenda guardada y disponibilidad generada', 'success')
+            db.session.add(schedule)
+            db.session.flush()  # Para obtener el ID sin commit
+            
+            current_app.logger.info(f"✅ Schedule creado: ID {schedule.id} para clinic {clinic_id}, día {day_of_week}")
+
+            # Generar disponibilidad - CON MANEJO ROBUSTO DE ERRORES
+            success = generar_disponibilidad_automatica(schedule, semanas=12)
+            
+            if success:
+                db.session.commit()
+                flash('✅ Agenda guardada y disponibilidad generada exitosamente', 'success')
+                current_app.logger.info(f"✅ Agenda {schedule.id} guardada exitosamente")
+                
+            else:
+                # Si falla la generación de disponibilidad, eliminamos el schedule
+                db.session.rollback()
+                current_app.logger.error(f"❌ Falló generación de disponibilidad para schedule {schedule.id}")
+                flash('❌ Error al generar la disponibilidad automática. Por favor, intenta nuevamente.', 'danger')
+                return redirect(url_for('routes.mi_agenda'))
+                
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error al generar disponibilidad: {str(e)}")
-            flash('❌ Error al generar disponibilidad', 'danger')
+            current_app.logger.error(f"❌ ERROR CRÍTICO en nueva_agenda: {str(e)}", exc_info=True)
+            flash('❌ Error interno del sistema. Por favor, contacta al soporte.', 'danger')
             return redirect(url_for('routes.mi_agenda'))
 
         return redirect(url_for('routes.mi_agenda'))
 
-    # Si es GET
+    # ===== MÉTODO GET =====
     clinics = Clinic.query.filter_by(doctor_id=current_user.id, is_active=True).all()
+    
     if not clinics:
-        flash('Primero debes crear un consultorio', 'info')
+        flash('💡 Primero debes crear un consultorio para configurar horarios', 'info')
         return redirect(url_for('routes.nuevo_consultorio'))
     
     days = {
-        0: 'Lunes', 1: 'Martes', 2: 'Miércoles',
-        3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'
+        0: 'Lunes',
+        1: 'Martes', 
+        2: 'Miércoles',
+        3: 'Jueves',
+        4: 'Viernes', 
+        5: 'Sábado', 
+        6: 'Domingo'
     }
+    
     return render_template('nueva_agenda.html', clinics=clinics, days=days)
 
 @routes.route('/agenda/eliminar/<int:schedule_id>', methods=['POST'])
@@ -2516,19 +2546,42 @@ def eliminar_agenda(schedule_id):
         return "Acceso denegado", 403
 
     try:
-        # ✅ Solo borrar disponibilidad NO reservada
+        # ✅ CORRECCIÓN: Solo eliminar disponibilidad de ESTE horario específico
+        # Primero identificamos las fechas/horas que pertenecen a este horario
+        from datetime import time
+        
+        # Obtenemos todos los time slots para este horario
+        start_time = schedule.start_time
+        end_time = schedule.end_time
+        day_of_week = schedule.day_of_week
+        
+        # Buscamos disponibilidades que coincidan con este horario específico
+        # Esto requiere lógica más compleja - mejor enfoque:
+        
+        # 1. Primero marcamos como inactivo el schedule
+        schedule.is_active = False
+        
+        # 2. Eliminamos solo disponibilidades futuras no reservadas de este horario
+        from datetime import datetime, date, timedelta
+        today = date.today()
+        
+        # Eliminar disponibilidades futuras para este día/horario específico
         Availability.query.filter(
             Availability.clinic_id == schedule.clinic_id,
-            Availability.is_booked == False
-        ).delete()
-
-        db.session.delete(schedule)
+            Availability.date >= today,
+            Availability.is_booked == False,
+            # Filtro adicional por el horario específico
+            Availability.time >= start_time,
+            Availability.time <= end_time
+        ).delete(synchronize_session=False)
+        
         db.session.commit()
-        flash('❌ Agenda eliminada', 'info')
+        flash('✅ Horario eliminado correctamente', 'success')
+        
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error al eliminar agenda: {str(e)}")
-        flash('❌ Error al eliminar agenda', 'danger')
+        current_app.logger.error(f"ERROR eliminando agenda {schedule_id}: {str(e)}", exc_info=True)
+        flash('❌ Error al eliminar el horario', 'danger')
 
     return redirect(url_for('routes.mi_agenda'))
 
@@ -5305,30 +5358,94 @@ def import_data():
         return jsonify({"error": f"Error al importar datos: {str(e)}"}), 500
     
 # === RUTAS ADMINISTRADOR ===
-def generar_disponibilidad_automatica(schedule, semanas=52):
+def generar_disponibilidad_automatica(schedule, semanas=12):
     """Genera automáticamente turnos disponibles para las próximas 'semanas' semanas."""
-    today = datetime.now().date()
-    for i in range(semanas):
-        days_ahead = (schedule.day_of_week - today.weekday()) % 7
-        fecha = today + timedelta(days=days_ahead + i * 7)
-        current = datetime.combine(fecha, schedule.start_time)
-        end = datetime.combine(fecha, schedule.end_time)
-
-        while current.time() < end.time():
-            # Evitar duplicados
-            if not Availability.query.filter_by(
-                clinic_id=schedule.clinic_id,
-                date=fecha,
-                time=current.time()
-            ).first():
-                avail = Availability(
-                    clinic_id=schedule.clinic_id,
-                    date=fecha,
-                    time=current.time(),
-                    is_booked=False
-                )
-                db.session.add(avail)
-            current += timedelta(minutes=30)  # Duración del turno
+    from datetime import datetime, date, timedelta
+    from sqlalchemy import and_
+    
+    today = date.today()
+    disponibilidades = []
+    
+    try:
+        current_app.logger.info(f"🔄 Generando disponibilidad para schedule {schedule.id}, {semanas} semanas")
+        
+        for i in range(semanas):
+            # Cálculo correcto de fechas
+            days_ahead = (schedule.day_of_week - today.weekday()) % 7
+            target_date = today + timedelta(days=days_ahead + (i * 7))
+            
+            # Saltar si la fecha es en el pasado
+            if target_date < today:
+                continue
+                
+            current_time = datetime.combine(target_date, schedule.start_time)
+            end_time = datetime.combine(target_date, schedule.end_time)
+            
+            # Generar slots de 30 minutos
+            while current_time < end_time:
+                slot_time = current_time.time()
+                
+                # Verificar si ya existe este slot
+                existing = Availability.query.filter(
+                    and_(
+                        Availability.clinic_id == schedule.clinic_id,
+                        Availability.date == target_date,
+                        Availability.time == slot_time
+                    )
+                ).first()
+                
+                if not existing:
+                    disponibilidades.append({
+                        'clinic_id': schedule.clinic_id,
+                        'date': target_date,
+                        'time': slot_time,
+                        'is_booked': False
+                    })
+                
+                current_time += timedelta(minutes=30)
+        
+        # Inserción masiva optimizada
+        if disponibilidades:
+            current_app.logger.info(f"📦 Preparando {len(disponibilidades)} slots para inserción")
+            
+            try:
+                # Usar bulk_insert_mappings para mejor performance
+                db.session.bulk_insert_mappings(Availability, disponibilidades)
+                # NO hacer commit aquí - lo hará la función llamadora
+                
+                current_app.logger.info(f"✅ Bulk insert preparado para {len(disponibilidades)} disponibilidades")
+                return True
+                
+            except Exception as bulk_error:
+                current_app.logger.error(f"❌ Error en bulk insert: {str(bulk_error)}")
+                
+                # Fallback: inserción individual
+                current_app.logger.info("🔄 Intentando inserción individual...")
+                success_count = 0
+                
+                for disp in disponibilidades:
+                    try:
+                        avail = Availability(**disp)
+                        db.session.add(avail)
+                        success_count += 1
+                    except Exception as single_error:
+                        current_app.logger.warning(f"⚠️ Slot duplicado o error: {single_error}")
+                        continue
+                
+                if success_count > 0:
+                    current_app.logger.info(f"✅ Inserción individual exitosa: {success_count}/{len(disponibilidades)} slots")
+                    return True
+                else:
+                    current_app.logger.error("❌ Inserción individual falló completamente")
+                    return False
+                    
+        else:
+            current_app.logger.warning("⚠️ No hay disponibilidades para generar (posiblemente todas las fechas en pasado)")
+            return True
+            
+    except Exception as e:
+        current_app.logger.error(f"❌ ERROR CRÍTICO en generar_disponibilidad_automatica: {str(e)}", exc_info=True)
+        return False
 
 
 @routes.route('/fix-view-count')
@@ -5355,3 +5472,75 @@ def inject_active_assistant():
             return {'active_assistant': assistant}
     return {'active_assistant': None}
 
+@routes.route('/debug/availability-status')
+@login_required
+def debug_availability_status():
+    """Diagnóstico del estado de disponibilidades"""
+    try:
+        from datetime import date
+        
+        clinic_id = request.args.get('clinic_id', type=int)
+        if not clinic_id:
+            return jsonify({"error": "clinic_id requerido"}), 400
+            
+        # Contar disponibilidades por estado
+        total = Availability.query.filter_by(clinic_id=clinic_id).count()
+        booked = Availability.query.filter_by(clinic_id=clinic_id, is_booked=True).count()
+        available = Availability.query.filter_by(clinic_id=clinic_id, is_booked=False).count()
+        future_available = Availability.query.filter(
+            Availability.clinic_id == clinic_id,
+            Availability.is_booked == False,
+            Availability.date >= date.today()
+        ).count()
+        
+        return jsonify({
+            "clinic_id": clinic_id,
+            "total_availability": total,
+            "booked": booked,
+            "available": available,
+            "future_available": future_available,
+            "schedules": [
+                {
+                    "id": s.id,
+                    "day": s.day_of_week,
+                    "start": s.start_time.strftime('%H:%M'),
+                    "end": s.end_time.strftime('%H:%M'),
+                    "active": s.is_active
+                }
+                for s in Schedule.query.filter_by(clinic_id=clinic_id).all()
+            ]
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Debug error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@routes.route('/debug/generar-disponibilidad-test', methods=['POST'])
+@login_required
+def debug_generar_disponibilidad_test():
+    """Ruta temporal para probar la generación de disponibilidad"""
+    try:
+        from app.models import Schedule
+        import json
+        
+        schedule_id = request.json.get('schedule_id')
+        schedule = Schedule.query.get(schedule_id)
+        
+        if not schedule:
+            return jsonify({"error": "Schedule no encontrado"}), 404
+            
+        # Probar la generación
+        success = generar_disponibilidad_automatica(schedule, semanas=2)
+        
+        return jsonify({
+            "success": success,
+            "schedule_id": schedule_id,
+            "clinic_id": schedule.clinic_id,
+            "day_of_week": schedule.day_of_week,
+            "start_time": schedule.start_time.strftime('%H:%M'),
+            "end_time": schedule.end_time.strftime('%H:%M')
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"DEBUG Error: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
