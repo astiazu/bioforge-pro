@@ -1,6 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const password = document.getElementById("password");
+    const toggle = document.getElementById("toggle-password");
+
     const passwordInput = document.getElementById('password');
     const togglePasswordButton = document.getElementById('toggle-password');
+
+    if (!password || !toggle-password) return;
 
     if (!passwordInput || !togglePasswordButton) {
         console.error("Elementos 'password' o 'toggle-password' no encontrados.");

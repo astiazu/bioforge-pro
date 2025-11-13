@@ -1,126 +1,262 @@
-<!-- templates/public/calendario_turnos.html -->
 {% extends "base.html" %}
 
+{% block styles %}
+<!-- Estilos principales -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 bg-gradient-dark p-4 rounded">
     <div class="row">
-        <div class="col-lg-8">
+        <!-- Primera Columna: Calendario -->
+        <div class="col-lg-4">
             <h3>{{ doctor.username }} - Agenda de visitas</h3>
             <p class="text-secondary">Selecciona un día con disponibilidad para ver los horarios.</p>
-            <div id="calendar"
-                 data-doctor-id="{{ doctor.id }}"
-                 data-clinic-id="{{ clinic.id }}">
+
+            <div id="calendar-wrapper">
+                <div id="calendar"
+                    data-doctor-id="{{ doctor.id }}"
+                    data-clinic-id="{{ clinic.id }}">
+                </div>
             </div>
         </div>
+
+        <!-- Segunda Columna: Horarios Disponibles -->
         <div class="col-lg-4" id="horarios-container" style="display: none;">
-            <h5 id="selected-date-title"></h5>
+            <h5 class="text-center text-secondary">Horarios Disponibles</h5>
+            <p class="text-center text-muted" id="selected-date-info">Selecciona un día para ver los horarios.</p>
             <div id="horarios"></div>
+        </div>
+
+        <!-- Tercera Columna: Eventos/Turnos -->
+        <div class="col-lg-4" id="eventos-container" style="display: none;">
+            <h5 class="text-center text-secondary">Turnos Agendados</h5>
+            <p class="text-center text-muted" id="selected-date-events">Selecciona un día para ver los turnos.</p>
+            <div id="eventos"></div>
         </div>
     </div>
 </div>
-
-<!-- FullCalendar -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/es.js"></script>
-
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/locales/es.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     const doctorId = calendarEl.dataset.doctorId;
     const clinicId = calendarEl.dataset.clinicId;
 
+    // Cargar días disponibles y eventos del backend
     fetch(`/api/dias-disponibles/${doctorId}/${clinicId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log("Datos recibidos:", data);
+
             const availableDays = new Set(data.available_days);
             const events = data.events;
 
+            // Inicializar FullCalendar con configuraciones corregidas
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                locale: 'es',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
-                events: events, // Mostrar eventos directamente
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana',
+                    day: 'Día'
+                },
+                events: events,
+                nowIndicator: true,
+                dayMaxEvents: true,
+                
+                // Configuración específica para manejar días disponibles y estilos
                 dayCellDidMount: function (info) {
                     const dateStr = info.date.toISOString().split('T')[0];
+                    const today = new Date();
+                    const isToday = dateStr === today.toISOString().split('T')[0];
+                    const isOtherMonth = info.date.getMonth() !== calendar.view.currentStart.getMonth();
+
+                    // Estilo para día actual
+                    if (isToday) {
+                        info.el.classList.add('fc-day-today');
+                    }
+
+                    // Estilo para días de otros meses
+                    if (isOtherMonth) {
+                        info.el.classList.add('fc-day-other-month');
+                    }
+
+                    // Estilo para días disponibles
                     if (availableDays.has(dateStr)) {
-                        info.el.style.backgroundColor = '#d4edda'; // Verde claro para días disponibles
-                        info.el.style.cursor = 'pointer';
+                        info.el.classList.add('fc-day-available');
+
+                        const eventCount = events.filter(e => {
+                            const eventDate = e.start.split('T')[0];
+                            return eventDate === dateStr;
+                        }).length;
+
+                        if (eventCount > 0) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge-circle';
+                            badge.textContent = eventCount;
+                            badge.style.position = 'absolute';
+                            badge.style.top = '-6px';
+                            badge.style.right = '-6px';
+                            badge.style.backgroundColor = '#4ecdc4';
+                            badge.style.color = '#000';
+                            badge.style.borderRadius = '50%';
+                            badge.style.width = '24px';
+                            badge.style.height = '24px';
+                            badge.style.display = 'flex';
+                            badge.style.alignItems = 'center';
+                            badge.style.justifyContent = 'center';
+                            badge.style.fontSize = '12px';
+                            badge.style.fontWeight = 'bold';
+                            badge.style.boxShadow = '0 0 5px rgba(0,0,0,0.3)';
+                            info.dayNumberEl.appendChild(badge);
+                        }
                     }
                 },
+                
                 dateClick: function (info) {
                     const fechaStr = info.dateStr;
+                    const fechaFormateada = formatearFechaES(info.date);
+
+                    // Limpiar selección anterior
+                    document.querySelectorAll('.fc-day-selected').forEach(el => {
+                        el.classList.remove('fc-day-selected');
+                    });
 
                     if (availableDays.has(fechaStr)) {
-                        document.getElementById('selected-date-title').textContent = 
-                            `Horarios disponibles - ${formatearFecha(fechaStr)}`;
+                        info.dayEl.classList.add('fc-day-selected');
+                        
+                        // Actualizar información de fecha seleccionada
+                        document.getElementById('selected-date-info').textContent = `Horarios para ${fechaFormateada}`;
+                        document.getElementById('selected-date-events').textContent = `Turnos para ${fechaFormateada}`;
+                        
                         cargarHorarios(fechaStr);
+                        cargarEventos(fechaStr);
                     } else {
                         alert('No hay disponibilidad en esta fecha.');
                     }
                 }
             });
+
             calendar.render();
+
+            // Función para formatear fechas
+            function formatearFechaES(date) {
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                return date.toLocaleDateString('es-ES', options);
+            }
+
+            /**
+             * Cargar horarios disponibles para una fecha específica
+             */
+            function cargarHorarios(fecha) {
+                fetch(`/api/horarios/${doctorId}/${clinicId}/${fecha}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Horarios disponibles:", data);
+
+                        const container = document.getElementById('horarios-container');
+                        const horariosDiv = document.getElementById('horarios');
+
+                        container.style.display = 'block';
+
+                        if (data.length === 0) {
+                            horariosDiv.innerHTML = '<p class="text-muted">No hay horarios disponibles.</p>';
+                        } else {
+                            horariosDiv.innerHTML = `
+                                <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                    ${data.map(slot => `
+                                    <div class="card border-success" style="width: 160px;">
+                                        <div class="card-body text-center p-2">
+                                            <p class="h5 text-success mb-2">${slot.time}</p>
+                                            <form method="POST" action="/turno/reservar" class="m-0">
+                                                <input type="hidden" name="availability_id" value="${slot.id}">
+                                                <input type="text" name="patient_name" placeholder="Tu nombre" required class="form-control form-control-sm">
+                                                <input type="email" name="patient_email" placeholder="Tu email" required class="form-control form-control-sm mt-1">
+                                                <button type="submit" class="btn btn-success btn-sm w-100 mt-2">Reservar</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    `).join('')}
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error cargando horarios:', err);
+                        document.getElementById('horarios').innerHTML = '<p class="text-danger">Error al cargar horarios.</p>';
+                    });
+            }
+
+            /**
+             * Cargar eventos/turnos para una fecha específica
+             */
+            function cargarEventos(fecha) {
+                fetch(`/api/eventos/${doctorId}/${clinicId}/${fecha}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Eventos/turnos recibidos:", data);
+
+                        const container = document.getElementById('eventos-container');
+                        const eventosDiv = document.getElementById('eventos');
+
+                        container.style.display = 'block';
+
+                        if (data.length === 0) {
+                            eventosDiv.innerHTML = '<p class="text-muted">No hay turnos agendados para este día.</p>';
+                        } else {
+                            eventosDiv.innerHTML = `
+                                <ul class="list-group">
+                                    ${data.map(evento => `
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="d-flex flex-column">
+                                            <strong>${evento.title}</strong>
+                                            <small class="text-muted">${evento.time}</small>
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">${evento.status}</span>
+                                    </li>
+                                    `).join('')}
+                                </ul>
+                            `;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error cargando eventos:', err);
+                        document.getElementById('eventos').innerHTML = '<p class="text-danger">Error al cargar eventos.</p>';
+                    });
+            }
+
         })
         .catch(err => {
             console.error('Error cargando días disponibles:', err);
             alert('Error al cargar el calendario. Recarga la página.');
         });
-
-    function cargarHorarios(fecha) {
-        fetch(`/api/horarios/${doctorId}/${clinicId}/${fecha}`)
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('horarios-container');
-                const title = document.getElementById('selected-date-title');
-                const horariosDiv = document.getElementById('horarios');
-
-                container.style.display = 'block';
-                title.textContent = `Horarios disponibles - ${formatearFecha(fecha)}`;
-
-                if (data.length === 0) {
-                    horariosDiv.innerHTML = '<p class="text-muted">No hay horarios disponibles.</p>';
-                } else {
-                    horariosDiv.innerHTML = `
-                        <div class="d-flex flex-wrap gap-2">
-                            ${data.map(slot => `
-                            <div class="card border-success" style="width: 160px;">
-                                <div class="card-body text-center p-2">
-                                    <p class="h5 text-success mb-2">${slot.time}</p>
-                                    <form method="POST" action="/turno/reservar" class="m-0">
-                                        <input type="hidden" name="availability_id" value="${slot.id}">
-                                        <input type="text" name="patient_name" placeholder="Tu nombre" required class="form-control form-control-sm">
-                                        <input type="email" name="patient_email" placeholder="Tu email" required class="form-control form-control-sm mt-1">
-                                        <button type="submit" class="btn btn-success btn-sm w-100 mt-2">Reservar</button>
-                                    </form>
-                                </div>
-                            </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-            })
-            .catch(err => {
-                console.error('Error:', err);
-                document.getElementById('horarios').innerHTML = '<p class="text-danger">Error al cargar horarios.</p>';
-            });
-    }
-
-    function formatearFecha(dateString) {
-        const options = { 
-            weekday: 'long',
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric' 
-        };
-        return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES', options);
-    }
 });
 </script>
 {% endblock %}

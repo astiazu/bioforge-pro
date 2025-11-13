@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BioForge{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Tus estilos -->
+    <link href="{{ url_for('static', filename='css/style_tienda.css') }}" rel="stylesheet">
+    
+    {% block styles %}{% endblock %}
+</head>
+<body id="tienda-body">
+    <header class="tienda-header tienda-nav bg-white shadow-sm">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between py-2 w-100">
+            <!-- Logo o usuario a la izquierda -->
+            {% if current_user.is_authenticated %}
+            <div class="d-flex align-items-center">
+                {% if current_user.profile_photo %}
+                <img src="{{ current_user.profile_photo }}" alt="Logo" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                <i class="fas fa-user"></i>
+                </div>
+                {% endif %}
+                <h3 class="text-secondary mb-0">{{ current_user.username }}</h3>
+            </div>
+            {% else %}
+            <a href="{{ url_for('routes.index') }}" class="text-decoration-none">
+                <h3 class="text-primary mb-0">🛍️ BioForge</h3>
+            </a>
+            {% endif %}
+
+            <!-- Navbar completamente a la derecha -->
+            <nav class="navbar navbar-expand ms-auto">
+                <div class="collapse navbar-collapse justify-content-end" id="navbarTienda">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('routes.tienda_publica', url_slug=professional.url_slug if professional else 'default') }}">Productos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Quiénes somos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Contacto</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item"><a href="{{ url_for('routes.editar_perfil_medico') }}" class="nav-link"><i class="fas fa-user me-1"></i> Mi Perfil</a></li>
+                    {% endif %}
+                </ul>
+                </div>
+            </nav>
+            </div>
+        </div>
+    </header>
+    <!-- Contenido -->
+    <main class="mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer de tienda -->
+    {% if professional %}
+    <footer class="tienda-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>{{ professional.username }}</h5>
+                    <p class="mb-1">{{ professional.specialty or 'Profesional' }}</p>
+                    {% if professional.bio %}
+                    <p class="small">{{ professional.bio|truncate(100) }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Contacto</h5>
+                    {% if professional.email %}
+                    <p class="mb-1"><i class="fas fa-envelope me-2"></i>{{ professional.email }}</p>
+                    {% endif %}
+                    {% if professional.clinics and professional.clinics|length > 0 %}
+                    <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ professional.clinics[0].address }}</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Síguenos</h5>
+                    <p class="mb-1"><i class="fab fa-whatsapp me-2"></i>WhatsApp</p>
+                    <p class="mb-1"><i class="fab fa-instagram me-2"></i>Instagram</p>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <small>&copy; {{ now().year }} {{ professional.username }}. Todos los derechos reservados.</small>
+            </div>
+        </div>
+    </footer>
+    {% endif %}
+
+    <!-- Botón de WhatsApp flotante -->
+    {% if professional and professional.clinics and professional.clinics|length > 0 and professional.clinics[0].phone %}
+    <a href="https://wa.me/{{ professional.clinics[0].phone|replace('+', '')|replace('-', '')|replace(' ', '') }}?text=Hola,%20vi%20tu%20tienda%20en%20BioForge%20y%20me%20gustaría%20consultar%20sobre%20un%20producto."
+       class="tienda-whatsapp-btn"
+       target="_blank"
+       title="Contactar por WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

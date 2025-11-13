@@ -4,7 +4,7 @@
 {% block title %}{{ doctor.username }} - Perfil{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container mt-5 bg-gradient-info p-4 rounded shadow-sm">
     <div class="text-center mb-5">
         <img src="{{ doctor.profile_photo or '/static/img/default-avatar.png' }}" 
              class="rounded-circle mb-3" 

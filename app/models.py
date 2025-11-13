@@ -87,6 +87,9 @@ class User(UserMixin, db.Model):
     url_slug = db.Column(db.String(100), unique=True, nullable=True)
     store_enabled = db.Column(db.Boolean, default=True, nullable=False)
     
+    # para guardar preferencias como el tema
+    preferences = db.Column(db.JSON, default=dict, nullable=True)
+
     # para verificar el correo electrónico
     email_verified = db.Column(db.Boolean, default=False, nullable=False)
 

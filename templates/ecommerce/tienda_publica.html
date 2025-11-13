@@ -1,153 +1,261 @@
-{% extends "base.html" %}
+<!-- Tienda online - template tienda_publica.html -->
+{% extends "base_tienda.html" %}
 
 {% block title %}Tienda de {{ professional.username }} - BioForge{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid px-0" id="store-container">
 
-    <!-- Título -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <h2>🛍️ Tienda de <strong>{{ professional.username }}</strong></h2>
-            <p class="text-muted">Productos y servicios disponibles</p>
-        </div>
-    </div>
+    <div class="row">
+        <!-- Columna 1: Panel de control (reducido) -->
+        <div class="col-lg-4">
+            <div class="p-2"> <!-- Contenedor ligero -->
+                <!-- Título compacto -->
+                <h2 class="display-6 tienda-product-title text-center mb-2" style="font-size: 1.4rem;">
+                    🛍️ Tienda de <strong>{{ professional.username }}</strong>
+                </h2>
+                <p class="text-muted tienda-subtitle text-center mb-3" style="font-size: 0.85rem;">
+                    Productos y servicios
+                </p>
 
-    <!-- Filtros -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-2">
-            <input type="text" id="search-input" class="form-control" placeholder="Buscar producto o servicio...">
-        </div>
-        <div class="col-md-6 mb-2">
-            <select id="category-filter" class="form-select">
-                <option value="">Todas las categorías</option>
-                {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
+                <!-- Filtros sin contenedor exagerado -->
+                <div class="mb-2">
+                    <input type="text" id="search-input" class="form-control form-control-sm" placeholder="Buscar productos...">
+                </div>
+                <div class="mb-3">
+                    <select id="category-filter" class="form-select form-select-sm">
+                        <option value="">Todas las categorías</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-    {% if products %}
-        {% set grouped_products = {} %}
-        {% for p in products %}
-            {% set cat_name = p.category.name if p.category else 'Sin categoría' %}
-            {% if cat_name not in grouped_products %}
-                {% set _ = grouped_products.update({cat_name: []}) %}
-            {% endif %}
-            {% set _ = grouped_products[cat_name].append(p) %}
-        {% endfor %}
-
-        {% for cat_name, prods in grouped_products.items() %}
-        <div class="category-group mb-5">
-            <h4 class="mb-3 p-3 rounded-3 d-flex align-items-center gap-2" 
-                style="background-color: #f0f8ff; border-left: 5px solid #0d6efd; animation: fadeIn 0.5s;">
-                <i class="fas fa-tag" style="color: #0d6efd; font-size: 1.5rem;"></i>
-                <span class="text-uppercase fw-bold" style="color: #0d6efd; font-size: 1.25rem;">
-                    {{ cat_name }}
-                </span>
-            </h4>
-            <hr class="my-2" style="border-color: #0d6efd; opacity: 0.3;">
-            <div class="row g-4">
-                {% for p in prods %}
-                <div class="col-md-6 col-lg-4 product-card" data-name="{{ p.name|lower }}" data-category="{{ p.category.id if p.category else '' }}">
-                    <div class="card h-100 shadow-sm border-0 rounded-3">
-                        <!-- Imagen -->
-                        <div style="height: 200px; background-color: #f8f9fa;"
-                            class="d-flex align-items-center justify-content-center p-3">
-                            {% if p.image_urls and p.image_urls|length > 0 %}
-                                <img src="{{ p.image_urls[0] }}" alt="{{ p.name }}" class="w-100 h-100" style="object-fit: contain;">
-                            {% else %}
-                                <i class="fas fa-box-open text-secondary" style="font-size: 3rem;"></i>
-                            {% endif %}
+                <!-- Selector de tema -->
+                {% if current_user.is_authenticated and current_user.id == professional.id %}
+                <div class="mt-2 p-2 bg-primary text-white rounded" style="font-size: 0.8rem;">
+                    <small>🎨 Tema:</small>
+                    <div class="d-flex flex-column gap-1 mt-1">
+                        {% for name, label in [('default', 'Claro'), ('azul', 'Azul'), ('verde', 'Verde'), ('morado', 'Morado'), ('amarillo', 'Amarillo'), ('negro', 'Negro')] %}
+                        <div class="d-flex align-items-center gap-1">
+                            <input type="radio" id="theme-{{ name }}" name="store-theme" value="{{ name }}" onchange="setTheme(this.value)" style="width: auto;">
+                            <label for="theme-{{ name }}" class="theme-label theme-{{ name }}">
+                                {{ label }}
+                            </label>
                         </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- 📱 CTA: Agregar a pantalla de inicio -->
+            <div class="mt-3 p-3 bg-gradient-dark text-white rounded" style="background: linear-gradient(145deg, #1a1a2e, #16213e); font-size: 0.85rem;">
+                <div class="text-center mb-2">
+                    <i class="fas fa-star text-warning"></i>
+                    <strong class="text-white">Acceso directo</strong>
+                    <i class="fas fa-star text-warning"></i>
+                </div>
+                <p class="small text-light mb-2 text-center" style="line-height: 1.4;">
+                    ¿Quieres acceso rápido a esta tienda?
+                    <br>
+                    <strong>Agrégala a tu pantalla de inicio</strong>
+                </p>
+                <div class="text-center">
+                    <button class="btn btn-sm btn-outline-light" 
+                            style="font-size: 0.75rem; padding: 0.25rem 0.6rem;" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#addToHomeModal">
+                        Cómo hacerlo →
+                    </button>
+                </div>
+            </div>
 
-                        <!-- Detalle -->
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ p.name }}</h5>
-                            <p class="card-text text-muted small">{{ p.description|truncate(100) }}</p>
-
-                            <!-- Precios -->
-                            <div class="mt-auto">
-                                {% if p.is_on_promotion and p.promotion_discount > 0 and (not p.promotion_end_date or p.promotion_end_date > now()) %}
-                                    <div class="d-flex align-items-baseline gap-2">
-                                        <span class="h5 mb-0 text-success">${{ "%.2f"|format(p.final_price) }}</span>
-                                        <small class="text-muted text-decoration-line-through">
-                                            ${{ "%.2f"|format(p.list_price) }}
-                                        </small>
-                                    </div>
-                                {% else %}
-                                    <span class="h5 mb-0 text-primary">${{ "%.2f"|format(p.final_price) }}</span>
-                                {% endif %}
-
-                                <span class="badge bg-{{ 'info' if p.is_service else 'success' }} mt-2">
-                                    {{ 'Servicio' if p.is_service else 'Producto' }}
-                                </span>
-
-                                {% if not p.is_service and p.stock == 0 %}
-                                    <span class="badge bg-warning text-dark mt-2">Agotado</span>
-                                {% endif %}
-
-                                <form action="{{ url_for('routes.detalle_producto', product_id=p.id) }}" method="GET" class="mt-2">
-                                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-                                        Ver Detalles
-                                    </button>
-                                </form>
-                                <form action="{{ url_for('routes.agregar_al_carrito', product_id=p.id) }}" method="POST">
-                                    <button type="submit" class="btn btn-primary btn-sm mt-3 w-100">
-                                        Comprar
-                                    </button>
-                                </form>
+            <!-- Modal de instrucciones -->
+            <div class="modal fade" id="addToHomeModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-primary text-white">
+                            <h6 class="modal-title"><i class="fas fa-mobile-alt me-2"></i>Agregar a Pantalla</h6>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center p-3">
+                            <p class="mb-3" style="font-size: 0.9rem;">Toca el botón de compartir y luego:</p>
+                            
+                            <!-- Instrucciones según dispositivo -->
+                            <div id="instructions-ios" style="display: none;">
+                                <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons/icons/share.svg" width="24" height="24" alt="Compartir">
+                                <span class="badge bg-secondary ms-2">Compartir</span>
+                                <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                                <span class="badge bg-success">Agregar a pantalla de inicio</span>
                             </div>
+                            <div id="instructions-android" style="display: none;">
+                                <img src="https://cdn.jsdelivr.net/npm/bootstrap-icons/icons/three-dots-vertical.svg" width="24" height="24" alt="Menú">
+                                <span class="badge bg-secondary ms-2">Menú</span>
+                                <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                                <span class="badge bg-success">Agregar a pantalla de inicio</span>
+                            </div>
+                            <div id="instructions-generic" style="display: none;">
+                                <span class="badge bg-secondary">Opciones</span>
+                                <i class="fas fa-arrow-right mx-2 text-muted"></i>
+                                <span class="badge bg-success">Agregar a inicio</span>
+                            </div>
+
+                            <p class="mt-3 text-muted small">
+                                Funciona como una app: rápida, sin navegador.
+                            </p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-sm btn-primary px-4" data-bs-dismiss="modal">
+                                Entendido
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Script para detectar dispositivo y mostrar instrucciones -->
+            <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const android = /Android/.test(navigator.userAgent);
+
+                if (ios) {
+                    document.getElementById('instructions-ios').style.display = 'block';
+                } else if (android) {
+                    document.getElementById('instructions-android').style.display = 'block';
+                } else {
+                    document.getElementById('instructions-generic').style.display = 'block';
+                }
+            });
+            </script>
+        </div>
+
+        <!-- Columna 2: Productos -->
+        <div class="col-lg-8">
+            {% if products %}
+                {% set grouped_products = {} %}
+                {% for p in products %}
+                    {% set cat_name = p.category.name if p.category else 'Sin categoría' %}
+                    {% if cat_name not in grouped_products %}
+                        {% set _ = grouped_products.update({cat_name: []}) %}
+                    {% endif %}
+                    {% set _ = grouped_products[cat_name].append(p) %}
                 {% endfor %}
+
+                {% for cat_name, prods in grouped_products.items() %}
+                <div class="category-group mb-4">
+                    <div class="category-header">
+                        <h4 class="tienda-product-title">{{ cat_name }}</h4>
+                    </div>
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+                        {% for p in prods %}
+                        <div class="col product-card product-card-chona" data-name="{{ p.name|lower }}" data-category="{{ p.category.id if p.category else '' }}">
+                            <a href="{{ url_for('routes.detalle_producto', product_id=p.id) }}" class="d-block">
+                                <div class="card-img-container">
+                                    {% if p.image_urls and p.image_urls|length > 0 %}
+                                        <img src="{{ p.image_urls[0] }}" alt="{{ p.name }}">
+                                    {% else %}
+                                        <i class="fas fa-box-open text-secondary" style="font-size: 2.5rem;"></i>
+                                    {% endif %}
+                                </div>
+                            </a>
+                            <div class="card-body">
+                                <h5 class="card-title tienda-product-title">{{ p.name }}</h5>
+                                <div class="price-container">
+                                    {% if p.is_on_promotion and p.promotion_discount > 0 and (not p.promotion_end_date or p.promotion_end_date > now()) %}
+                                        <span class="price-promo tienda-price-promo">${{ "%.2f"|format(p.final_price) }}</span>
+                                        <small class="price-original tienda-price-original">${{ "%.2f"|format(p.list_price) }}</small>
+                                    {% else %}
+                                        <span class="price-promo tienda-price-promo">${{ "%.2f"|format(p.final_price) }}</span>
+                                    {% endif %}
+                                </div>
+                                <form action="{{ url_for('routes.agregar_al_carrito', product_id=p.id) }}" method="POST" class="mt-2">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">Comprar</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info text-center rounded-3">
+                    <h5>📦 Tienda vacía</h5>
+                    <p>El profesional aún no ha agregado productos.</p>
+                </div>
+            {% endif %}
+
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('routes.perfil_profesional', url_slug=professional.url_slug) }}" class="btn btn-secondary btn-sm rounded-pill px-4">
+                    ← Volver al perfil
+                </a>
             </div>
         </div>
-        {% endfor %}
-    {% else %}
-        <div class="alert alert-info text-center rounded-3">
-            <h4>📦 Esta tienda está vacía por el momento.</h4>
-            <p>El profesional aún no ha agregado productos o servicios.</p>
-        </div>
-    {% endif %}
-
-    <div class="mt-4 text-center">
-        <a href="{{ url_for('routes.perfil_profesional', url_slug=professional.url_slug) }}" 
-           class="btn btn-secondary rounded-pill px-4">
-            ← Volver al perfil
-        </a>
     </div>
 </div>
 
-<!-- Filtro JS -->
+<!-- Script JS actualizado -->
 <script>
-const searchInput = document.getElementById('search-input');
-const categoryFilter = document.getElementById('category-filter');
+const themeColors = {
+    default: { bg: '#f8f9fa', text: '#212529' },
+    azul:    { bg: '#0d6efd', text: 'white' },
+    verde:   { bg: '#198754', text: 'white' },
+    morado:  { bg: '#6c5ce7', text: 'white' },
+    amarillo: { bg: '#ffc107', text: 'black' }, // Nuevo tema
+    negro:   { bg: '#212529', text: 'white' }
+};
 
-function filterProducts() {
-    const searchText = searchInput.value.toLowerCase();
-    const category = categoryFilter.value;
+function applyTheme(themeName) {
+    const body = document.getElementById('tienda-body');
+    const colors = themeColors[themeName] || themeColors.default;
 
-    document.querySelectorAll('.product-card').forEach(card => {
-        const name = card.dataset.name;
-        const catId = card.dataset.category;
+    // Aplicar color de fondo y texto a body (afecta todo el sitio)
+    body.style.backgroundColor = colors.bg;
+    body.style.color = colors.text;
 
-        const matchesSearch = !searchText || name.includes(searchText);
-        const matchesCategory = !category || catId === category;
+    // Agregar clase al body para estilos CSS específicos
+    document.body.className = document.body.className.replace(/theme-\w+/g, '').trim();
+    document.body.classList.add(`theme-${themeName}`);
 
-        card.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
-    });
+    localStorage.setItem('store-theme', themeName);
+}
 
-    document.querySelectorAll('.category-group').forEach(group => {
-        const visibleProducts = group.querySelectorAll('.product-card:not([style*="display: none"])');
-        group.style.display = visibleProducts.length > 0 ? '' : 'none';
+function setTheme(theme) {
+    fetch(`/guardar-tema/${theme}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    }).then(() => {
+        applyTheme(theme);
     });
 }
 
-searchInput.addEventListener('input', filterProducts);
-categoryFilter.addEventListener('change', filterProducts);
+document.addEventListener('DOMContentLoaded', function () {
+    const backendTheme = "{{ theme }}";
+    const savedTheme = localStorage.getItem('store-theme') || backendTheme || 'default';
+    applyTheme(savedTheme);
+
+    const radio = document.querySelector(`input[name="store-theme"][value="${savedTheme}"]`);
+    if (radio) radio.checked = true;
+
+    // Filtros (sin cambios)
+    const searchInput = document.getElementById('search-input');
+    const categoryFilter = document.getElementById('category-filter');
+
+    function filterProducts() {
+        const searchText = searchInput.value.toLowerCase();
+        const category = categoryFilter.value;
+        document.querySelectorAll('.product-card').forEach(card => {
+            const name = card.dataset.name;
+            const catId = card.dataset.category;
+            const matches = (!searchText || name.includes(searchText)) && (!category || catId === category);
+            card.style.display = matches ? '' : 'none';
+        });
+        document.querySelectorAll('.category-group').forEach(group => {
+            group.style.display = group.querySelector('.product-card:not([style*="none"])') ? '' : 'none';
+        });
+    }
+    searchInput.addEventListener('input', filterProducts);
+    categoryFilter.addEventListener('change', filterProducts);
+});
 </script>
 {% endblock %}
-

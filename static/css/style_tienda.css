@@ -1,0 +1,389 @@
+/* === Estilos para las tiendas === */
+/* body {
+    background-color: #f9f9f9;
+    font-family: 'Inter', sans-serif;
+} */
+
+body#tienda-body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#store-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.category-group {
+    margin-bottom: 40px;
+}
+
+.category-header {
+    background-color: white;
+    border-left: 4px solid #0d6efd;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.category-header h4 {
+    margin: 0;
+    color: #000000;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+
+.product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    height: 100%;
+}
+
+/* === Cambio 1: Imágenes al doble de tamaño y clickeables === */
+.card-img-container {
+    height: 400px; /* Cambiado de 200px a 400px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 15px;
+    cursor: pointer; /* Indica que es clickeable */
+}
+
+.card-img-container img {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    transition: transform 0.2s ease; /* Efecto al pasar el mouse */
+}
+
+.card-img-container img:hover {
+    transform: scale(1.05); /* Efecto de zoom suave */
+}
+
+.card-body {
+    padding: 15px;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #3b3d3f;
+    margin-bottom: 8px;
+}
+
+/* === Ajuste para temas: títulos cambian según el tema === */
+.theme-default .card-title,
+.theme-verde .card-title,
+.theme-amarillo .card-title { color: #212529; }
+
+.theme-azul .card-title,
+.theme-morado .card-title,
+.theme-negro .card-title { color: white; }
+
+.card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.price-container {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.price-promo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #198754;
+}
+
+/* === Ajuste para temas: precios cambian según el tema === */
+.theme-default .price-promo,
+.theme-verde .price-promo { color: #2dc7ee; }
+.theme-amarillo .price-promo { color: #198754; }
+
+.theme-azul .price-promo,
+.theme-morado .price-promo,
+.theme-negro .price-promo { color: #79f2c0; } /* Verde claro sobre fondo oscuro */
+
+.price-original {
+    font-size: 1rem;
+    color: #6c757d;
+    text-decoration: line-through;
+}
+
+/* === Ajuste para temas: precios originales cambian según el tema === */
+.theme-default .price-original,
+.theme-verde .price-original,
+.theme-amarillo .price-original { color: #6c757d; }
+
+.theme-azul .price-original,
+.theme-morado .price-original,
+.theme-negro .price-original { color: #a0aec0; } /* Gris claro sobre fondo oscuro */
+
+/* === Botones más pequeños === */
+.btn-sm {
+    border-radius: 30px;
+    padding: 6px 12px; /* Reducido de 8px 20px */
+    font-size: 0.8rem; /* Reducido de 0.9rem */
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary, .btn-primary {
+    border-radius: 30px;
+    padding: 6px 12px; /* Reducido de 8px 20px */
+    font-size: 0.8rem; /* Reducido de 0.9rem */
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0b5ed7;
+}
+
+.badge {
+    border-radius: 50px;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+}
+
+.search-filter-row {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+}
+
+/* === Ajuste para temas: filtro de búsqueda cambia según el tema === */
+.theme-default .search-filter-row,
+.theme-verde .search-filter-row,
+.theme-amarillo .search-filter-row { background-color: white; }
+
+.theme-azul .search-filter-row,
+.theme-morado .search-filter-row,
+.theme-negro .search-filter-row { background-color: rgba(255,255,255,0.1); }
+
+/* Header de tienda */
+.tienda-header {
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 1rem 0;
+}
+
+.tienda-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tienda-header h3 {
+    color: #0d6efd;
+    margin: 0;
+}
+
+.tienda-header a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.tienda-header .btn {
+    border-radius: 30px;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+}
+
+.tienda-product-title {
+    color:#788188;
+    font-size: 0.875rem;
+}
+
+/* === Estilos para el navbar de tienda (siempre visible, sin afectar por tema) === */
+.tienda-header .navbar-nav .nav-link {
+    color: #212529 !important; /* Negro por defecto */
+    transition: color 0.3s ease;
+}
+
+.tienda-header .navbar-nav .nav-link:hover {
+    color: #c8d3e2 !important; /* Azul al pasar el mouse */
+}
+
+.tienda-header .btn-outline-primary {
+    color: #c8d3e2 !important;
+    border-color: #81b1fa !important;
+}
+
+.tienda-header .btn-outline-primary:hover {
+    background-color: #c8d3e2 !important;
+    color: white !important;
+}
+
+/* === Subtítulo de tienda (siempre visible) === */
+.tienda-subtitle {
+    color: #868d94 !important;
+    /*transition: color 0.3s ease;*/
+}
+
+/* === Ajuste para temas: subtítulo cambia según el tema === */
+.theme-default .tienda-subtitle,
+.theme-verde .tienda-subtitle,
+.theme-amarillo .tienda-subtitle { color: #868d94 !important; }
+
+.theme-azul .tienda-subtitle,
+.theme-morado .tienda-subtitle,
+.theme-negro .tienda-subtitle { color: rgba(255,255,255,0.7) !important; }
+
+/* === Estilos para los radios del selector de tema === */
+.theme-label {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.theme-default {
+    background-color: #f8f9fa;
+    color: black;
+}
+
+.theme-azul {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.theme-verde {
+    background-color: #198754;
+    color: white;
+}
+
+.theme-morado {
+    background-color: #6c5ce7;
+    color: white;
+}
+
+.theme-amarillo {
+    background-color: #ffc107;
+    color: black;
+}
+
+.theme-negro {
+    background-color: #212529;
+    color: white;
+}
+
+/* === Footer de tienda === */
+.tienda-footer {
+    background-color: #212529;
+    color: white;
+    padding: 2rem 0;
+    margin-top: 4rem;
+}
+
+.tienda-footer a {
+    color: #adb5bd;
+    text-decoration: none;
+}
+
+.tienda-footer a:hover {
+    color: white;
+}
+
+.tienda-footer h5 {
+    color: #f8f9fa;
+}
+
+.tienda-whatsapp-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #25d366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: transform 0.2s ease;
+}
+
+.tienda-whatsapp-btn:hover {
+    transform: scale(1.1);
+}
+
+/* === Navbar de tienda (dinámico con el tema) === */
+.tienda-nav {
+    background-color: inherit !important;
+    transition: background-color 0.3s ease;
+    padding: 1rem 0;
+}
+
+.tienda-nav .navbar-nav .nav-link {
+    color: inherit !important; /* Hereda el color del body */
+    transition: color 0.3s ease;
+}
+
+.tienda-nav .navbar-nav .nav-link:hover {
+    color: #a3afc2 !important; /* Azul al pasar el mouse */
+}
+
+.tienda-nav .btn-outline-primary {
+    color: inherit !important;
+    border-color: currentColor !important; /* Borde del mismo color que el texto */
+}
+
+.tienda-nav .btn-outline-primary:hover {
+    background-color: currentColor !important;
+    color: white !important;
+}
+
+/* === Cambio 2: Diseño responsive para móviles === */
+@media (max-width: 768px) {
+    .product-card {
+        flex: 0 0 48%; /* 2 productos por fila */
+        max-width: 48%;
+    }
+
+    .search-filter-row .col-md-6 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Para tablets (2 columnas también si es necesario) */
+@media (min-width: 769px) and (max-width: 992px) {
+    .product-card {
+        flex: 0 0 48%;
+        max-width: 48%;
+    }
+}

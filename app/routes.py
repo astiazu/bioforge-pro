@@ -41,6 +41,7 @@ from werkzeug.security import generate_password_hash
 from sqlalchemy import or_, and_, func, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse
 from decimal import Decimal, ROUND_HALF_UP
 from app.config.constants import PROFESSIONAL_ROLE_IDS
@@ -2215,39 +2216,83 @@ def api_horarios(doctor_id, clinic_id, fecha):
 
 @routes.route('/api/dias-disponibles/<int:doctor_id>/<int:clinic_id>')
 def api_dias_disponibles(doctor_id, clinic_id):
-    from datetime import datetime
+    try:
+        # Obtener días disponibles
+        available_days = Availability.query.filter(
+            Availability.clinic_id == clinic_id,
+            Availability.date >= datetime.utcnow().date(),
+            Availability.is_booked == False
+        ).distinct(Availability.date).all()
 
-    # Obtener días disponibles
-    available_days = Availability.query.filter(
-        Availability.clinic_id == clinic_id,
-        Availability.date >= datetime.utcnow().date(),
-        Availability.is_booked == False
-    ).distinct(Availability.date).all()
+        # Convertir fechas a formato YYYY-MM-DD y ordenarlas
+        available_dates = sorted({day.date.strftime('%Y-%m-%d') for day in available_days})
 
-    available_dates = {day.date.strftime('%Y-%m-%d') for day in available_days}
+        # Obtener eventos próximos del profesional
+        events = Event.query.filter(
+            Event.doctor_id == doctor_id,
+            Event.start_datetime >= datetime.utcnow(),
+            Event.is_public == True
+        ).all()
 
-    # Obtener eventos próximos del profesional
-    events = Event.query.filter(
-        Event.doctor_id == doctor_id,
-        Event.start_datetime >= datetime.utcnow(),
-        Event.is_public == True
-    ).all()
+        # Formatear eventos para el frontend
+        event_data = [
+            {
+                "title": event.title,
+                "start": event.start_datetime.strftime('%Y-%m-%d'),
+                "end": event.end_datetime.strftime('%Y-%m-%d') if event.end_datetime else None,
+                "url": url_for('routes.view_event', event_id=event.id)
+            }
+            for event in events
+        ] if events else []
 
-    event_data = [
-        {
-            "title": event.title,
-            "start": event.start_datetime.strftime('%Y-%m-%d'),
-            "end": event.end_datetime.strftime('%Y-%m-%d') if event.end_datetime else None,
-            "url": url_for('routes.view_event', event_id=event.id)
-        }
-        for event in events
-    ]
+        # Devolver respuesta JSON
+        response = jsonify({
+            "available_days": available_dates,
+            "events": event_data
+        })
 
-    return jsonify({
-        "available_days": list(available_dates),
-        "events": event_data
-    })
+        # Imprimir la respuesta para depuración
+        print("Respuesta JSON:", response.get_json())
 
+        return response
+
+    except SQLAlchemyError as e:
+        # Capturar errores de base de datos
+        print(f"Error en la base de datos: {e}")
+        return jsonify({"error": "Error al cargar los datos"}), 500
+    
+@routes.route('/api/eventos/<int:doctor_id>/<int:clinic_id>/<string:date>')
+def api_eventos(doctor_id, clinic_id, date):
+    try:
+        # Convertir la fecha recibida en un objeto datetime
+        selected_date = datetime.strptime(date, '%Y-%m-%d')
+
+        # Obtener eventos/turnos para el día seleccionado
+        eventos = Event.query.filter(
+            Event.doctor_id == doctor_id,
+            Event.clinic_id == clinic_id,
+            Event.start_datetime >= selected_date,
+            Event.start_datetime < selected_date + timedelta(days=1)  # Filtrar por el mismo día
+        ).all()
+
+        # Formatear los eventos para el frontend
+        evento_data = [
+            {
+                "title": evento.title,
+                "time": evento.start_datetime.strftime('%H:%M'),  # Hora del evento
+                "status": "Confirmado" if evento.is_confirmed else "Pendiente"
+            }
+            for evento in eventos
+        ]
+
+        # Devolver respuesta JSON
+        return jsonify(evento_data)
+
+    except SQLAlchemyError as e:
+        # Capturar errores de base de datos
+        print(f"Error en la base de datos: {e}")
+        return jsonify({"error": "Error al cargar los datos"}), 500
+    
 @routes.route('/calendario/<int:doctor_id>/<int:clinic_id>')
 def calendario_turnos(doctor_id, clinic_id):
     doctor = User.query.filter_by(id=doctor_id, is_professional=True).first_or_404()
@@ -4286,7 +4331,10 @@ def assistant():
 # === TIENDA PÚBLICA ===
 @routes.route('/tienda/<string:url_slug>')
 def tienda_publica(url_slug):
-    from app.models import User, Product  # Ajusta según tu estructura
+    from app.models import User, Product, ProductCategory
+    from datetime import datetime
+    import json
+
     professional = User.query.filter_by(url_slug=url_slug, is_professional=True).first_or_404()
     
     # Productos visibles y con stock (o servicios)
@@ -4294,7 +4342,8 @@ def tienda_publica(url_slug):
         doctor_id=professional.id,
         is_visible=True
     ).filter(
-        (Product.is_service == True) | (Product.stock > 0) |
+        (Product.is_service == True) |
+        (Product.stock > 0) |
         ((Product.stock == 0) & (Product.hide_if_out_of_stock == False))
     ).all()
     
@@ -4306,13 +4355,83 @@ def tienda_publica(url_slug):
         .all()
     )
 
+    # ✅ Convertir preferences a diccionario si es string
+    preferences_dict = {}
+    if professional.preferences:
+        if isinstance(professional.preferences, str):
+            try:
+                preferences_dict = json.loads(professional.preferences)
+            except (json.JSONDecodeError, TypeError):
+                preferences_dict = {}
+        else:
+            preferences_dict = professional.preferences
+
+    # ✅ Obtener el tema de la tienda desde preferences
+    theme = preferences_dict.get('store_theme', 'default')
+    print("Tema leído de BD:", theme)
+
     return render_template(
         'ecommerce/tienda_publica.html',
         professional=professional,
         products=products,
         categories=categories,
-        now=datetime.now
-    )    
+        now=datetime.now,
+        theme=theme
+    )
+
+@routes.route('/guardar-tema/<string:theme>', methods=['POST'])
+def guardar_tema(theme):
+    from flask import jsonify
+    from app import db
+    from app.models import User
+    import json
+
+    print("Tema recibido:", theme)
+
+    # Verificar que el usuario esté autenticado
+    if not current_user.is_authenticated:
+        return jsonify({"error": "No autenticado"}), 403
+
+    # Verificar que sea un profesional
+    if not current_user.is_professional:
+        return jsonify({"error": "No tienes permisos"}), 403
+
+    # ✅ Verificar que el tema sea válido - AGREGADO 'amarillo'
+    temas_validos = ['default', 'azul', 'verde', 'morado', 'negro', 'amarillo']
+    if theme not in temas_validos:
+        return jsonify({"error": "Tema no válido"}), 400
+
+    # ✅ Cargar el objeto fresh de la base de datos
+    user = db.session.query(User).filter(User.id == current_user.id).first()
+
+    # ✅ Asegurar que sea un diccionario
+    if user.preferences:
+        if isinstance(user.preferences, str):
+            try:
+                current_prefs = json.loads(user.preferences)
+            except (json.JSONDecodeError, TypeError):
+                current_prefs = {}
+        else:
+            current_prefs = user.preferences.copy()  # ✅ Hacer copia para evitar problemas
+    else:
+        current_prefs = {}
+
+    # ✅ Actualizar el tema
+    current_prefs['store_theme'] = theme
+
+    # ✅ Reemplazar completamente el objeto para que SQLAlchemy detecte el cambio
+    user.preferences = current_prefs
+
+    # ✅ Forzar el marcado de cambio (importante para JSON)
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(user, 'preferences')
+
+    # ✅ Guardar y confirmar
+    db.session.commit()
+
+    print("Tema guardado en BD:", user.preferences)
+
+    return jsonify({"success": True})
 
 # === PRODUCTOS ===
 @routes.route('/<int:doctor_id>/productos')
