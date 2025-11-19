@@ -72,6 +72,42 @@
     </script>
     <!-- Password -->    
     <script src="{{ url_for('static', filename='js/pass.js') }}" defer></script>
+
+    <!-- Estilos para el Modal de Suscripción -->
+    <style>
+        .subscription-benefit-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .subscription-benefit-item:last-child {
+            border-bottom: none;
+        }
+        
+        #subscriptionModal .modal-content {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        #subscriptionModal .modal-header {
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .subscription-pulse {
+            animation: subscriptionPulse 2s infinite;
+        }
+        
+        @keyframes subscriptionPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .subscription-float-btn {
+            z-index: 1040;
+        }
+    </style>
 </head>
 <body>
     <!-- WhatsApp Float -->
@@ -80,6 +116,16 @@
             <i class="fab fa-whatsapp"></i>
             <span class="tooltip-text">¡Hablemos por WhatsApp!</span>
         </a>
+    </div>
+
+    <!-- Botón Flotante Suscripción -->
+    <div class="position-fixed bottom-0 start-0 m-4 subscription-float-btn">
+        <button class="btn btn-primary btn-lg rounded-pill shadow subscription-pulse" 
+                data-bs-toggle="modal" 
+                data-bs-target="#subscriptionModal"
+                title="Suscríbete para acceso completo">
+            <i class="fas fa-gem me-2"></i>Únete
+        </button>
     </div>
 
     <!-- Promo Bar -->
@@ -100,6 +146,20 @@
             <div class="d-flex">
                 <div class="toast-body">Producto agregado al carrito</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Suscripción -->
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        <div id="subscriptionToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">¡Éxito!</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Te hemos enviado tus credenciales de acceso al correo electrónico.
             </div>
         </div>
     </div>
@@ -125,9 +185,202 @@
     <!-- Footer -->
     {% include 'partials/footer.html' %}
 
+    <!-- Modal de Suscripción -->
+    <div class="modal fade" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="subscriptionModalLabel">
+                        <i class="fas fa-rocket me-2"></i>¡Desbloquea Todo el Contenido!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-gem fa-3x text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold">Únete a Nuestra Comunidad</h4>
+                        <p class="text-muted">Suscríbete y accede a contenido exclusivo de profesionales</p>
+                    </div>
+
+                    <!-- Beneficios -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="subscription-benefit-item d-flex align-items-center mb-3">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <span>Acceso a todos los profesionales registrados</span>
+                            </div>
+                            <div class="subscription-benefit-item d-flex align-items-center mb-3">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <span>Contenido exclusivo y actualizaciones</span>
+                            </div>
+                            <div class="subscription-benefit-item d-flex align-items-center mb-3">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <span>Notificaciones de nuevos servicios</span>
+                            </div>
+                            <div class="subscription-benefit-item d-flex align-items-center mb-3">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <span>Ofertas especiales y descuentos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de Suscripción -->
+                    <form id="subscriptionForm" action="{{ url_for('routes.subscribe') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="subscribeEmail" class="form-label fw-semibold">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <input type="email" 
+                                       class="form-control" 
+                                       id="subscribeEmail" 
+                                       name="email" 
+                                       placeholder="tu@email.com" 
+                                       required
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                            </div>
+                            <div class="form-text">
+                                Te enviaremos tus credenciales de acceso inmediatamente
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                            <label class="form-check-label small" for="termsCheck">
+                                Acepto los <a href="{{ url_for('routes.terminos_condiciones') }}" target="_blank" class="text-decoration-none">Términos y Condiciones</a> 
+                                y la <a href="{{ url_for('routes.politica_privacidad') }}" target="_blank" class="text-decoration-none">Política de Privacidad</a>
+                            </label>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Suscribirse y Acceder
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Quizás más tarde
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <small class="text-muted">
+                        ¿Ya tienes cuenta? <a href="{{ url_for('auth.login') }}" class="text-decoration-none">Inicia sesión aquí</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/datosconsultora.js') }}"></script>
+
+    <!-- Script para el Modal de Suscripción -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar modal después de 3 segundos
+        setTimeout(function() {
+            // Verificar si el usuario ya está suscrito o logueado
+            const isSubscribed = localStorage.getItem('userSubscribed');
+            const isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+            
+            if (!isSubscribed && !isLoggedIn) {
+                const subscriptionModal = new bootstrap.Modal(document.getElementById('subscriptionModal'));
+                subscriptionModal.show();
+            }
+        }, 3000);
+
+        // Manejar el formulario de suscripción
+        const subscriptionForm = document.getElementById('subscriptionForm');
+        if (subscriptionForm) {
+            subscriptionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const email = formData.get('email');
+                
+                // Validación básica del email
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) {
+                    alert('Por favor ingresa un correo electrónico válido');
+                    return;
+                }
+
+                // Mostrar loading
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+                submitBtn.disabled = true;
+                
+                // Enviar formulario
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Mostrar toast de éxito
+                        const toastElement = document.getElementById('subscriptionToast');
+                        const toastBody = toastElement.querySelector('.toast-body');
+                        toastBody.textContent = data.message || '¡Te has suscrito exitosamente! Revisa tu email para las credenciales.';
+                        
+                        const toast = new bootstrap.Toast(toastElement);
+                        toast.show();
+                        
+                        // Cerrar modal después de 2 segundos
+                        setTimeout(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('subscriptionModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                        }, 2000);
+                        
+                        // Marcar como suscrito en localStorage
+                        localStorage.setItem('userSubscribed', 'true');
+                        
+                        // Resetear formulario
+                        subscriptionForm.reset();
+                    } else {
+                        alert(data.message || 'Error al suscribirse. Por favor intenta nuevamente.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al procesar la suscripción. Por favor intenta nuevamente.');
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
+        }
+
+        // Validación en tiempo real del email
+        const emailInput = document.getElementById('subscribeEmail');
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (this.value && !emailPattern.test(this.value)) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+    });
+    </script>
 
     {% block scripts %}{% endblock %}
     <script>

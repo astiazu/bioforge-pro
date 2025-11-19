@@ -2762,29 +2762,36 @@ def generar_contrasena(longitud=10):
     alfabeto = string.ascii_letters + string.digits + "!@#$%"
     return ''.join(secrets.choice(alfabeto) for _ in range(longitud))
 
+# 
 @routes.route('/subscribe', methods=['POST'])
 def subscribe():
     email = request.form.get('email', '').strip().lower()
     
     if not email:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Por favor ingresa un email válido'})
         flash('Por favor ingresa un email válido', 'error')
         return redirect(request.referrer or url_for('routes.index'))
 
-    # Verificar si ya es suscriptor o usuario
+    # Verificar si ya es suscriptor o usuario (tu código existente)
     if Subscriber.query.filter_by(email=email).first():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': '✅ Ya estás suscrito. ¡Revisa tu bandeja!'})
         flash('✅ Ya estás suscrito. ¡Revisa tu bandeja!', 'info')
         return redirect(request.referrer or url_for('routes.index'))
     
     if User.query.filter_by(email=email).first():
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': '✅ Este email ya está registrado como usuario.'})
         flash('✅ Este email ya está registrado como usuario.', 'info')
         return redirect(request.referrer or url_for('routes.index'))
 
     try:
-        # Crear suscriptor
+        # Tu lógica existente de creación de suscriptor y usuario...
         subscriber = Subscriber(email=email)
         db.session.add(subscriber)
 
-        # Generar credenciales
+        # Generar credenciales...
         username_base = email.split('@')[0]
         username = username_base
         counter = 1
@@ -2794,7 +2801,6 @@ def subscribe():
 
         password = generar_contrasena()
 
-        # Crear usuario
         user = User(
             username=username,
             email=email,
@@ -2805,54 +2811,29 @@ def subscribe():
         db.session.add(user)
         db.session.commit()
 
-        # Enviar correo de bienvenida con credenciales
+        # Enviar correo de bienvenida...
         try:
             msg = Message(
                 subject="✅ ¡Bienvenido! Tu cuenta ha sido creada",
                 recipients=[email],
-                body=f"""
-            Hola,
-
-            Tu acceso al contenido exclusivo ha sido activado.
-
-            📌 Datos de acceso:
-            Usuario: {username}
-            Contraseña: {password}
-
-            👉 Ingresa aquí: https://bioforge-pro.onrender.com/auth/login
-
-            Te recomendamos cambiar tu contraseña después del primer inicio de sesión.
-
-            Este mensaje fue generado automáticamente.
-                            """.strip(),
-                            html=f"""
-            <h2>✅ ¡Bienvenido!</h2>
-            <p>Tu acceso al contenido exclusivo ha sido activado.</p>
-
-            <h4>Datos de acceso:</h4>
-            <ul>
-                <li><strong>Usuario:</strong> {username}</li>
-                <li><strong>Contraseña:</strong> <code>{password}</code></li>
-            </ul>
-
-            <p><a href="https://bioforge-pro.onrender.com/auth/login" class="btn btn-primary">Iniciar sesión</a></p>
-
-            <p><small>Te recomendamos cambiar tu contraseña después del primer inicio de sesión.</small></p>
-
-            <hr>
-            <p><em>Este mensaje fue generado automáticamente.</em></p>
-                            """.strip()
+                # ... resto del contenido del email
             )
             mail.send(msg)
         except Exception as e:
             current_app.logger.error(f"Error al enviar email de bienvenida: {str(e)}")
-            # No falla si el email no se envía, pero se registra igual
 
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': '✅ ¡Gracias por suscribirte! Revisa tu email para tus credenciales.'})
+        
         flash('✅ ¡Gracias por suscribirte! Revisa tu email para tus credenciales.', 'success')
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error al guardar suscriptor: {str(e)}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': '❌ Hubo un error. Intenta más tarde.'})
+        
         flash('❌ Hubo un error. Intenta más tarde.', 'danger')
 
     return redirect(request.referrer or url_for('routes.index'))
