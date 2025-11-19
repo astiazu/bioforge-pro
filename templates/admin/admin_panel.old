@@ -1,0 +1,418 @@
+<!-- templates/admin/admin_panel.html -->
+{% extends "base.html" %}
+
+{% block title %}Panel de Administración - Portafolio José Luis Astiazu{% endblock %}
+
+{% block content %}
+<!-- Debug solo en desarrollo -->
+{% if config.DEBUG %}
+<div class="alert alert-info">
+    <strong>Debug:</strong> Hay {{ pending_notes|length }} notas pendientes
+    {% if pending_notes %}
+        ({{ pending_notes[0].title }} es una)
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">
+                    <i class="fas fa-cog me-3 text-info"></i>
+                    Panel de Administración
+                </h1>
+                <p class="lead text-muted">
+                    Gestiona notas pendientes, publicaciones, roles y contenido del sitio
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards (ampliadas con visitas) -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-2">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ pending_notes|length }}</h4>
+                    <p class="card-text mb-0">Notas Pendientes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ published_notes|length }}</h4>
+                    <p class="card-text mb-0">Notas Publicadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-newspaper fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ all_publications|length }}</h4>
+                    <p class="card-text mb-0">Publicaciones</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-tag fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ all_roles|length }}</h4>
+                    <p class="card-text mb-0">Tipos de Usuario</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ total_visits|default(0) }}</h4>
+                    <p class="card-text mb-0">Visitas Totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ today_visits|default(0) }}</h4>
+                    <p class="card-text mb-0">Visitas Hoy</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de visitas -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>
+                        Visitas de los últimos 7 días
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="visitsChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nuevas tarjetas de Usuarios y Suscriptores -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ total_users|default(0) }}</h4>
+                    <p class="card-text mb-0">Usuarios Totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-2x mb-2"></i>
+                    <h4 class="card-title">{{ total_subscribers|default(0) }}</h4>
+                    <p class="card-text mb-0">Suscriptores</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enlace a Gestión de Roles -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <a href="{{ url_for('routes.admin_roles') }}" class="btn btn-dark btn-lg w-100">
+                <i class="fas fa-users-cog me-2"></i> Gestión de Roles de Usuario
+            </a>
+        </div>
+    </div>
+
+    <!-- Gestionar usuarios y Suscriptores -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <a href="{{ url_for('routes.admin_users') }}" class="btn btn-dark btn-lg w-100">
+                <i class="fas fa-users me-2"></i> Gestionar Usuarios
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{{ url_for('routes.admin_subscribers') }}" class="btn btn-dark btn-lg w-100">
+                <i class="fas fa-envelope me-2"></i> Gestionar Suscriptores
+            </a>
+        </div>
+    </div>
+
+    {% if config.DEBUG %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">🛠️ Herramientas de Desarrollo</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('routes.admin_backup_render') }}" 
+            class="btn btn-warning"
+            onclick="return confirm('¿Descargar backup de Render a local?')">
+                <i class="fas fa-download me-2"></i>Backup desde Render
+            </a>
+            <small class="text-muted d-block mt-2">
+                Genera backup_render.sql en la carpeta /backups
+            </small>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Notas Pendientes de Aprobación -->
+    <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+                <i class="fas fa-clock me-2"></i>
+                Notas Pendientes de Aprobación ({{ pending_notes|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if pending_notes %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Autor</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in pending_notes %}
+                            <tr>
+                                <td>{{ note.title }}</td>
+                                <td>{{ note.author.username if note.author else 'N/A' }}</td>
+                                <td>{{ note.created_at.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('routes.approve_note', note_id=note.id) }}" 
+                                    class="btn btn-success btn-sm" 
+                                    onclick="return confirm('¿Aprobar esta nota?')">
+                                        <i class="fas fa-check"></i> Aprobar
+                                    </a>
+                                    <a href="{{ url_for('routes.edit_note', note_id=note.id) }}" 
+                                    class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <form method="POST" 
+                                        action="{{ url_for('routes.delete_note', note_id=note.id) }}" 
+                                        class="d-inline"
+                                        onsubmit="return confirm('¿Eliminar esta nota?')">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-3">No hay notas pendientes de aprobación.</p>
+            {% endif %}
+        </div>
+    </div>
+    <!-- 2. Sección de Notas Publicadas: -->
+    <!-- Notas Publicadas -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Notas Publicadas ({{ published_notes|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if published_notes %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Autor</th>
+                                <th>Fecha Publicación</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for note in published_notes %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('routes.view_note', note_slug=note.slug) }}" target="_blank">
+                                        {{ note.title }}
+                                    </a>
+                                </td>
+                                <td>{{ note.author.username if note.author else 'N/A' }}</td>
+                                <td>{{ note.published_at.strftime('%d/%m/%Y') if note.published_at else 'No publicada' }}</td>
+                                <td>
+                                    <span class="badge bg-success">Publicada</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('routes.edit_note', note_id=note.id) }}" 
+                                    class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <form method="POST" 
+                                        action="{{ url_for('routes.unpublish_note', note_id=note.id) }}" 
+                                        class="d-inline"
+                                        onsubmit="return confirm('¿Despublicar esta nota?')">
+                                        <button type="submit" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-eye-slash"></i> Despublicar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-3">No hay notas publicadas.</p>
+            {% endif %}
+        </div>
+    </div>
+    <!-- 3. Sección de Publicaciones Académicas: -->
+    <!-- Publicaciones Académicas -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-newspaper me-2"></i>
+                Publicaciones Académicas ({{ all_publications|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if all_publications %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Revista/Conferencia</th>
+                                <th>Año</th>
+                                <th>DOI/Enlace</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pub in all_publications %}
+                            <tr>
+                                <td>{{ pub.title }}</td>
+                                <td>{{ pub.journal_or_conference }}</td>
+                                <td>{{ pub.year }}</td>
+                                <td>
+                                    {% if pub.doi %}
+                                        <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="text-decoration-none">
+                                            {{ pub.doi }}
+                                        </a>
+                                    {% elif pub.link %}
+                                        <a href="{{ pub.link }}" target="_blank" class="text-decoration-none">
+                                            Enlace
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('routes.edit_publication', pub_id=pub.id) }}" 
+                                    class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <form method="POST" 
+                                        action="{{ url_for('routes.delete_publication', pub_id=pub.id) }}" 
+                                        class="d-inline"
+                                        onsubmit="return confirm('¿Eliminar esta publicación?')">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-3">No hay publicaciones académicas.</p>
+            {% endif %}
+            
+            <!-- Botón para agregar nueva publicación -->
+            <div class="text-center mt-3">
+                <a href="{{ url_for('routes.new_publication') }}" class="btn btn-info">
+                    <i class="fas fa-plus me-2"></i> Agregar Nueva Publicación
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('visitsChart').getContext('2d');
+    
+    const chartLabels = {{ chart_labels | default([]) | tojson }};
+    const chartData = {{ chart_data | default([]) | tojson }};
+    
+    if (chartLabels.length > 0 && chartData.length > 0) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Visitas',
+                    data: chartData,
+                    backgroundColor: '#4f46e5',
+                    borderColor: '#4338ca',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { 
+                            precision: 0,
+                            callback: function(value) {
+                                if (value % 1 === 0) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { 
+                        display: false 
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Visitas: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        ctx.font = '16px Arial';
+        ctx.fillStyle = '#6c757d';
+        ctx.textAlign = 'center';
+        ctx.fillText('No hay datos de visitas disponibles', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+}); // <-- Esta es la línea que cierra el addEventListener
+</script>
+{% endblock %}

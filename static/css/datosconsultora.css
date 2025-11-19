@@ -340,6 +340,7 @@ body {
 
 .card {
     border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: var(--transition-base);
     border: none;
     overflow: hidden;
@@ -348,6 +349,21 @@ body {
 .card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-xl);
+}
+
+.card-body {
+    padding: 1.5rem; /* Espaciado interno adecuado */
+}
+
+.card-title {
+    font-size: 1.5rem; /* Tamaño del título */
+    font-weight: 600; /* Negrita para destacar */
+    margin-bottom: 0.5rem; /* Espacio entre el título y el texto */
+}
+
+.card-text {
+    font-size: 0.9rem; /* Tamaño del texto secundario */
+    color: #6c757d; /* Color gris para el texto secundario */
 }
 
 .pain-point-card {
@@ -716,7 +732,20 @@ body {
     margin: 2rem 0;
     border-radius: 1px;
 }
+/* ================================
+   ESPACIADO ENTRE ELEMENTOS
+   ================================ */
+.row.g-4 > .col-md-2,
+.row.g-4 > .col-md-3 {
+    margin-bottom: 1rem; /* Espaciado adicional en el eje vertical */
+}
 
+@media (max-width: 768px) {
+    .row.g-4 > .col-md-2,
+    .row.g-4 > .col-md-3 {
+        margin-bottom: 1.5rem; /* Más espacio en dispositivos pequeños */
+    }
+}
 /* ================================================
    RESPONSIVE DESIGN
    ================================================ */
