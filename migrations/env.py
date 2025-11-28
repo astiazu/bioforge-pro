@@ -9,9 +9,15 @@ from alembic import context
 # access to the values within the .ini file in use.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-fileConfig(config.config_file_name)
+import os
+# Cargar logging desde alembic.ini en la RAÍZ del proyecto
+alembic_ini_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'alembic.ini')
+if os.path.exists(alembic_ini_path):
+    fileConfig(alembic_ini_path)
+else:
+    # Fallback si no existe (en Render debería existir)
+    fileConfig(config.config_file_name)
+    
 logger = logging.getLogger('alembic.env')
 
 
