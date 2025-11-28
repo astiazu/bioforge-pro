@@ -27,6 +27,40 @@
         </div>
     </div>
 
+    <!-- ✅ BANNER SUPERIOR MEJORADO -->
+    <div class="ad-container mb-5 py-3 border-top border-bottom">
+        {% set header_ads = obtener_anuncios('header', 3) %}
+        {% if header_ads %}
+            <div class="text-center">
+                <small class="text-muted">COLABORACIÓN</small>
+                <div class="d-flex justify-content-center align-items-center gap-4 mt-2">
+                    <span class="text-muted small">En asociación con:</span>
+                    {% for anuncio in header_ads %}
+                    <a href="{{ anuncio.url_destino }}" onclick="registrarClicAnuncio({{ anuncio.id }})" class="d-block">
+                        <img src="{{ anuncio.imagen_url }}" 
+                             alt="{{ anuncio.titulo }}" 
+                             class="ad-header-img">
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <!-- Banner por defecto mejorado -->
+            <div class="text-center">
+                <small class="text-muted">COLABORACIÓN</small>
+                <div class="d-flex justify-content-center align-items-center gap-4 mt-2">
+                    <span class="text-muted small">En asociación con:</span>
+                    <img src="{{ url_for('static', filename='img/ads/partner-logo-1.png') }}" 
+                         alt="Partner" 
+                         class="ad-header-img">
+                    <img src="{{ url_for('static', filename='img/ads/partner-logo-2.png') }}" 
+                         alt="Partner" 
+                         class="ad-header-img">
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
     <!-- 2. Carrusel: 3 publicaciones -->
     <h3 class="mb-4">📌 Publicaciones Destacadas</h3>
     {% if carousel_items %}
@@ -141,7 +175,93 @@
                 <p class="text-secondary">No hay publicaciones secundarias.</p>
                 {% endfor %}
             </div>
+
+            <!-- ✅ PUBLICIDAD LATERAL MEJORADA -->
+            <div class="ad-container mt-4">
+                {% set sidebar_ads = obtener_anuncios('sidebar', 1) %}
+                {% if sidebar_ads %}
+                    {% for anuncio in sidebar_ads %}
+                    <div class="card border-light shadow-sm ad-sidebar-card">
+                        <div class="card-body text-center py-4">
+                            <div class="mb-3">
+                                <img src="{{ anuncio.imagen_url }}" 
+                                     alt="{{ anuncio.titulo }}" 
+                                     class="ad-sidebar-img">
+                            </div>
+                            <h6 class="card-title">{{ anuncio.titulo }}</h6>
+                            <p class="small text-muted mb-3">{{ anuncio.descripcion|truncate(80) }}</p>
+                            <a href="{{ anuncio.url_destino }}" 
+                               class="btn btn-outline-primary btn-sm"
+                               onclick="registrarClicAnuncio({{ anuncio.id }})">
+                                Ver más
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Publicidad por defecto mejorada -->
+                    <div class="card border-light shadow-sm ad-sidebar-card">
+                        <div class="card-body text-center py-4">
+                            <div class="mb-3">
+                                <i class="fas fa-award fa-2x text-warning"></i>
+                            </div>
+                            <h6 class="card-title">Certificación Premium</h6>
+                            <p class="small text-muted mb-3">Profesionales verificados y certificados</p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <img src="{{ url_for('static', filename='img/certifications/cert1.png') }}" 
+                                     alt="Certificación 1" 
+                                     class="ad-certification-img">
+                                <img src="{{ url_for('static', filename='img/certifications/cert2.png') }}" 
+                                     alt="Certificación 2" 
+                                     class="ad-certification-img">
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
         </div>
+    </div>
+
+    <!-- ✅ BANNER INTERMEDIO MEJORADO -->
+    <div class="ad-container my-5 py-4 border-top border-bottom">
+        {% set intermedio_ads = obtener_anuncios('intermedio', 1) %}
+        {% if intermedio_ads %}
+            {% for anuncio in intermedio_ads %}
+            <div class="text-center p-4 rounded ad-intermediate-card">
+                <h6 class="mb-3">{{ anuncio.titulo }}</h6>
+                <div class="row align-items-center">
+                    <div class="col-md-8 text-start">
+                        <p class="small text-muted mb-2">{{ anuncio.descripcion|truncate(100) }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ anuncio.url_destino }}" 
+                           class="btn btn-outline-primary btn-sm"
+                           onclick="registrarClicAnuncio({{ anuncio.id }})">
+                            Ver más
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Banner por defecto mejorado -->
+            <div class="text-center p-4 rounded ad-intermediate-card">
+                <h6 class="mb-3">🚀 Impulsa tu Carrera Profesional</h6>
+                <div class="row align-items-center">
+                    <div class="col-md-8 text-start">
+                        <p class="small text-muted mb-2">Únete a nuestra comunidad de profesionales certificados</p>
+                        <div class="d-flex gap-3">
+                            <small class="text-success">✅ +500 profesionales</small>
+                            <small class="text-success">✅ +1,000 proyectos</small>
+                            <small class="text-success">✅ 98% satisfacción</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary btn-sm">Ver Planes</button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <!-- 4. Resto de publicaciones -->
@@ -182,6 +302,60 @@
                 </div>
             </div>
         </div>
+
+        <!-- ✅ PUBLICIDAD CADA 4 PUBLICACIONES MEJORADA -->
+        {% if loop.index % 4 == 0 and not loop.last %}
+        <div class="col-12">
+            <div class="ad-container my-5 py-3">
+                {% set inarticle_ads = obtener_anuncios('inarticle', 1) %}
+                {% if inarticle_ads %}
+                    {% for anuncio in inarticle_ads %}
+                    <div class="text-center p-4 rounded ad-inarticle-card">
+                        <small class="text-muted d-block mb-2">RECOMENDADO</small>
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <img src="{{ anuncio.imagen_url }}" 
+                                     alt="{{ anuncio.titulo }}" 
+                                     class="ad-inarticle-img">
+                            </div>
+                            <div class="col-md-8 text-start">
+                                <h6 class="mb-1">{{ anuncio.titulo }}</h6>
+                                <p class="small text-muted mb-0">{{ anuncio.descripcion|truncate(80) }}</p>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="{{ anuncio.url_destino }}" 
+                                   class="btn btn-primary btn-sm"
+                                   onclick="registrarClicAnuncio({{ anuncio.id }})">
+                                    Saber más
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Publicidad por defecto mejorada -->
+                    <div class="text-center p-4 rounded ad-inarticle-card">
+                        <small class="text-muted d-block mb-2">RECOMENDADO</small>
+                        <div class="row align-items-center">
+                            <div class="col-md-2">
+                                <img src="{{ url_for('static', filename='img/ads/featured-service.png') }}" 
+                                     alt="Servicio Destacado" 
+                                     class="ad-inarticle-img">
+                            </div>
+                            <div class="col-md-8 text-start">
+                                <h6 class="mb-1">Consultoría Personalizada</h6>
+                                <p class="small text-muted mb-0">Soluciones a medida para tu negocio</p>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary btn-sm">Saber más</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
         {% endfor %}
     </div>
     {% else %}
@@ -256,6 +430,54 @@
     </div>
     {% endif %}
 
+    <!-- ✅ FOOTER MEJORADO -->
+    <div class="ad-container mt-5 py-4 border-top">
+        {% set client_ads = obtener_anuncios('clients', 4) %}
+        {% if client_ads %}
+        <div class="text-center p-4 rounded bg-white">
+            <h6 class="mb-4">Empresas que confían en nosotros</h6>
+            <div class="row align-items-center justify-content-center g-4">
+                {% for anuncio in client_ads %}
+                <div class="col-6 col-md-3">
+                    <a href="{{ anuncio.url_destino }}" onclick="registrarClicAnuncio({{ anuncio.id }})">
+                        <img src="{{ anuncio.imagen_url }}" 
+                             alt="{{ anuncio.titulo }}" 
+                             class="ad-client-img">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Footer por defecto mejorado -->
+        <div class="text-center p-4 rounded bg-white">
+            <h6 class="mb-4">Empresas que confían en nosotros</h6>
+            <div class="row align-items-center justify-content-center g-4">
+                <div class="col-6 col-md-3">
+                    <img src="{{ url_for('static', filename='img/clients/enterprise1.png') }}" 
+                         alt="Enterprise 1" 
+                         class="ad-client-img">
+                </div>
+                <div class="col-6 col-md-3">
+                    <img src="{{ url_for('static', filename='img/clients/enterprise2.png') }}" 
+                         alt="Enterprise 2" 
+                         class="ad-client-img">
+                </div>
+                <div class="col-6 col-md-3">
+                    <img src="{{ url_for('static', filename='img/clients/enterprise3.png') }}" 
+                         alt="Enterprise 3" 
+                         class="ad-client-img">
+                </div>
+                <div class="col-6 col-md-3">
+                    <img src="{{ url_for('static', filename='img/clients/enterprise4.png') }}" 
+                         alt="Enterprise 4" 
+                         class="ad-client-img">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Publicidad (opcional) -->
     <div class="row mt-5">
         <div class="col-12">
@@ -274,4 +496,146 @@
         </div>
     </div>
 </div>
+
+<script>
+function registrarClicAnuncio(anuncioId) {
+    fetch(`/api/anuncios/${anuncioId}/clic`, { method: 'POST' });
+}
+</script>
+
+<style>
+/* ✅ ESTILOS MEJORADOS PARA PUBLICIDADES */
+
+/* Banner Superior */
+.ad-header-img {
+    height: 65px !important; /* Aumentado de 30px */
+    opacity: 1 !important; /* Más visible */
+    transition: all 0.3s ease;
+    object-fit: contain;
+}
+
+.ad-header-img:hover {
+    transform: scale(2.05);
+    opacity: 1 !important;
+}
+
+/* Publicidad Lateral */
+.ad-sidebar-img {
+    height: 80px !important; /* Aumentado de 50px */
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.ad-sidebar-card {
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+    margin-top: 1.5rem;
+}
+
+.ad-sidebar-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+}
+
+.ad-sidebar-card:hover .ad-sidebar-img {
+    transform: scale(1.08);
+}
+
+/* Certificaciones */
+.ad-certification-img {
+    height: 50px !important; /* Aumentado */
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.ad-certification-img:hover {
+    opacity: 1;
+}
+
+/* Banner Intermedio */
+.ad-intermediate-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.ad-intermediate-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+/* Publicidad entre artículos */
+.ad-inarticle-img {
+    max-height: 90px !important; /* Aumentado de 60px */
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.ad-inarticle-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.ad-inarticle-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.ad-inarticle-card:hover .ad-inarticle-img {
+    transform: scale(1.05);
+}
+
+/* Clientes Footer */
+.ad-client-img {
+    max-height: 70px !important; /* Aumentado de 50px */
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    object-fit: contain;
+}
+
+.ad-client-img:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Contenedores generales */
+.ad-container {
+    transition: all 0.3s ease;
+    margin: 2rem 0; /* Separación mejorada */
+}
+
+/* Separación entre secciones */
+.border-top, .border-bottom {
+    border-color: #e9ecef !important;
+}
+
+/* Efectos hover generales */
+.ad-container .card {
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.ad-container .card:hover {
+    border-color: #007bff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Indicadores de publicidad */
+.ad-container small.text-muted {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+/* Mejora de espaciado general */
+.mb-5, .my-5 {
+    margin-bottom: 3rem !important;
+}
+
+.mt-5 {
+    margin-top: 3rem !important;
+}
+</style>
 {% endblock %}

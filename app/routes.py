@@ -874,6 +874,30 @@ def admin_panel():
     total_users = User.query.count()
     total_subscribers = Subscriber.query.count()
 
+    # ✅ NUEVOS DATOS PARA LA SECCIÓN DE ANUNCIOS
+    from app.models import Anuncio
+    from app.services.servicio_anuncios import ServicioAnuncios
+    
+    # Profesionales destacados
+    profesionales_destacados = User.query.filter_by(
+        is_professional=True, 
+        es_destacado=True
+    ).order_by(User.prioridad_anuncio.desc()).all()
+    
+    # Contar anuncios activos por profesional
+    for prof in profesionales_destacados:
+        prof.anuncios_activos_count = Anuncio.query.filter_by(
+            profesional_id=prof.id, 
+            esta_activo=True
+        ).count()
+    
+    # Estadísticas de anuncios
+    total_profesionales_destacados = len(profesionales_destacados)
+    total_anuncios_activos = Anuncio.query.filter_by(esta_activo=True).count()
+    
+    # Total de clics en anuncios
+    total_clics_anuncios = db.session.query(db.func.sum(Anuncio.contador_clics)).scalar() or 0
+
     return render_template(
         "admin/admin_panel.html",
         pending_notes=pending_notes,
@@ -887,7 +911,11 @@ def admin_panel():
         total_visits=total_visits,
         today_visits=today_visits,
         chart_labels=chart_labels,
-        chart_data=chart_data
+        chart_data=chart_data,
+        profesionales_destacados=profesionales_destacados,
+        total_profesionales_destacados=total_profesionales_destacados,
+        total_anuncios_activos=total_anuncios_activos,
+        total_clics_anuncios=total_clics_anuncios
     )
 
 @routes.route('/admin/note/<int:note_id>/approve', methods=['POST'])

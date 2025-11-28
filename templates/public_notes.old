@@ -1,0 +1,90 @@
+<!-- templates/public_notes.html -->
+{% extends "base.html" %}
+
+{% block title %}Blog - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Columna principal: Notas recientes -->
+        <div class="col-lg-8">
+            <h2 class="mb-4">📝 Últimas Publicaciones</h2>
+            
+            {% for note in published_notes %}
+            <article class="card mb-5 shadow-sm border-0">
+                <!-- Imagen destacada -->
+                {% if note.featured_image %}
+                    <img src="{{ note.featured_image }}" 
+                         class="card-img-top" 
+                         alt="{{ note.title }}" 
+                         style="height: 250px; object-fit: cover;">
+                {% else %}
+                    <img src="/static/img/default-note.jpg" 
+                         class="card-img-top" 
+                         alt="Imagen por defecto" 
+                         style="height: 250px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ note.title }}</h5>
+                    <p class="card-text">{{ note.content[:200] }}{% if note.content|length > 200 %}...{% endif %}</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center text-secondary small">
+                        <span>
+                            Por {{ note.author.username }} • 
+                            {% if note.approved_at %}
+                                {{ note.approved_at.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                {{ note.created_at.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </span>
+                        <span class="badge bg-info">{{ note.view_count }} vistas</span>
+                    </div>
+                    
+                    <a href="{{ url_for('routes.view_note', note_id=note.id) }}" 
+                       class="btn btn-outline-primary btn-sm mt-3">
+                        Leer más
+                    </a>
+                </div>
+            </article>
+            {% else %}
+            <p class="text-secondary">No hay notas públicas aún.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Columna lateral: Más vistas -->
+        <div class="col-lg-4">
+            <div class="position-sticky" style="top: 100px;">
+                <h5 class="mb-4">🔥 Más vistas</h5>
+                <ul class="list-group list-group-flush">
+                    {% for note in top_notes %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div>
+                            <a href="{{ url_for('routes.view_note', note_id=note.id) }}" 
+                               class="text-decoration-none text-dark">
+                                {{ note.title[:60] }}{% if note.title|length > 60 %}...{% endif %}
+                            </a>
+                            <div class="text-secondary small mt-1">
+                                {{ note.view_count }} vistas • 
+                                {% if note.approved_at %}
+                                    {{ note.approved_at.strftime('%d/%m') }}
+                                {% else %}
+                                    {{ note.created_at.strftime('%d/%m') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-secondary">No hay datos</li>
+                    {% endfor %}
+                </ul>
+
+                <div class="mt-4 p-3 bg-white rounded">
+                    <h6>📌 ¿Eres profesional?</h6>
+                    <p class="small">Compartí tus conocimientos con nuestros usuarios y aumentá tu autoridad.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

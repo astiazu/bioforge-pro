@@ -158,7 +158,12 @@ class User(UserMixin, db.Model):
         foreign_keys="Event.updated_by",
         lazy="select"
     )
-
+    # Campos - Anuncios - publicidades - profesuinales
+    logo_profesional = db.Column(db.String(500), nullable=True)
+    banner_anuncio = db.Column(db.String(500), nullable=True)
+    es_destacado = db.Column(db.Boolean, default=False, nullable=False)  # Solo admin controla esto
+    prioridad_anuncio = db.Column(db.Integer, default=0, nullable=False)  # Orden de prioridad en anuncios
+    
     # Propiedades de asistentes
     @property
     def is_general_assistant(self):
@@ -634,6 +639,29 @@ class Event(db.Model):
     updater = db.relationship("User", back_populates="updated_events", foreign_keys=[updated_by])
     publication = db.relationship("Publication", back_populates="event")
 
+class Anuncio(db.Model):
+    __tablename__ = "anuncios"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    profesional_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    imagen_url = db.Column(db.String(500), nullable=False)
+    titulo = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text)
+    url_destino = db.Column(db.String(500))  # URL a la que redirige
+    esta_activo = db.Column(db.Boolean, default=True)
+    posicion = db.Column(db.String(50))  # "header", "sidebar", "home_hero", etc.
+    orden_visualizacion = db.Column(db.Integer, default=0)
+    contador_clics = db.Column(db.Integer, default=0)
+    contador_impresiones = db.Column(db.Integer, default=0)
+    creado_en = db.Column(db.DateTime, default=datetime.utcnow)
+    expira_en = db.Column(db.DateTime, nullable=True)
+    
+    # Relaciones
+    profesional = db.relationship("User", foreign_keys=[profesional_id])
+    
+    def __repr__(self):
+        return f"<Anuncio {self.titulo} | Profesional: {self.profesional_id}>"
+    
 class Visit(db.Model):
     __tablename__ = 'visits'
 

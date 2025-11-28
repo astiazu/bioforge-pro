@@ -4,24 +4,22 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
-from flask_migrate import Migrate  # ← IMPORTADO
+from flask_migrate import Migrate
+from dotenv import load_dotenv
+from app.filters import now, format_date
+import cloudinary
 
-# Instancias globales
+# === Instancias globales ===
 db = SQLAlchemy()
 login_manager = LoginManager()
 mail = Mail()
-migrate = Migrate()  # ← INSTANCIA GLOBAL DE MIGRATE
+migrate = Migrate()
 
-# Cloudinary (opcional)
-try:
-    import cloudinary
-except ImportError:
-    cloudinary = None
 
-def create_app():
-    # ✅ Cargar variables de entorno desde .env (solo en desarrollo)
+def create_app(strict_mode: bool = False):
+    """Crea e inicializa la aplicación Flask."""
+    # Cargar variables locales si no estamos en producción
     if os.environ.get("FLASK_ENV") != "production":
-        from dotenv import load_dotenv
         load_dotenv()
 
     app = Flask(
@@ -31,104 +29,97 @@ def create_app():
         static_folder="../static"
     )
 
-    # === Configuración ===
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or "clave-secreta-para-desarrollo"
+    # === Configuración general ===
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
+    app.config["DEBUG"] = True
     
-    # Base de datos
-    if os.environ.get('DATABASE_URL'):
-        database_url = os.environ.get('DATABASE_URL')
+    # --- Configuración base de datos ---
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url:
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     else:
         os.makedirs(app.instance_path, exist_ok=True)
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'portfolio.db')}"
-    
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(app.instance_path, 'bioforge.db')}"
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Email (Gmail)
-    app.config["MAIL_SERVER"] = "smtp.gmail.com"
-    app.config["MAIL_PORT"] = 587
-    app.config["MAIL_USE_TLS"] = True
-    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME") or "astiazu@gmail.com"
-    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD") or "wepy imlw ltus fxoq"
-    app.config["MAIL_DEFAULT_SENDER"] = ("Equipo Fuerza Bruta", app.config["MAIL_USERNAME"])
+    # --- Configuración de Email ---
+    app.config.update(
+        MAIL_SERVER=os.environ.get("MAIL_SERVER"),
+        MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+        MAIL_USE_TLS=os.environ.get("MAIL_USE_TLS", "True") == "True",
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
+        ADMIN_EMAIL=os.environ.get("ADMIN_EMAIL"),
+    )
 
-    # ✅ Variables personalizadas
-    app.config["BIO_SHORT"] = "Breve descripción del sitio"
-    app.config["BIO_EXTENDED"] = "Descripción extendida del sitio BioForge..."
+    # --- Configuración de Celery ---
+    app.config["broker_url"] = os.environ.get("broker_url", "redis://localhost:6379/0")
+    app.config["result_backend"] = os.environ.get("result_backend", "redis://localhost:6379/0")
 
-    # Telegram
-    app.config['TELEGRAM_BOT_TOKEN'] = os.environ.get('TELEGRAM_BOT_TOKEN')
-    app.config['TELEGRAM_CHAT_ID'] = os.environ.get('TELEGRAM_CHAT_ID')
+    # --- Configuración de Cloudinary ---
+    cloudinary.config(
+        cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        api_key=os.environ.get("CLOUDINARY_API_KEY"),
+        api_secret=os.environ.get("CLOUDINARY_API_SECRET")
+    )
 
     # === Inicializar extensiones ===
     db.init_app(app)
-    migrate.init_app(app, db)  # ← ¡REGISTRADO!
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     mail.init_app(app)
     login_manager.login_view = "auth.login"
 
-    # ✅ USER_LOADER: debe estar aquí, fuera de app_context
-    from app.models import User
     @login_manager.user_loader
     def load_user(user_id):
+        from app.models import User
         return User.query.get(int(user_id))
 
-    # === Contexto de la aplicación ===
+    # === Registrar blueprints y filtros ===
     with app.app_context():
-        # Importar todos los modelos para que SQLAlchemy los registre
         from app import models
-        
-        # ❌ ¡ELIMINADO! No usar db.create_all() con Flask-Migrate
-        # db.create_all()
-
-        # Registrar Blueprints
+        from datetime import datetime
         from app.routes import routes
         from app.auth import auth
+        from app.utils import format_date
+
+        app.jinja_env.filters["format_date"] = format_date
         app.register_blueprint(routes)
         app.register_blueprint(auth, url_prefix="/auth")
 
-        # Filtros personalizados
-        from datetime import datetime
-
-        @app.template_filter('sort_by_due_date')
+        # --- Filtros de plantilla personalizados ---
+        @app.template_filter("sort_by_due_date")
         def sort_by_due_date(tasks):
             def sort_key(task):
-                return task.due_date if task.due_date is not None else datetime.max.date()
+                return task.due_date if task.due_date else datetime.max.date()
             return sorted(tasks, key=sort_key)
 
-        @app.template_filter('without_page')
+        @app.template_filter("without_page")
         def without_page(args):
-            return {k: v for k, v in args.items() if k != 'page'}
+            return {k: v for k, v in args.items() if k != "page"}
 
+        # --- Registro de visitas ---
         @app.before_request
         def log_visit():
-            # No registrar visitas de administrador ni en rutas de auth
-            if request.endpoint and not request.endpoint.startswith('auth'):
+            """Registra cada visita (excepto rutas de login y estáticas)."""
+            if request.endpoint and not request.endpoint.startswith(("auth", "static")):
                 from app.models import Visit
-                Visit.log_visit(request)
+                try:
+                    Visit.log_visit(request)
+                except Exception:
+                    pass  # Evita que un fallo de logging rompa la carga principal
+        
+        @app.context_processor
+        def inject_now():
+            """
+            Inyecta la función `now` en el contexto global de Jinja2.
+            """
+            return {'now': now}
 
-        # Configurar Cloudinary
-        if cloudinary:
-            cloudinary.config(
-                cloud_name=os.environ.get("CLOUD_NAME"),
-                api_key=os.environ.get("CLOUDINARY_API_KEY"),
-                api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
-                secure=True
-            )
-        
-        register_cli_commands(app)
-        
     return app
 
-# === Comandos CLI personalizados ===
-def register_cli_commands(app):
-    @app.cli.command("sync-sequences")
-    def sync_sequences_command():
-        """Sincroniza secuencias de PostgreSQL tras migración."""
-        from scripts.sync_sequences import sync_all_sequences
-        sync_all_sequences()
-
-# ✅ Instancia para gunicorn (Render)
 app = create_app()

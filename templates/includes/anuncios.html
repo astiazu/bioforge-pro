@@ -1,0 +1,36 @@
+<!-- Banner de anuncios rotatorio -->
+<div class="anuncio-rotator">
+    {% for anuncio in obtener_anuncios('rotatorio', 5) %}
+    <div class="anuncio-item" data-anuncio-id="{{ anuncio.id }}">
+        <a href="{{ anuncio.url_destino }}" 
+           onclick="registrarClicAnuncio({{ anuncio.id }})" 
+           class="anuncio-link">
+            <img src="{{ anuncio.imagen_url }}" 
+                 alt="{{ anuncio.titulo }}" 
+                 class="anuncio-imagen img-fluid rounded">
+            <div class="anuncio-contenido mt-2">
+                <h6 class="anuncio-titulo">{{ anuncio.titulo }}</h6>
+                <p class="anuncio-descripcion small text-muted">
+                    {{ anuncio.descripcion|truncate(80) }}
+                </p>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function registrarClicAnuncio(anuncioId) {
+    fetch(`/api/anuncios/${anuncioId}/clic`, { method: 'POST' });
+}
+
+// Tracking de impresiones
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.anuncio-item').forEach(function(anuncioElement) {
+        const anuncioId = anuncioElement.dataset.anuncioId;
+        if (anuncioId) {
+            fetch(`/api/anuncios/${anuncioId}/impresion`, { method: 'POST' });
+        }
+    });
+});
+</script>

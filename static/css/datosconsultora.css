@@ -1139,10 +1139,12 @@ html {
 
 /* ===== HEADER MÁS COMPACTO ===== */
 h3 {
-    color: #ffffff;
+    color: #616060;
     font-weight: 700;
     font-size: 1.5rem;
     margin-bottom: 0.25rem;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .text-secondary {
@@ -1644,4 +1646,27 @@ h3 {
     .fc-toolbar-chunk {
         gap: 2px !important;
     }
+}
+
+/* Estilos card Admin Panel */
+.anuncio-stats-card {
+    transition: all 0.3s ease;
+    border: none;
+    border-radius: 10px;
+}
+
+.anuncio-stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.profesional-avatar {
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+}
+
+.priority-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
 }

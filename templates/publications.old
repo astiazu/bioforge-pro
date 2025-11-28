@@ -1,100 +1,274 @@
-<!-- template/publications.html-->
+<!-- templates/publications.html -->
 {% extends "base.html" %}
 
-{% block title %}Publicaciones - Portafolio José Luis Astiazu{% endblock %}
+{% block title %}Publicaciones - José Luis Astiazu{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center mb-5">
-                <h1 class="display-5 mb-3">
-                    <i class="fas fa-newspaper me-3 text-info"></i>
-                    Ejemplos de Publicaciones
-                </h1>
-                <p class="lead text-muted">
-                    Artículos y casos de estudio que demuestran experiencia y conocimiento en análisis de datos
-                </p>
-            </div>
+<div class="container mt-5">
+
+    <!-- 1. Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="GET" action="{{ url_for('routes.publications') }}" class="d-flex">
+                <input type="text" name="q" class="form-control flex-grow-1" placeholder="Buscar...">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+            </form>
+        </div>
+        <div class="col-md-4 text-end">
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">Todas las categorías</option>
+                <option value="Educativo">Educativo</option>
+                <option value="Caso de éxito">Caso de éxito</option>
+                <option value="Análisis">Análisis</option>
+                <option value="Opinión">Opinión</option>
+                <option value="Cultura">Cultura</option>
+                <option value="Deportes">Deportes</option>
+            </select>
         </div>
     </div>
-    
-    <div class="row g-4">
-        {% for publication in publications %}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="row align-items-center">
-                        <div class="col">
-                            <span class="badge 
-                                {% if publication.type == 'Educativo' %}bg-info
-                                {% elif publication.type == 'Caso de éxito' %}bg-success
-                                {% else %}bg-warning text-dark
-                                {% endif %} me-2">
-                                {{ publication.type }}
-                            </span>
-                            <h5 class="card-title d-inline-block mb-0">{{ publication.title }}</h5>
-                        </div>
-                        <div class="col-auto">
-                            {% if publication.type == 'Educativo' %}
-                                <i class="fas fa-graduation-cap text-info"></i>
-                            {% elif publication.type == 'Caso de éxito' %}
-                                <i class="fas fa-trophy text-success"></i>
+
+    <!-- 2. Carrusel: 3 publicaciones -->
+    <h3 class="mb-4">📌 Publicaciones Destacadas</h3>
+    {% if carousel_items %}
+    <div id="carouselPublications" class="carousel slide mb-5" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for pub in carousel_items %}
+            <div class="carousel-item {% if loop.index0 == 0 %}active{% endif %}">
+                <div class="card bg-light d-flex flex-row align-items-center p-3">
+                    <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                         class="me-3" style="width: 120px; height: 80px; object-fit: cover;">
+                    <div>
+                        <h6>{{ pub.title }}</h6>
+                        <small class="text-secondary">
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
                             {% else %}
-                                <i class="fas fa-star text-warning"></i>
+                                Sin fecha
                             {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carouselPublications" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carouselPublications" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+    {% else %}
+    <p class="text-secondary">No hay publicaciones destacadas.</p>
+    {% endif %}
+    
+    <!-- Eventos (si aplica) -->
+    {% if professional and professional.events %}
+        {% include "partials/timeline_events.html" %}
+    {% endif %}
+
+    <!-- 3. Publicaciones Actuales -->
+    <h3 class="mb-4">📰 Publicaciones Actuales</h3>
+    <div class="row g-4 mb-5">
+        <!-- Principal -->
+        <div class="col-lg-6">
+            {% if main_pub %}
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ main_pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 250px; object-fit: cover;">
+                <div class="card-body">
+                    <span class="badge bg-secondary">{{ main_pub.type }}</span>
+                    <h5 class="card-title mt-2">{{ main_pub.title }}</h5>
+                    <p class="card-text small text-secondary">{{ main_pub.content|truncate(150) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ main_pub.view_count }} vistas •
+                            {% if main_pub.published_at %}
+                                {{ main_pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if main_pub.author %}
+                                • Por {{ main_pub.author.username }}
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=main_pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p class="text-secondary">No hay publicación principal.</p>
+            {% endif %}
+        </div>
+
+        <!-- 4 Tarjetas (2x2) -->
+        <div class="col-lg-6">
+            <div class="row g-3">
+                {% for pub in side_pubs %}
+                <div class="col-6">
+                    <div class="card h-100 shadow-sm border-light" style="max-height: 200px;">
+                        <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                             class="card-img-top" style="height: 100px; object-fit: cover;">
+                        <div class="card-body p-2">
+                            <h6 class="card-title small m-0">
+                                {{ pub.title|truncate(40) }}
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <small>
+                                    <i class="fas fa-eye me-1"></i>
+                                    {{ pub.view_count }} vistas •
+                                    {% if pub.published_at %}
+                                        {{ pub.published_at.strftime('%d %b %Y') }}
+                                    {% else %}
+                                        Sin fecha
+                                    {% endif %}
+                                    {% if pub.author %}
+                                        • Por {{ pub.author.username }}
+                                    {% endif %}
+                                </small>
+                                <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer</a>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <p class="card-text text-muted">{{ publication.content }}</p>
+                {% else %}
+                <p class="text-secondary">No hay publicaciones secundarias.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Resto de publicaciones -->
+    <h3 class="mb-4">📚 Otras Publicaciones</h3>
+    {% if rest_pubs %}
+    <div class="row g-4 mb-5">
+        {% for pub in rest_pubs %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <span class="badge bg-secondary">
+                        {{ pub.type }}
+                    </span>
+                    <h6 class="card-title mt-2">
+                        {{ pub.title|truncate(50) }}
+                    </h6>
+                    <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
                     <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>Publicado recientemente
-                        </small>
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary me-2">
-                                <i class="fas fa-share me-1"></i>Compartir
-                            </button>
-                            {% if publication.id %}
-                                <a href="{{ url_for('routes.view_publication', pub_id=publication.id) }}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-external-link-alt me-1"></i>Leer más
-                                </a>
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
                             {% else %}
-                                <button class="btn btn-sm btn-outline-info" disabled>
-                                    <i class="fas fa-external-link-alt me-1"></i>Próximamente
-                                </button>
+                                Sin fecha
                             {% endif %}
-                        </div>
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" 
+                            class="btn btn-outline-primary btn-sm">
+                            Leer más
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-    
+    {% else %}
+    <p class="text-secondary">No hay otras publicaciones.</p>
+    {% endif %}
+
+    <!-- 5. Sociales y Cultura -->
+    {% if sociales_y_cultura %}
+    <h3 class="mb-4">🎭 Sociales y Cultura</h3>
+    <div class="row g-4 mb-5">
+        {% for pub in sociales_y_cultura %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
+                    <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 6. Deportes -->
+    {% if deportes %}
+    <h3 class="mb-4">⚽ Deportes</h3>
+    <div class="row g-4 mb-5">
+        {% for pub in deportes %}
+        <div class="col-lg-3 col-md-6">
+            <div class="card h-100 shadow-sm border-light">
+                <img src="{{ pub.image_url or '/static/img/default-article.jpg' }}" 
+                     class="card-img-top" style="height: 150px; object-fit: cover;">
+                <div class="card-body p-3">
+                    <h6 class="card-title">{{ pub.title|truncate(50) }}</h6>
+                    <p class="card-text small text-secondary">{{ pub.content|truncate(100) }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small>
+                            <i class="fas fa-eye me-1"></i>
+                            {{ pub.view_count }} vistas •
+                            {% if pub.published_at %}
+                                {{ pub.published_at.strftime('%d %b %Y') }}
+                            {% else %}
+                                Sin fecha
+                            {% endif %}
+                            {% if pub.author %}
+                                • Por {{ pub.author.username }}
+                            {% endif %}
+                        </small>
+                        <a href="{{ url_for('routes.view_publication', pub_id=pub.id) }}" class="btn btn-outline-primary btn-sm">Leer más</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Publicidad (opcional) -->
     <div class="row mt-5">
         <div class="col-12">
-            <div class="card bg-dark border-secondary">
-                <div class="card-body text-center">
-                    <h4 class="card-title text-light mb-3">
-                        <i class="fas fa-lightbulb me-2 text-warning"></i>
-                        ¿Te interesa este tipo de contenido?
-                    </h4>
-                    <p class="card-text text-muted mb-4">
-                        Suscríbete para recibir más artículos sobre análisis de datos, 
-                        Python y casos de éxito reales.
-                    </p>
-                    <div class="row justify-content-center">
-                        <div class="col-md-6">
-                            <div class="input-group">
-                                <input type="email" class="form-control" placeholder="Tu email aquí...">
-                                <button class="btn btn-info" type="button">
-                                    <i class="fas fa-paper-plane me-1"></i>Suscribirse
-                                </button>
-                            </div>
+            <div class="bg-dark text-white p-4 rounded">
+                <div class="text-center">
+                    <h5>¿Te interesa este tipo de contenido?</h5>
+                    <p class="text-primary">Suscríbete para recibir más artículos de tu interés o sobre análisis de datos, Python, casos de éxito o información general.</p>
+                    <form method="POST" action="{{ url_for('routes.subscribe') }}">
+                        <div class="d-flex gap-2">
+                            <input type="email" name="email" class="form-control" placeholder="Tu email aquí..." required>
+                            <button type="submit" class="btn btn-success">Suscribirse</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

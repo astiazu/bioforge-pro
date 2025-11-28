@@ -10,6 +10,43 @@
         <div class="col-lg-8">
             <h2 class="mb-4">📝 Últimas Publicaciones</h2>
             
+            <!-- ✅ BANNER HORIZONTAL DINÁMICO -->
+            <div class="ad-container mb-4">
+                {% set header_ads = obtener_anuncios('header', 1) %}
+                {% if header_ads %}
+                    {% for anuncio in header_ads %}
+                    <div class="text-center py-3 border rounded bg-light">
+                        <small class="text-muted d-block mb-2">PUBLICIDAD</small>
+                        <a href="{{ anuncio.url_destino }}" 
+                           class="d-inline-block"
+                           onclick="registrarClicAnuncio({{ anuncio.id }})">
+                            <img src="{{ anuncio.imagen_url }}" 
+                                 alt="{{ anuncio.titulo }}" 
+                                 class="img-fluid rounded" 
+                                 style="max-height: 80px;">
+                        </a>
+                        <div class="mt-2">
+                            <small class="text-muted">{{ anuncio.descripcion|truncate(60) }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Banner por defecto -->
+                    <div class="text-center py-3 border rounded bg-light">
+                        <small class="text-muted d-block mb-2">PUBLICIDAD</small>
+                        <a href="#" class="d-inline-block">
+                            <img src="{{ url_for('static', filename='img/ads/client-banner-horizontal.jpg') }}" 
+                                 alt="Nuestros clientes" 
+                                 class="img-fluid rounded" 
+                                 style="max-height: 80px;">
+                        </a>
+                        <div class="mt-2">
+                            <small class="text-muted">Empresas que confían en nosotros</small>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
             {% for note in published_notes %}
             <article class="card mb-5 shadow-sm border-0">
                 <!-- Imagen destacada -->
@@ -47,6 +84,50 @@
                     </a>
                 </div>
             </article>
+
+            <!-- ✅ PUBLICIDAD CADA 2 ARTÍCULOS DINÁMICA -->
+            {% if loop.index % 2 == 0 and not loop.last %}
+            <div class="ad-container my-4">
+                {% set inarticle_ads = obtener_anuncios('inarticle', 1) %}
+                {% if inarticle_ads %}
+                    {% for anuncio in inarticle_ads %}
+                    <div class="text-center p-3 border rounded bg-white">
+                        <small class="text-muted d-block mb-2">PATROCINADO</small>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <img src="{{ anuncio.imagen_url }}" 
+                                     alt="{{ anuncio.titulo }}" 
+                                     class="img-fluid"
+                                     style="max-height: 50px;">
+                            </div>
+                            <div class="col-9 text-start">
+                                <h6 class="mb-1">{{ anuncio.titulo }}</h6>
+                                <p class="small text-muted mb-0">{{ anuncio.descripcion|truncate(60) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Publicidad por defecto -->
+                    <div class="text-center p-3 border rounded bg-white">
+                        <small class="text-muted d-block mb-2">PATROCINADO</small>
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <img src="{{ url_for('static', filename='img/ads/client-logo-1.png') }}" 
+                                     alt="Cliente Premium" 
+                                     class="img-fluid"
+                                     style="max-height: 50px;">
+                            </div>
+                            <div class="col-9 text-start">
+                                <h6 class="mb-1">Soluciones Empresariales</h6>
+                                <p class="small text-muted mb-0">Transformamos datos en resultados tangibles</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
             {% else %}
             <p class="text-secondary">No hay notas públicas aún.</p>
             {% endfor %}
@@ -79,6 +160,59 @@
                     {% endfor %}
                 </ul>
 
+                <!-- ✅ CARRUSEL DE LOGOS DINÁMICO -->
+                <div class="ad-container mt-4">
+                    {% set client_ads = obtener_anuncios('clients', 4) %}
+                    {% if client_ads %}
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-3">💼 Nuestros Clientes</h6>
+                            <div class="clients-carousel">
+                                <div class="d-flex justify-content-around align-items-center flex-wrap gap-3">
+                                    {% for anuncio in client_ads %}
+                                    <a href="{{ anuncio.url_destino }}" onclick="registrarClicAnuncio({{ anuncio.id }})">
+                                        <img src="{{ anuncio.imagen_url }}" 
+                                             alt="{{ anuncio.titulo }}" 
+                                             class="client-logo"
+                                             style="height: 40px; opacity: 0.7; transition: opacity 0.3s;">
+                                    </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">Empresas líderes del sector</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Carrusel por defecto -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <h6 class="card-title mb-3">💼 Nuestros Clientes</h6>
+                            <div class="clients-carousel">
+                                <div class="d-flex justify-content-around align-items-center flex-wrap gap-3">
+                                    <img src="{{ url_for('static', filename='img/clients/client1.png') }}" 
+                                         alt="Cliente 1" 
+                                         class="client-logo"
+                                         style="height: 40px; opacity: 0.7; transition: opacity 0.3s;">
+                                    <img src="{{ url_for('static', filename='img/clients/client2.png') }}" 
+                                         alt="Cliente 2" 
+                                         class="client-logo"
+                                         style="height: 40px; opacity: 0.7; transition: opacity 0.3s;">
+                                    <img src="{{ url_for('static', filename='img/clients/client3.png') }}" 
+                                         alt="Cliente 3" 
+                                         class="client-logo"
+                                         style="height: 40px; opacity: 0.7; transition: opacity 0.3s;">
+                                    <img src="{{ url_for('static', filename='img/clients/client4.png') }}" 
+                                         alt="Cliente 4" 
+                                         class="client-logo"
+                                         style="height: 40px; opacity: 0.7; transition: opacity 0.3s;">
+                                </div>
+                            </div>
+                            <small class="text-muted mt-2 d-block">Empresas líderes del sector</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
                 <div class="mt-4 p-3 bg-white rounded">
                     <h6>📌 ¿Eres profesional?</h6>
                     <p class="small">Compartí tus conocimientos con nuestros usuarios y aumentá tu autoridad.</p>
@@ -87,4 +221,40 @@
         </div>
     </div>
 </div>
+
+<script>
+function registrarClicAnuncio(anuncioId) {
+    fetch(`/api/anuncios/${anuncioId}/clic`, { method: 'POST' });
+}
+</script>
+
+<style>
+.ad-container {
+    transition: transform 0.2s ease;
+}
+
+.ad-container:hover {
+    transform: translateY(-2px);
+}
+
+.client-logo:hover {
+    opacity: 1 !important;
+}
+
+.clients-carousel {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efectos sutiles para publicidad */
+.ad-container .card {
+    border: 1px solid #e9ecef !important;
+    transition: all 0.3s ease;
+}
+
+.ad-container .card:hover {
+    border-color: #007bff !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+</style>
 {% endblock %}

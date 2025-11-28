@@ -73,6 +73,9 @@
                             <a href="{{ url_for('routes.admin_subscribers') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-envelope"></i> Suscriptores
                             </a>
+                            <a href="{{ url_for('admin_anuncios.gestion_anuncios') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-ad"></i> Anuncios y Profesionales
+                            </a>
                             <a href="{{ url_for('routes.new_publication') }}" class="list-group-item list-group-item-action">
                                 <i class="fas fa-newspaper"></i> Nueva Publicación
                             </a>
@@ -98,6 +101,9 @@
                             </a>
                             <a href="{{ url_for('routes.admin_roles') }}" class="btn btn-outline-warning btn-sm">
                                 <i class="fas fa-tag"></i> Gestionar Roles
+                            </a>
+                            <a href="{{ url_for('admin_anuncios.gestion_anuncios') }}" class="btn btn-outline-warning btn-sm">
+                                <i class="fas fa-star"></i> Gestionar Anuncios
                             </a>
                         </div>
                     </div>
@@ -341,6 +347,156 @@
                             </div>
                         </div>
                     </div>
+                                        <!-- Gestión de Anuncios -->
+                    <div class="card admin-card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-ad"></i> Gestión de Anuncios y Profesionales Destacados</h5>
+                            <div>
+                                <a href="{{ url_for('admin_anuncios.gestion_anuncios') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-cog"></i> Gestionar Completo
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Estadísticas de Anuncios -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-8">
+                                                    <h5 class="card-title">{{ total_profesionales_destacados }}</h5>
+                                                    <p class="card-text">Profesionales Destacados</p>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <i class="fas fa-star fa-2x opacity-50"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-8">
+                                                    <h5 class="card-title">{{ total_anuncios_activos }}</h5>
+                                                    <p class="card-text">Anuncios Activos</p>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <i class="fas fa-ad fa-2x opacity-50"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-warning text-dark">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-8">
+                                                    <h5 class="card-title">{{ total_clics_anuncios }}</h5>
+                                                    <p class="card-text">Clics en Anuncios</p>
+                                                </div>
+                                                <div class="col-4 text-end">
+                                                    <i class="fas fa-mouse-pointer fa-2x opacity-50"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de Profesionales Destacados -->
+                            <h6 class="mt-4 mb-3">🌟 Profesionales Destacados Activos</h6>
+                            {% if profesionales_destacados %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Profesional</th>
+                                            <th>Especialidad</th>
+                                            <th>Prioridad</th>
+                                            <th>Anuncios Activos</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for prof in profesionales_destacados %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if prof.profile_photo %}
+                                                    <img src="{{ prof.profile_photo }}" 
+                                                        class="rounded-circle me-2" 
+                                                        style="width: 30px; height: 30px; object-fit: cover;">
+                                                    {% else %}
+                                                    <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" 
+                                                        style="width: 30px; height: 30px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                    {% endif %}
+                                                    <span>{{ prof.username }}</span>
+                                                </div>
+                                            </td>
+                                            <td>{{ prof.specialty or "Sin especificar" }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ 'danger' if prof.prioridad_anuncio >= 8 else 'warning' if prof.prioridad_anuncio >= 5 else 'info' }}">
+                                                    {{ prof.prioridad_anuncio }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">{{ prof.anuncios_activos_count }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-secondary" 
+                                                            onclick="actualizarPrioridad({{ prof.id }}, {{ prof.prioridad_anuncio - 1 }})"
+                                                            {% if prof.prioridad_anuncio <= 1 %}disabled{% endif %}>
+                                                        <i class="fas fa-arrow-down"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" 
+                                                            onclick="actualizarPrioridad({{ prof.id }}, {{ prof.prioridad_anuncio + 1 }})"
+                                                            {% if prof.prioridad_anuncio >= 10 %}disabled{% endif %}>
+                                                        <i class="fas fa-arrow-up"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger" 
+                                                            onclick="toggleDestacado({{ prof.id }}, false)">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> No hay profesionales destacados actualmente.
+                            </div>
+                            {% endif %}
+
+                            <!-- Acciones Rápidas -->
+                            <div class="mt-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button class="btn btn-success w-100" onclick="generarAnuncios()">
+                                            <i class="fas fa-sync-alt"></i> Regenerar Anuncios
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <a href="{{ url_for('admin_anuncios.rendimiento_anuncios') }}" class="btn btn-info w-100">
+                                            <i class="fas fa-chart-line"></i> Ver Métricas
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Fin Gestion anuncios-->
                 </div>
             </div>
         </div>
@@ -422,6 +578,84 @@
                 window.location.reload();
             }, 300000); // 5 minutes
         });
+    </script>
+    <script>
+    // Funciones para gestión de anuncios
+    function toggleDestacado(userId, estado) {
+        fetch(`/admin/anuncios/toggle-destacado/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al actualizar el estado');
+        });
+    }
+
+    function actualizarPrioridad(userId, nuevaPrioridad) {
+        if (nuevaPrioridad < 1 || nuevaPrioridad > 10) {
+            alert('La prioridad debe estar entre 1 y 10');
+            return;
+        }
+
+        fetch(`/admin/anuncios/actualizar-prioridad/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prioridad: nuevaPrioridad })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al actualizar la prioridad');
+        });
+    }
+
+    function generarAnuncios() {
+        if (!confirm('¿Regenerar todos los anuncios desde los profesionales destacados?')) {
+            return;
+        }
+
+        fetch('/admin/anuncios/generar-anuncios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al generar anuncios');
+        });
+    }
     </script>
 </body>
 </html>

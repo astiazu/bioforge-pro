@@ -86,6 +86,17 @@ def create_app(strict_mode: bool = False):
         from app.routes import routes
         from app.auth import auth
         from app.utils import format_date
+        # ✅ REGISTRAR COMANDOS CLI
+        from app.commands import register_commands
+        register_commands(app)  # <-- AGREGAR ESTA LÍNEA
+        
+        # ✅ IMPORTAR Y REGISTRAR BLUEPRINT DE ANUNCIOS
+        try:
+            from app.admin.anuncios import admin_anuncios
+            app.register_blueprint(admin_anuncios)
+        except ImportError as e:
+            print(f"⚠️  No se pudo registrar blueprint de anuncios: {e}")
+            print("⚠️  Asegúrate de crear el archivo app/admin/anuncios.py")
 
         app.jinja_env.filters["format_date"] = format_date
         app.register_blueprint(routes)
@@ -119,6 +130,48 @@ def create_app(strict_mode: bool = False):
             Inyecta la función `now` en el contexto global de Jinja2.
             """
             return {'now': now}
+
+        # ✅ NUEVO CONTEXT PROCESSOR PARA ANUNCIOS
+        @app.context_processor
+        def inject_anuncios():
+            """
+            Inyecta funciones de anuncios en el contexto global de Jinja2.
+            """
+            try:
+                from app.services.servicio_anuncios import ServicioAnuncios
+                
+                def obtener_anuncios(posicion="sidebar", limite=5):
+                    """Obtiene anuncios activos para mostrar en templates"""
+                    return ServicioAnuncios.obtener_anuncios_activos(
+                        limite=limite, 
+                        posicion=posicion
+                    )
+                
+                def registrar_impresion_anuncio(anuncio_id):
+                    """Registra una impresión de anuncio (para usar en templates)"""
+                    ServicioAnuncios.registrar_impresion(anuncio_id)
+                    return ""  # Retorna string vacío para usar en templates
+                
+                return {
+                    'obtener_anuncios': obtener_anuncios,
+                    'registrar_impresion_anuncio': registrar_impresion_anuncio
+                }
+                
+            except ImportError as e:
+                print(f"⚠️  No se pudo cargar servicio de anuncios: {e}")
+                print("⚠️  Asegúrate de crear el archivo app/services/servicio_anuncios.py")
+                
+                # Retornar funciones dummy para evitar errores
+                def obtener_anuncios_dummy(posicion="sidebar", limite=5):
+                    return []
+                
+                def registrar_impresion_anuncio_dummy(anuncio_id):
+                    return ""
+                
+                return {
+                    'obtener_anuncios': obtener_anuncios_dummy,
+                    'registrar_impresion_anuncio': registrar_impresion_anuncio_dummy
+                }
 
     return app
 
