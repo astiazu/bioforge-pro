@@ -4451,6 +4451,93 @@ def import_data():
     </html>
     '''
 
+# === TEMPORAL: Migración automática de datos ===
+import os
+from app.admin.data_migration import run_data_migration
+
+@routes.route('/admin/migrate-data', methods=['GET', 'POST'])
+@login_required
+def migrate_data():
+    if not current_user.is_admin:
+        abort(403)
+    
+    secret = request.args.get('secret')
+    expected = os.environ.get('INIT_DB_SECRET')
+    if not secret or secret != expected:
+        abort(403)
+
+    if request.method == 'POST':
+        # Agrupar archivos por nombre de tabla
+        csv_files = {}
+        for key in request.files:
+            file = request.files[key]
+            if file and file.filename.endswith('.csv'):
+                table_name = file.filename.replace('.csv', '')
+                csv_files[table_name] = file.read()
+
+        if not csv_files:
+            flash("❌ No se subieron archivos CSV", "danger")
+            return redirect(request.url)
+
+        try:
+            success = run_data_migration(csv_files)
+            if success:
+                flash("✅ Migración completada con éxito", "success")
+            else:
+                flash("⚠️ Migración completada con advertencias", "warning")
+        except Exception as e:
+            flash(f"❌ Error durante la migración: {str(e)}", "danger")
+
+        return redirect(url_for('routes.migrate_data'))
+
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Migrar datos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h4>📤 Migrar datos a Render (solo admin)</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Sube TODOS los CSVs (nombre debe coincidir con la tabla)</label>
+                        <input type="file" name="user_roles.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="users.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="clinic.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="product_category.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="assistants.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="availability.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="appointments.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="medical_records.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="schedules.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="notes.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="publications.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="tasks.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="company_invites.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="invitation_logs.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="subscribers.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="product.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="event.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="anuncios.csv" accept=".csv" class="form-control mb-2">
+                        <input type="file" name="visits.csv" accept=".csv" class="form-control mb-2">
+                    </div>
+                    <button type="submit" class="btn btn-success">Migrar datos</button>
+                </form>
+                <div class="alert alert-warning mt-3">
+                    ⚠️ Esto borrará TODOS los datos actuales y los reemplazará por los CSVs.
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+    </html>
+    '''
+
 # === TEMPORAL: Crear admin inicial en Render ===
 @routes.route('/setup-admin', methods=['GET'])
 def setup_admin():
