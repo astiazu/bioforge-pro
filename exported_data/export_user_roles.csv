@@ -1,0 +1,7 @@
+﻿id,name,description,is_active,created_at
+1,Profesional,Profesional de la salud,true,2025-09-15T12:49:15.089596
+2,Tienda,Tienda de productos,true,2025-09-15T12:49:15.149453
+3,Visitante,Usuario visitante,true,2025-09-15T12:49:15.207350
+4,Paciente,Paciente,true,2025-09-15T12:49:15.261005
+5,Usuario,Usuario general del sistema,true,2025-09-29T22:57:09.602066
+6,PyME,Pequeña y mediana empresa hasta 10 empleados,true,2025-09-29T22:57:54.084654

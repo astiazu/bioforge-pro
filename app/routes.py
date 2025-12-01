@@ -5418,14 +5418,14 @@ def toggle_categoria_estado(category_id):
     
     return redirect(url_for('routes.gestion_categorias', doctor_id=category.doctor_id))
 
-@routes.route("/admin/import-data", methods=['GET', 'POST'])
-def import_data():
-    try:
-        import_csv_to_render_db()
-        return jsonify({"message": "Datos importados exitosamente."}), 200
-    except Exception as e:
-        current_app.logger.error(f"Error al importar datos: {e}")
-        return jsonify({"error": f"Error al importar datos: {str(e)}"}), 500
+# @routes.route("/admin/import-data", methods=['GET', 'POST'])
+# def import_data():
+#     try:
+#         import_csv_to_render_db()
+#         return jsonify({"message": "Datos importados exitosamente."}), 200
+#     except Exception as e:
+#         current_app.logger.error(f"Error al importar datos: {e}")
+#         return jsonify({"error": f"Error al importar datos: {str(e)}"}), 500
     
 # === RUTAS ADMINISTRADOR ===
 def generar_disponibilidad_automatica(schedule, semanas=12):
