@@ -4451,6 +4451,38 @@ def import_data():
     </html>
     '''
 
+# === TEMPORAL: Crear admin inicial en Render ===
+@routes.route('/setup-admin', methods=['GET'])
+def setup_admin():
+    # Solo permitir si se proporciona una clave secreta en la URL
+    secret = request.args.get('secret')
+    expected = os.environ.get('INIT_DB_SECRET')  # usa tu INIT_DB_SECRET ya definido en Render
+    
+    if not secret or secret != expected:
+        abort(403)
+
+    # Verificar si ya existe un admin
+    from app.models import User
+    existing = User.query.filter_by(is_admin=True).first()
+    if existing:
+        return f"<h2>✅ Ya existe un admin: {existing.email}</h2>"
+
+    # Crear admin predeterminado
+    admin = User(
+        username="admin",
+        email="astiazu@gmail.com",  # usa tu email real
+        is_admin=True,
+        is_professional=False,
+        email_verified=True,
+        role_name="admin"
+    )
+    admin.set_password("admin123")  # ¡cambia esta contraseña después!
+    from app import db
+    db.session.add(admin)
+    db.session.commit()
+
+    return f"<h2>✅ Admin creado: astiazu@gmail.com / contraseña: admin123</h2><p>⚠️ Cambia la contraseña al iniciar sesión.</p>"
+
 # === TIENDA PÚBLICA ===
 @routes.route('/tienda/<string:url_slug>')
 def tienda_publica(url_slug):
