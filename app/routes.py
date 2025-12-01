@@ -4272,123 +4272,184 @@ def assistant():
 #         headers={"Content-Disposition": f"attachment;filename={table_name}.csv"}
 #     )
     
-# @routes.route('/admin/import-data', methods=['GET', 'POST'])
-# @login_required
-# def import_data():
-#     if not current_user.is_admin:
-#         abort(403)
+# === TEMPORAL: Solo para migrar datos a producción ===
+from io import StringIO
+import csv
+from dateutil import parser as date_parser
+import json
 
-#     tables = {
-#         'users': User,
-#         'assistants': Assistant,
-#         'clinic': Clinic,
-#         'tasks': Task,
-#         'notes': Note,
-#         'publications': Publication,
-#         'availability': Availability,
-#         'appointments': Appointment,
-#         'medical_records': MedicalRecord,
-#         'schedules': Schedule,
-#         'user_roles': UserRole,
-#         'subscribers': Subscriber,
-#         'company_invites': CompanyInvite,
-#         'invitation_logs': InvitationLog,
-#         'visits': Visit
-#     }
+@routes.route('/admin/clear-all-data', methods=['POST'])
+@login_required
+def clear_all_data():
+    if not current_user.is_admin:
+        abort(403)
+    
+    from app.models import (
+        Visit, InvitationLog, CompanyInvite, Subscriber,
+        MedicalRecord, Appointment, Availability, Schedule,
+        Task, Assistant, Clinic, Publication, Note,
+        Product, ProductCategory, Event, Anuncio, User, UserRole
+    )
 
-#     if request.method == 'POST':
-#         table = request.form.get('table')
-#         csv_file = request.files.get('csv_file')
+    try:
+        Visit.query.delete()
+        InvitationLog.query.delete()
+        CompanyInvite.query.delete()
+        Subscriber.query.delete()
+        MedicalRecord.query.delete()
+        Appointment.query.delete()
+        Availability.query.delete()
+        Schedule.query.delete()
+        Task.query.delete()
+        Assistant.query.delete()
+        Publication.query.delete()
+        Note.query.delete()
+        Event.query.delete()
+        Product.query.delete()
+        ProductCategory.query.delete()
+        Anuncio.query.delete()
+        Clinic.query.delete()
+        User.query.delete()
+        UserRole.query.delete()
         
-#         if not csv_file or table not in tables:
-#             flash("❌ Tabla o archivo inválido", "danger")
-#             return redirect(request.url)
+        db.session.commit()
+        flash("✅ Todas las tablas han sido vaciadas.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"❌ Error al vaciar datos: {str(e)}", "danger")
 
-#         model = tables[table]
-#         try:
-#             # Soporta UTF-8 con BOM (común en Excel)
-#             stream = StringIO(csv_file.read().decode('utf-8-sig'))
-#             reader = csv.DictReader(stream)
-#         except Exception as e:
-#             flash(f"❌ Error al leer CSV: {e}", "danger")
-#             return redirect(request.url)
+    return redirect(url_for('routes.import_data'))
 
-#         success_count = 0
-#         try:
-#             for row in reader:
-#                 cleaned = {}
-#                 for key, value in row.items():
-#                     if value == '':
-#                         cleaned[key] = None
-#                     elif key in ['id', 'user_id', 'doctor_id', 'assistant_id', 'clinic_id', 'patient_id', 'role_id', 'created_by', 'approved_by']:
-#                         cleaned[key] = int(value) if value.isdigit() else None
-#                     elif key in ['is_active', 'is_admin', 'is_professional', 'is_used', 'success']:
-#                         cleaned[key] = value.lower() in ('1', 'true', 't', 'yes', 'on')
-#                     elif key in ['created_at', 'updated_at', 'due_date', 'published_at', 'expires_at', 'used_at', 'approved_at']:
-#                         if value:
-#                             try:
-#                                 cleaned[key] = date_parser.parse(value)
-#                             except:
-#                                 cleaned[key] = None
-#                         else:
-#                             cleaned[key] = None
-#                     else:
-#                         cleaned[key] = value
 
-#                 # Evitar duplicados por ID
-#                 if 'id' in cleaned and cleaned['id']:
-#                     existing = model.query.get(cleaned['id'])
-#                     if existing:
-#                         continue  # salta si ya existe
+@routes.route('/admin/import-data', methods=['GET', 'POST'])
+@login_required
+def import_data():
+    if not current_user.is_admin:
+        abort(403)
 
-#                 obj = model(**cleaned)
-#                 db.session.add(obj)
-#                 success_count += 1
+    tables = {
+        'user_roles': UserRole,
+        'users': User,
+        'clinic': Clinic,
+        'assistants': Assistant,
+        'availability': Availability,
+        'appointments': Appointment,
+        'medical_records': MedicalRecord,
+        'schedules': Schedule,
+        'notes': Note,
+        'publications': Publication,
+        'tasks': Task,
+        'subscribers': Subscriber,
+        'company_invites': CompanyInvite,
+        'invitation_logs': InvitationLog,
+        'visits': Visit,
+        'product_category': ProductCategory,
+        'product': Product,
+        'event': Event,
+        'anuncios': Anuncio,
+    }
 
-#             db.session.commit()
-#             flash(f"✅ Importado: {success_count} registros en '{table}'", "success")
-#         except Exception as e:
-#             db.session.rollback()
-#             flash(f"❌ Error al importar '{table}': {str(e)}", "danger")
+    if request.method == 'POST':
+        table = request.form.get('table')
+        csv_file = request.files.get('csv_file')
+        
+        if not csv_file or table not in tables:
+            flash("❌ Tabla o archivo inválido", "danger")
+            return redirect(request.url)
 
-#         return redirect(url_for('routes.import_data'))
+        model = tables[table]
+        try:
+            stream = StringIO(csv_file.read().decode('utf-8-sig'))
+            reader = csv.DictReader(stream)
+        except Exception as e:
+            flash(f"❌ Error al leer CSV: {e}", "danger")
+            return redirect(request.url)
 
-#     # Mostrar formulario
-#     options = "".join([f'<option value="{name}">{name}</option>' for name in sorted(tables.keys())])
-#     return f'''
-#     <!DOCTYPE html>
-#     <html>
-#     <head><title>Importar datos</title>
-#     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-#     </head>
-#     <body class="bg-light">
-#     <div class="container mt-5">
-#         <div class="card">
-#             <div class="card-header">
-#                 <h4>📤 Importar datos a Render (solo admin)</h4>
-#             </div>
-#             <div class="card-body">
-#                 <form method="post" enctype="multipart/form-data">
-#                     <div class="mb-3">
-#                         <label class="form-label">Tabla</label>
-#                         <select name="table" class="form-select" required>{options}</select>
-#                     </div>
-#                     <div class="mb-3">
-#                         <label class="form-label">Archivo CSV</label>
-#                         <input type="file" name="csv_file" accept=".csv" class="form-control" required>
-#                     </div>
-#                     <button type="submit" class="btn btn-success">Importar</button>
-#                     <a href="{{ url_for('routes.dashboard') }}" class="btn btn-secondary">Cancelar</a>
-#                 </form>
-#                 <div class="alert alert-warning mt-3">
-#                     ⚠️ <strong>Advertencia:</strong> Esta ruta debe eliminarse después de usarla.
-#                 </div>
-#             </div>
-#         </div>
-#     </div>
-#     </body>
-#     </html>
-#     '''
+        success_count = 0
+        try:
+            for row in reader:
+                cleaned = {}
+                for key, value in row.items():
+                    if value == '':
+                        cleaned[key] = None
+                    elif key in ['id', 'user_id', 'doctor_id', 'assistant_id', 'clinic_id', 'patient_id', 'role_id', 'created_by', 'approved_by', 'updated_by', 'appointment_id', 'publication_id', 'profesional_id', 'category_id', 'parent_id']:
+                        cleaned[key] = int(value) if value and value.isdigit() else None
+                    elif key in ['is_active', 'is_admin', 'is_professional', 'is_used', 'success', 'store_enabled', 'email_verified', 'has_tax_included', 'is_on_promotion', 'is_service', 'is_visible', 'hide_if_out_of_stock', 'es_destacado']:
+                        cleaned[key] = value.lower() in ('1', 'true', 't', 'yes', 'on')
+                    elif key in ['created_at', 'updated_at', 'due_date', 'published_at', 'expires_at', 'used_at', 'approved_at', 'creado_en', 'expira_en', 'start_datetime', 'end_datetime']:
+                        if value:
+                            try:
+                                cleaned[key] = date_parser.parse(value)
+                            except:
+                                cleaned[key] = None
+                        else:
+                            cleaned[key] = None
+                    elif key in ['preferences', 'image_urls', 'skills']:
+                        if value and value.strip():
+                            try:
+                                cleaned[key] = json.loads(value)
+                            except:
+                                cleaned[key] = {} if key == 'preferences' else []
+                        else:
+                            cleaned[key] = {} if key == 'preferences' else []
+                    else:
+                        cleaned[key] = value
+
+                if 'id' in cleaned and cleaned['id']:
+                    existing = model.query.get(cleaned['id'])
+                    if existing:
+                        continue
+
+                obj = model(**cleaned)
+                db.session.add(obj)
+                success_count += 1
+
+            db.session.commit()
+            flash(f"✅ Importado: {success_count} registros en '{table}'", "success")
+        except Exception as e:
+            db.session.rollback()
+            flash(f"❌ Error al importar '{table}': {str(e)}", "danger")
+
+        return redirect(url_for('routes.import_data'))
+
+    options = "".join([f'<option value="{name}">{name}</option>' for name in sorted(tables.keys())])
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Importar datos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-light">
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h4>📤 Importar datos a Render (solo admin)</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{url_for('routes.clear_all_data')}" 
+                      onsubmit="return confirm('⚠️ ¿Estás seguro? Esto borrará TODOS los datos en producción.')">
+                    <button type="submit" class="btn btn-danger mb-3">Vaciar todas las tablas</button>
+                </form>
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Tabla</label>
+                        <select name="table" class="form-select" required>{options}</select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Archivo CSV</label>
+                        <input type="file" name="csv_file" accept=".csv" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Importar</button>
+                </form>
+                <div class="alert alert-warning mt-3">
+                    ⚠️ <strong>Advertencia:</strong> Elimina estos endpoints después de usarlos.
+                </div>
+            </div>
+        </div>
+    </div>
+    </body>
+    </html>
+    '''
 
 # === TIENDA PÚBLICA ===
 @routes.route('/tienda/<string:url_slug>')
