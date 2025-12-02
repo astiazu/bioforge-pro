@@ -4461,9 +4461,8 @@ def migrate_data():
     Endpoint temporal para migrar datos.
     Accesible SIN login si se usa el secreto correcto.
     """
-    secret = request.args.get('secret')
+    secret = request.args.get('secret') or request.form.get('secret')
     expected = os.environ.get('INIT_DB_SECRET')
-    
     if not secret or secret != expected:
         if not current_user.is_authenticated or not current_user.is_admin:
             abort(403)
@@ -4515,6 +4514,7 @@ def migrate_data():
             </div>
             <div class="card-body">
                 <form method="post">
+                    <input type="hidden" name="secret" value="{{ request.args.get('secret', '') }}">
                     <button type="submit" name="clear_all" value="1" 
                             class="btn btn-danger mb-4"
                             onclick="return confirm('⚠️ Esto borrará TODOS los datos actuales. ¿Estás seguro?')">
