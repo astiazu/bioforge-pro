@@ -130,3 +130,5 @@ def run_data_migration(csv_files_dict):
         db.session.rollback()
         current_app.logger.error(f"❌ Error durante la migración: {str(e)}")
         raise
+
+__all__ = ['run_data_migration', 'clear_all_tables']

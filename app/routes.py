@@ -4451,23 +4451,34 @@ def import_data():
     </html>
     '''
 
-# === TEMPORAL: Migración automática de datos ===
+# === TEMPORAL: Migración segura con botón para vaciar tablas ===
 import os
-from app.admin.data_migration import run_data_migration
+from app.admin.data_migration import run_data_migration, clear_all_tables
 
 @routes.route('/admin/migrate-data', methods=['GET', 'POST'])
-@login_required
 def migrate_data():
-    if not current_user.is_admin:
-        abort(403)
-    
+    """
+    Endpoint temporal para migrar datos.
+    Accesible SIN login si se usa el secreto correcto.
+    """
     secret = request.args.get('secret')
     expected = os.environ.get('INIT_DB_SECRET')
+    
     if not secret or secret != expected:
-        abort(403)
+        if not current_user.is_authenticated or not current_user.is_admin:
+            abort(403)
 
     if request.method == 'POST':
-        # Agrupar archivos por nombre de tabla
+        if 'clear_all' in request.form:
+            # Vaciar todas las tablas
+            try:
+                clear_all_tables()
+                flash("✅ Todas las tablas han sido vaciadas.", "success")
+            except Exception as e:
+                flash(f"❌ Error al vaciar tablas: {str(e)}", "danger")
+            return redirect(url_for('routes.migrate_data'))
+
+        # Procesar migración de CSVs
         csv_files = {}
         for key in request.files:
             file = request.files[key]
@@ -4500,12 +4511,20 @@ def migrate_data():
     <div class="container mt-5">
         <div class="card">
             <div class="card-header">
-                <h4>📤 Migrar datos a Render (solo admin)</h4>
+                <h4>📤 Migrar datos a Render</h4>
             </div>
             <div class="card-body">
+                <form method="post">
+                    <button type="submit" name="clear_all" value="1" 
+                            class="btn btn-danger mb-4"
+                            onclick="return confirm('⚠️ Esto borrará TODOS los datos actuales. ¿Estás seguro?')">
+                        🗑️ Vaciar todas las tablas
+                    </button>
+                </form>
+
                 <form method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label">Sube TODOS los CSVs (nombre debe coincidir con la tabla)</label>
+                        <label class="form-label">Sube TODOS los CSVs (nombre = tabla)</label>
                         <input type="file" name="user_roles.csv" accept=".csv" class="form-control mb-2">
                         <input type="file" name="users.csv" accept=".csv" class="form-control mb-2">
                         <input type="file" name="clinic.csv" accept=".csv" class="form-control mb-2">
@@ -4528,8 +4547,10 @@ def migrate_data():
                     </div>
                     <button type="submit" class="btn btn-success">Migrar datos</button>
                 </form>
-                <div class="alert alert-warning mt-3">
-                    ⚠️ Esto borrará TODOS los datos actuales y los reemplazará por los CSVs.
+                <div class="alert alert-warning mt-4">
+                    ⚠️ <strong>Importante:</strong> 
+                    - Usa el secreto en la URL: <code>?secret=x7G!qL2@kP9z</code><br>
+                    - Elimina este endpoint después de usarlo.
                 </div>
             </div>
         </div>

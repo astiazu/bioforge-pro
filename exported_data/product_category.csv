@@ -1,2 +1,7 @@
-id,name,description,parent_id,is_active,doctor_id
-1,Sistemas de Seguridad,,,True,38
+﻿id,name,description,parent_id,is_active,doctor_id
+1,Sistemas de Seguridad,,,true,38
+2,Electrodomesticos,electrodomesticos,,true,4
+3,Tecnología,Tecno - Telefonos - compu,,true,4
+4,Accesorios,Accesorios,,true,4
+5,Herramientas,Herramientas,,true,4
+6,Soluciones IoT,“Control de tu hogar/negocio desde cualquier lugar. Domótica IOT argentina hecha para gente real.”,,true,2

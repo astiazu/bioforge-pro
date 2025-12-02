@@ -1,3 +1,1 @@
-SELECT id, name, image_urls 
-FROM product 
-WHERE doctor_id = '38';
+SELECT id, username, email FROM users WHERE id = 4;
