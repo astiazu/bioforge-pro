@@ -244,23 +244,23 @@ def format_date(value, format: str = "%d/%m/%Y") -> str:
     return value.strftime(format)
 
 def send_verification_email(email, verification_code):
-    """Envía un correo de verificación usando el email y el código."""
+    """Envía un correo con el código de verificación directamente en el cuerpo."""
     try:
-        verify_url = url_for("routes.verify_email", code=verification_code, _external=True)
-
-        subject = f"Verificá tu cuenta — {current_app.config.get('APP_NAME', 'BioForge')}"
+        subject = f"🔐 Código de verificación — {current_app.config.get('APP_NAME', 'BioForge')}"
         body = f"""Hola,
 
-                Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
+        Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
 
-                Para activar tu cuenta, haz clic en el siguiente enlace:
+        Tu código de verificación es:
 
-                {verify_url}
+                {verification_code}
 
-                Este enlace expira en 24 horas.
+        Ingresa este código en la página de verificación para activar tu cuenta.
 
-                Si no creaste esta cuenta, ignora este mensaje.
-                """
+        Este código expira en 10 minutos.
+
+        Si no creaste esta cuenta, ignora este mensaje.
+        """
 
         mail = current_app.extensions.get("mail")
         if not mail:
