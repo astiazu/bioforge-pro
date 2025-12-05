@@ -249,18 +249,18 @@ def send_verification_email(email, verification_code):
         subject = f"🔐 Código de verificación — {current_app.config.get('APP_NAME', 'BioForge')}"
         body = f"""Hola,
 
-        Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
+Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
 
-        Tu código de verificación es:
+Tu código de verificación es:
 
-                {verification_code}
+        {verification_code}
 
-        Ingresa este código en la página de verificación para activar tu cuenta.
+Ingresa este código en la página de verificación para activar tu cuenta.
 
-        Este código expira en 10 minutos.
+Este código expira en 10 minutos.
 
-        Si no creaste esta cuenta, ignora este mensaje.
-        """
+Si no creaste esta cuenta, ignora este mensaje.
+"""
 
         mail = current_app.extensions.get("mail")
         if not mail:
