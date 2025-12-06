@@ -246,27 +246,34 @@ def format_date(value, format: str = "%d/%m/%Y") -> str:
 def send_verification_email(email, verification_code):
     """Envía un correo con el código de verificación directamente en el cuerpo."""
     try:
-        subject = f"🔐 Código de verificación — {current_app.config.get('APP_NAME', 'BioForge')}"
-        body = f"""Hola,
+        app_name = current_app.config.get("APP_NAME", "BioForge")
+        default_sender = current_app.config.get("MAIL_DEFAULT_SENDER")
 
-Gracias por registrarte en {current_app.config.get('APP_NAME', 'nuestra plataforma')}.
-
-Tu código de verificación es:
-
-        {verification_code}
-
-Ingresa este código en la página de verificación para activar tu cuenta.
-
-Este código expira en 10 minutos.
-
-Si no creaste esta cuenta, ignora este mensaje.
-"""
+        if not default_sender:
+            raise RuntimeError("MAIL_DEFAULT_SENDER no está configurado en el environment.")
 
         mail = current_app.extensions.get("mail")
         if not mail:
-            raise RuntimeError("Flask-Mail no está inicializado.")
+            raise RuntimeError("Flask-Mail no está inicializado correctamente.")
 
-        msg = Message(subject=subject, recipients=[email], body=body)
+        subject = f"🔐 Código de verificación — {app_name}"
+        body = (
+            "Hola,\n\n"
+            f"Gracias por registrarte en {app_name}.\n\n"
+            "Tu código de verificación es:\n\n"
+            f"        {verification_code}\n\n"
+            "Ingresa este código en la página de verificación para activar tu cuenta.\n\n"
+            "Este código expira en 10 minutos.\n\n"
+            "Si no creaste esta cuenta, ignora este mensaje.\n"
+        )
+
+        msg = Message(
+            subject=subject,
+            recipients=[email],
+            body=body,
+            sender=default_sender,
+        )
+
         mail.send(msg)
         current_app.logger.info(f"📧 Correo de verificación enviado a {email}")
         return True
