@@ -244,6 +244,12 @@ def format_date(value, format: str = "%d/%m/%Y") -> str:
     return value.strftime(format)
 
 def send_verification_email(email, verification_code):
+    current_app.logger.warning("Intentando enviar mail…")
+    current_app.logger.warning(f"MAIL_SERVER={current_app.config['MAIL_SERVER']}")
+    current_app.logger.warning(f"MAIL_PORT={current_app.config['MAIL_PORT']}")
+    current_app.logger.warning(f"MAIL_USE_TLS={current_app.config['MAIL_USE_TLS']}")
+    current_app.logger.warning(f"MAIL_USE_SSL={current_app.config['MAIL_USE_SSL']}")
+    current_app.logger.warning(f"MAIL_USERNAME={current_app.config['MAIL_USERNAME']}")
     """Envía un correo con el código de verificación directamente en el cuerpo."""
     try:
         app_name = current_app.config.get("APP_NAME", "BioForge")
